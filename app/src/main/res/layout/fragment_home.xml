@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp"
+    android:background="#F3F4F6"
+    tools:context=".ui.home.HomeFragment">
+
+    <!-- Заголовок -->
+    <TextView
+        android:id="@+id/titleInventory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Инвентаризация Фаровон"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        android:textColor="#1E3A8A"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="24dp"/>
+
+    <!-- Сетка кнопок -->
+    <GridLayout
+        android:id="@+id/gridButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/titleInventory"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="50dp"
+        android:alignmentMode="alignBounds"
+        android:columnCount="2"
+        android:rowCount="3"
+        android:useDefaultMargins="true">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/defineDepartment"
+            style="@style/SquareIconBtn"
+            android:layout_width="0dp"
+            android:layout_height="90dp"
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill"
+            android:text="Сканировать"
+            app:backgroundTint="#FF6F61"
+            app:icon="@android:drawable/ic_menu_camera"
+            app:iconSize="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button2"
+            style="@style/SquareIconBtn"
+            android:layout_width="0dp"
+            android:layout_height="90dp"
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill"
+            android:text="Настройка 1С аккаунт"
+            app:backgroundTint="#6B5B95"
+            app:icon="@android:drawable/ic_menu_call"
+            app:iconSize="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button3"
+            style="@style/SquareIconBtn"
+            android:layout_width="0dp"
+            android:layout_height="90dp"
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill"
+            android:text="Тест"
+            app:backgroundTint="#88B04B"
+            app:icon="@android:drawable/ic_menu_compass"
+            app:iconSize="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button4"
+            style="@style/SquareIconBtn"
+            android:layout_width="0dp"
+            android:layout_height="90dp"
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill"
+            android:text="Тест"
+            app:backgroundTint="#FFA500"
+            app:icon="@android:drawable/ic_menu_send"
+            app:iconSize="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button5"
+            style="@style/SquareIconBtn"
+            android:layout_width="0dp"
+            android:layout_height="90dp"
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill"
+            android:text="Тест"
+            app:backgroundTint="#009688"
+            app:icon="@android:drawable/ic_menu_manage"
+            app:iconSize="24dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button6"
+            style="@style/SquareIconBtn"
+            android:layout_width="0dp"
+            android:layout_height="90dp"
+            android:layout_columnWeight="1"
+            android:layout_gravity="fill"
+            android:text="Тест"
+            app:backgroundTint="#3F51B5"
+            app:icon="@android:drawable/ic_menu_info_details"
+            app:iconSize="24dp" />
+
+    </GridLayout>
+
+
+</RelativeLayout>
