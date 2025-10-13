@@ -15,6 +15,7 @@ import androidx.navigation.Navigation;
 
 import com.inventory.farovon.R;
 import com.inventory.farovon.databinding.FragmentHomeBinding;
+import com.inventory.farovon.ui.login.LoginDialogFragment;
 
 public class HomeFragment extends Fragment {
 
@@ -27,13 +28,17 @@ public class HomeFragment extends Fragment {
         View root = binding.getRoot();
 
         final Button defineDepartmentBtn = binding.defineDepartment;
-        defineDepartmentBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                NavController navController = Navigation.findNavController(v);
-                navController.navigate(R.id.nav_gallery);
-            }
+        defineDepartmentBtn.setOnClickListener(v -> {
+            NavController navController = Navigation.findNavController(v);
+            navController.navigate(R.id.nav_gallery);
         });
+
+        final Button settingsButton = binding.button2;
+        settingsButton.setOnClickListener(v -> {
+            LoginDialogFragment dialogFragment = new LoginDialogFragment();
+            dialogFragment.show(getParentFragmentManager(), "LoginDialogFragment");
+        });
+
         return root;
     }
 
