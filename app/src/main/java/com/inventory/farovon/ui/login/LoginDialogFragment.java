@@ -2,13 +2,16 @@ package com.inventory.farovon.ui.login;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -33,7 +36,9 @@ import okhttp3.Response;
 
 public class LoginDialogFragment extends DialogFragment {
 
+    private static final String TAG = "LoginDialogFragment";
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private TextView statusTextView;
 
     @NonNull
     @Override
@@ -46,6 +51,7 @@ public class LoginDialogFragment extends DialogFragment {
         final EditText username = view.findViewById(R.id.username);
         final EditText password = view.findViewById(R.id.password);
         final Button loginButton = view.findViewById(R.id.loginButton);
+        statusTextView = view.findViewById(R.id.statusTextView);
 
         SessionManager sessionManager = new SessionManager(requireContext());
         ipAddress.setText(sessionManager.getIpAddress());
@@ -58,10 +64,12 @@ public class LoginDialogFragment extends DialogFragment {
             String pass = password.getText().toString().trim();
 
             if (ip.isEmpty() || user.isEmpty() || pass.isEmpty()) {
-                Toast.makeText(getContext(), "Please fill in all fields", Toast.LENGTH_SHORT).show();
+                statusTextView.setText("Please fill in all fields");
                 return;
             }
 
+            statusTextView.setTextColor(Color.DKGRAY);
+            statusTextView.setText("Connecting...");
             authenticate(ip, user, pass);
         });
 
@@ -70,7 +78,7 @@ public class LoginDialogFragment extends DialogFragment {
     }
 
     private void authenticate(String ip, String user, String pass) {
-        String url = "http://" + ip + "/my1c/hs/hw/say";
+        String url = "http://" + ip + "/my1c/hs/checking/check";
         OkHttpClient client = new OkHttpClient();
 
         RequestBody body = RequestBody.create("{}", MediaType.get("application/json; charset=utf-8"));
@@ -86,38 +94,36 @@ public class LoginDialogFragment extends DialogFragment {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
                 mainHandler.post(() -> {
-                    Toast.makeText(getContext(), "Error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    statusTextView.setTextColor(Color.RED);
+                    statusTextView.setText("Network Error: " + e.getMessage());
                 });
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                final String responseBody = response.body().string();
-                if (response.isSuccessful()) {
-                    try {
-                        JSONObject jsonObject = new JSONObject(responseBody);
-                        if (jsonObject.optString("status").equals("1")) {
-                            mainHandler.post(() -> {
-                                SessionManager sessionManager = new SessionManager(requireContext());
-                                sessionManager.createLoginSession(ip, user, pass);
-                                Toast.makeText(getContext(), "Login Successful", Toast.LENGTH_SHORT).show();
-                                dismiss();
-                            });
+                final String responseBody = response.body().string().trim();
+                mainHandler.post(() -> {
+                    if (response.isSuccessful()) {
+                        if (responseBody.equalsIgnoreCase("ок")) {
+                            statusTextView.setTextColor(Color.GREEN);
+                            statusTextView.setText("Успешно");
+                            SessionManager sessionManager = new SessionManager(requireContext());
+                            sessionManager.createLoginSession(ip, user, pass);
+                            // Dismiss after a short delay
+                            new Handler(Looper.getMainLooper()).postDelayed(() -> dismiss(), 1000);
                         } else {
-                            mainHandler.post(() -> {
-                                Toast.makeText(getContext(), "Invalid credentials", Toast.LENGTH_SHORT).show();
-                            });
+                            statusTextView.setTextColor(Color.RED);
+                            statusTextView.setText("Unknown server response: " + responseBody);
                         }
-                    } catch (JSONException e) {
-                        mainHandler.post(() -> {
-                            Toast.makeText(getContext(), "Error parsing response", Toast.LENGTH_SHORT).show();
-                        });
+                    } else {
+                        statusTextView.setTextColor(Color.RED);
+                        if (response.code() == 401) {
+                            statusTextView.setText("Invalid credentials (401)");
+                        } else {
+                            statusTextView.setText("Error: " + response.code() + " " + response.message());
+                        }
                     }
-                } else {
-                    mainHandler.post(() -> {
-                        Toast.makeText(getContext(), "Error: " + response.message(), Toast.LENGTH_LONG).show();
-                    });
-                }
+                });
             }
         });
     }
