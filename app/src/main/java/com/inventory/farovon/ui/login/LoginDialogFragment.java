@@ -12,7 +12,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -20,10 +19,8 @@ import androidx.fragment.app.DialogFragment;
 
 import com.inventory.farovon.R;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -79,10 +76,17 @@ public class LoginDialogFragment extends DialogFragment {
 
     private void authenticate(String ip, String user, String pass) {
         String url = "http://" + ip + "/my1c/hs/checking/check";
-        OkHttpClient client = new OkHttpClient();
+        Log.d(TAG, "URL: " + url);
+        String credential = Credentials.basic(user, pass);
+        Log.d(TAG, "Credential: " + credential);
+
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
 
         RequestBody body = RequestBody.create("{}", MediaType.get("application/json; charset=utf-8"));
-        String credential = Credentials.basic(user, pass);
 
         Request request = new Request.Builder()
                 .url(url)
@@ -93,6 +97,7 @@ public class LoginDialogFragment extends DialogFragment {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "Network request failed", e);
                 mainHandler.post(() -> {
                     statusTextView.setTextColor(Color.RED);
                     statusTextView.setText("Network Error: " + e.getMessage());
@@ -102,6 +107,7 @@ public class LoginDialogFragment extends DialogFragment {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 final String responseBody = response.body().string().trim();
+                Log.d(TAG, "Response received. Code: " + response.code() + ", Body: " + responseBody);
                 mainHandler.post(() -> {
                     if (response.isSuccessful()) {
                         if (responseBody.equalsIgnoreCase("ок")) {
@@ -109,11 +115,10 @@ public class LoginDialogFragment extends DialogFragment {
                             statusTextView.setText("Успешно");
                             SessionManager sessionManager = new SessionManager(requireContext());
                             sessionManager.createLoginSession(ip, user, pass);
-                            // Dismiss after a short delay
                             new Handler(Looper.getMainLooper()).postDelayed(() -> dismiss(), 1000);
                         } else {
                             statusTextView.setTextColor(Color.RED);
-                            statusTextView.setText("Unknown server response: " + responseBody);
+                            statusTextView.setText("Unknown Response: " + responseBody);
                         }
                     } else {
                         statusTextView.setTextColor(Color.RED);
