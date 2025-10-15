@@ -1,16 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="24dp"
+    android:gravity="center_vertical"
+    android:background="@android:color/white"
+    tools:context=".ui.login.LoginActivity">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Настройка 1С аккаунт"
-        android:textSize="20sp"
+        android:text="Подключение к серверу"
+        android:textSize="24sp"
+        android:textColor="@android:color/black"
         android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="это нужно сделать один раз"
+        android:textSize="16sp"
+        android:textColor="@android:color/darker_gray"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="32dp"/>
 
     <EditText
         android:id="@+id/ipAddress"
@@ -18,7 +35,7 @@
         android:layout_height="wrap_content"
         android:hint="IP Address"
         android:inputType="text"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="16dp"/>
 
     <EditText
         android:id="@+id/username"
@@ -26,7 +43,7 @@
         android:layout_height="wrap_content"
         android:hint="Логин"
         android:inputType="text"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginBottom="16dp"/>
 
     <EditText
         android:id="@+id/password"
@@ -34,13 +51,15 @@
         android:layout_height="wrap_content"
         android:hint="Пароль"
         android:inputType="textPassword"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="24dp"/>
 
     <Button
         android:id="@+id/loginButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Войти"/>
+        android:text="Войти"
+        android:backgroundTint="#005BFF"
+        android:textColor="@android:color/white"/>
 
     <TextView
         android:id="@+id/statusTextView"
@@ -48,7 +67,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:textAlignment="center"
-        android:textColor="@android:color/holo_red_dark"
         android:textSize="16sp" />
 
 </LinearLayout>
