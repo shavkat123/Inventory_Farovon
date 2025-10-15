@@ -62,6 +62,11 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
                 return true;
             }
+            if (id == R.id.nav_settings) {
+                // Placeholder for settings
+                Snackbar.make(binding.getRoot(), "Настройки в разработке", Snackbar.LENGTH_SHORT).show();
+                return true;
+            }
             // Handle other items by navigating
             boolean handled = NavigationUI.onNavDestinationSelected(item, navController);
             if (handled) {
@@ -69,16 +74,78 @@ public class MainActivity extends AppCompatActivity {
             }
             return handled;
         });
+
+        drawer.addDrawerListener(new DrawerLayout.SimpleDrawerListener() {
+            @Override
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+                checkConnectionStatus();
+            }
+        });
     }
 
     private void updateNavHeader() {
         NavigationView navigationView = binding.navView;
         View headerView = navigationView.getHeaderView(0);
         TextView navUsername = headerView.findViewById(R.id.nav_header_username);
+        TextView navServerIp = headerView.findViewById(R.id.nav_header_server_ip);
+
         String username = sessionManager.getUsername();
+        String ipAddress = sessionManager.getIpAddress();
+
         if (username != null) {
             navUsername.setText(username);
         }
+        if (ipAddress != null) {
+            navServerIp.setText(ipAddress);
+        }
+    }
+
+    private void checkConnectionStatus() {
+        String ip = sessionManager.getIpAddress();
+        String user = sessionManager.getUsername();
+        String pass = sessionManager.getPassword();
+
+        if (ip == null || user == null || pass == null) {
+            return; // No credentials, no check
+        }
+
+        String url = "http://" + ip + "/my1c/hs/checking/check";
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(5, java.util.concurrent.TimeUnit.SECONDS)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(url)
+                .header("Authorization", okhttp3.Credentials.basic(user, pass))
+                .build();
+
+        client.newCall(request).enqueue(new okhttp3.Callback() {
+            @Override
+            public void onFailure(@NonNull okhttp3.Call call, @NonNull java.io.IOException e) {
+                runOnUiThread(() -> {
+                    View headerView = binding.navView.getHeaderView(0);
+                    TextView statusView = headerView.findViewById(R.id.nav_header_status);
+                    statusView.setText("Оффлайн");
+                    statusView.setTextColor(getResources().getColor(android.R.color.holo_red_light));
+                });
+            }
+
+            @Override
+            public void onResponse(@NonNull okhttp3.Call call, @NonNull okhttp3.Response response) {
+                runOnUiThread(() -> {
+                    View headerView = binding.navView.getHeaderView(0);
+                    TextView statusView = headerView.findViewById(R.id.nav_header_status);
+                    if (response.isSuccessful()) {
+                        statusView.setText("Онлайн");
+                        statusView.setTextColor(getResources().getColor(android.R.color.holo_green_light));
+                    } else {
+                        statusView.setText("Оффлайн");
+                        statusView.setTextColor(getResources().getColor(android.R.color.holo_red_light));
+                    }
+                });
+            }
+        });
     }
 
     @Override
