@@ -19,6 +19,9 @@ import com.inventory.farovon.databinding.ActivityMainBinding;
 import com.inventory.farovon.ui.login.LoginActivity;
 import com.inventory.farovon.ui.login.SessionManager;
 
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+
 public class MainActivity extends AppCompatActivity {
 
     private AppBarConfiguration mAppBarConfiguration;
