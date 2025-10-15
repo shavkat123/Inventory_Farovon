@@ -36,4 +36,9 @@ public class SessionManager {
     public String getPassword() {
         return pref.getString(KEY_PASSWORD, null);
     }
+
+    public void logoutUser() {
+        editor.clear();
+        editor.commit();
+    }
 }
