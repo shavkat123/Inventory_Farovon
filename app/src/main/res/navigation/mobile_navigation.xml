@@ -8,18 +8,12 @@
     <fragment
         android:id="@+id/nav_home"
         android:name="com.inventory.farovon.ui.home.HomeFragment"
-        android:label="@string/menu_home"
+        android:label="Главное меню"
         tools:layout="@layout/fragment_home" />
 
     <fragment
         android:id="@+id/nav_gallery"
         android:name="com.inventory.farovon.ui.gallery.GalleryFragment"
-        android:label="@string/menu_gallery"
+        android:label="Инвентаризация"
         tools:layout="@layout/fragment_gallery" />
-
-    <fragment
-        android:id="@+id/nav_slideshow"
-        android:name="com.inventory.farovon.ui.slideshow.SlideshowFragment"
-        android:label="@string/menu_slideshow"
-        tools:layout="@layout/fragment_slideshow" />
 </navigation>

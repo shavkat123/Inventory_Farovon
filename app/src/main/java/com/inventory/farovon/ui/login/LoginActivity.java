@@ -1,29 +1,21 @@
 package com.inventory.farovon.ui.login;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
-
+import com.inventory.farovon.MainActivity;
 import com.inventory.farovon.R;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -34,26 +26,23 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class LoginDialogFragment extends DialogFragment {
+public class LoginActivity extends AppCompatActivity {
 
-    private static final String TAG = "LoginDialogFragment";
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static final String TAG = "LoginActivity";
     private TextView statusTextView;
 
-    @NonNull
     @Override
-    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-        LayoutInflater inflater = requireActivity().getLayoutInflater();
-        View view = inflater.inflate(R.layout.dialog_login, null);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_login);
 
-        final EditText ipAddress = view.findViewById(R.id.ipAddress);
-        final EditText username = view.findViewById(R.id.username);
-        final EditText password = view.findViewById(R.id.password);
-        final Button loginButton = view.findViewById(R.id.loginButton);
-        statusTextView = view.findViewById(R.id.statusTextView);
+        final EditText ipAddress = findViewById(R.id.ipAddress);
+        final EditText username = findViewById(R.id.username);
+        final EditText password = findViewById(R.id.password);
+        final Button loginButton = findViewById(R.id.loginButton);
+        statusTextView = findViewById(R.id.statusTextView);
 
-        SessionManager sessionManager = new SessionManager(requireContext());
+        SessionManager sessionManager = new SessionManager(this);
         ipAddress.setText(sessionManager.getIpAddress());
         username.setText(sessionManager.getUsername());
         password.setText(sessionManager.getPassword());
@@ -72,17 +61,21 @@ public class LoginDialogFragment extends DialogFragment {
             statusTextView.setText("Connecting...");
             authenticate(ip, user, pass);
         });
-
-        builder.setView(view);
-        return builder.create();
     }
 
     private void authenticate(String ip, String user, String pass) {
         String url = "http://" + ip + "/my1c/hs/checking/check";
-        OkHttpClient client = new OkHttpClient();
+        Log.d(TAG, "URL: " + url);
+        String credential = Credentials.basic(user, pass);
+        Log.d(TAG, "Credential: " + credential);
+
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
 
         RequestBody body = RequestBody.create("{}", MediaType.get("application/json; charset=utf-8"));
-        String credential = Credentials.basic(user, pass);
 
         Request request = new Request.Builder()
                 .url(url)
@@ -93,7 +86,8 @@ public class LoginDialogFragment extends DialogFragment {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                mainHandler.post(() -> {
+                Log.e(TAG, "Network request failed", e);
+                runOnUiThread(() -> {
                     statusTextView.setTextColor(Color.RED);
                     statusTextView.setText("Network Error: " + e.getMessage());
                 });
@@ -102,18 +96,22 @@ public class LoginDialogFragment extends DialogFragment {
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
                 final String responseBody = response.body().string().trim();
-                mainHandler.post(() -> {
+                Log.d(TAG, "Response received. Code: " + response.code() + ", Body: " + responseBody);
+                runOnUiThread(() -> {
                     if (response.isSuccessful()) {
-                        if (responseBody.equalsIgnoreCase("ок")) {
+                        if (responseBody.equalsIgnoreCase("ok")) {
                             statusTextView.setTextColor(Color.GREEN);
                             statusTextView.setText("Успешно");
-                            SessionManager sessionManager = new SessionManager(requireContext());
+                            SessionManager sessionManager = new SessionManager(LoginActivity.this);
                             sessionManager.createLoginSession(ip, user, pass);
-                            // Dismiss after a short delay
-                            new Handler(Looper.getMainLooper()).postDelayed(() -> dismiss(), 1000);
+                            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                startActivity(intent);
+                                finish();
+                            }, 1000);
                         } else {
                             statusTextView.setTextColor(Color.RED);
-                            statusTextView.setText("Unknown server response: " + responseBody);
+                            statusTextView.setText("Unknown Response: " + responseBody);
                         }
                     } else {
                         statusTextView.setTextColor(Color.RED);
