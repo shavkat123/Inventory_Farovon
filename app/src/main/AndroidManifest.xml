@@ -31,6 +31,10 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="31">
         <activity
+            android:name=".AssetMovementActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
             android:name=".RfidActivity"
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon" />
