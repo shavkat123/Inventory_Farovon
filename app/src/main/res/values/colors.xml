@@ -7,4 +7,16 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Custom Colors from Design Spec -->
+    <color name="colorPrimary">#1976D2</color>
+    <color name="colorPrimaryBright">#0D6EFF</color>
+    <color name="colorLightGreyBackground">#F3F5F7</color>
+    <color name="colorDivider">#E0E0E0</color>
+    <color name="colorTextPlaceholder">#9E9E9E</color>
+    <color name="colorTextPrimary">#212121</color>
+    <color name="colorTextDark">#263238</color>
+    <color name="colorAccentOrange">#FB8C00</color>
+    <color name="colorTextDisabled">#BDBDBD</color>
+    <color name="colorIconGrey">#B0BEC5</color>
 </resources>

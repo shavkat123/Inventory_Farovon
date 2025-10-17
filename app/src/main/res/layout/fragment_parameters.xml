@@ -1,82 +1,134 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="12dp">
 
-        <LinearLayout
+        <!-- "From" Card -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp"
+            android:layout_marginBottom="12dp">
 
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_from_location"
-                android:layout_marginEnd="8dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Откуда"
-                android:textSize="18sp"
-                android:textStyle="bold"/>
-        </LinearLayout>
+                android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/edit_text_responsible"
+                <!-- Header -->
+                <LinearLayout
+                    android:id="@+id/from_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@color/colorLightGreyBackground"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_indicator_circle"
+                        android:layout_marginEnd="8dp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Откуда"
+                        android:textColor="@color/colorTextDark"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/from_chevron"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chevron_right"/>
+                </LinearLayout>
+
+                <!-- Body -->
+                <LinearLayout
+                    android:id="@+id/from_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="visible">
+
+                    <TextView style="@style/TappableRow" android:text="Ответственный" />
+                    <View style="@style/Divider" />
+                    <TextView style="@style/TappableRow" android:text="Подразделение" />
+                    <View style="@style/Divider" />
+                    <TextView style="@style/TappableRow" android:text="Организация" />
+
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- "To" Card -->
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Ответственный"
-            android:layout_marginBottom="8dp"/>
+            app:cardCornerRadius="8dp"
+            app:cardElevation="2dp">
 
-        <EditText
-            android:id="@+id/edit_text_department"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Подразделение"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/edit_text_organization"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Организация"
-            android:layout_marginBottom="24dp"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="16dp">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/ic_to_location"
-                android:layout_marginEnd="8dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Куда"
-                android:textSize="18sp"
-                android:textStyle="bold"/>
-        </LinearLayout>
+                android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/edit_text_destination"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Место назначения"/>
+                <!-- Header -->
+                <LinearLayout
+                    android:id="@+id/to_header"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:background="@color/colorLightGreyBackground"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="16dp">
+
+                    <ImageView
+                        android:layout_width="14dp"
+                        android:layout_height="14dp"
+                        android:src="@drawable/ic_indicator_circle"
+                        android:layout_marginEnd="8dp"/>
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Куда"
+                        android:textColor="@color/colorTextDark"
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
+
+                    <ImageView
+                        android:id="@+id/to_chevron"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_chevron_right"/>
+                </LinearLayout>
+
+                <!-- Body -->
+                <LinearLayout
+                    android:id="@+id/to_body"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:visibility="visible">
+
+                    <TextView style="@style/TappableRow" android:text="Место назначения" />
+
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
 
     </LinearLayout>
 </ScrollView>
