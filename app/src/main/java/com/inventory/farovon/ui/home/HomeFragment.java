@@ -30,9 +30,7 @@ public class HomeFragment extends Fragment {
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
 
         List<MenuItem> menuItems = new ArrayList<>();
-        // Existing functionality
         menuItems.add(new MenuItem("Инвентаризация", R.drawable.ic_menu_camera));
-        // Placeholders
         menuItems.add(new MenuItem("Быстрая идентификация", R.drawable.ic_menu_search));
         menuItems.add(new MenuItem("Выдача со склада", R.drawable.ic_menu_upload));
         menuItems.add(new MenuItem("Возврат на склад", R.drawable.ic_menu_download));
@@ -46,6 +44,9 @@ public class HomeFragment extends Fragment {
             if (item.getTitle().equals("Инвентаризация")) {
                 NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
                 navController.navigate(R.id.nav_gallery);
+            } else if (item.getTitle().equals("Перемещение МП")) {
+                Intent intent = new Intent(getActivity(), AssetMovementActivity.class);
+                startActivity(intent);
             } else {
                 Toast.makeText(getContext(), item.getTitle() + " - в разработке", Toast.LENGTH_SHORT).show();
             }
