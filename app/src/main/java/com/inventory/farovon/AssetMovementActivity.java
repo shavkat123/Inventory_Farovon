@@ -36,10 +36,13 @@ public class AssetMovementActivity extends AppCompatActivity {
                     if (position == 0) {
                         tab.setText("Парам.");
                     } else {
-                        tab.setText("ОУ");
+                        tab.setText("ОУ (0)");
                     }
                 }
         ).attach();
+
+        // Set the "ОУ" tab as the default selected tab
+        viewPager.setCurrentItem(1, false);
 
         findViewById(R.id.button_create).setOnClickListener(v ->
                 Toast.makeText(this, "Create Clicked", Toast.LENGTH_SHORT).show());
