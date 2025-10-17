@@ -37,8 +37,7 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        setSupportActionBar(binding.toolbar);
         DrawerLayout drawer = binding.drawerLayout;
         NavigationView navigationView = binding.navView;
 
@@ -137,8 +136,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupDrawerButtons(NavigationView navigationView) {
-        TextView settingsButton = findViewById(R.id.nav_settings_button);
-        TextView logoutButton = findViewById(R.id.nav_logout_button);
+        TextView settingsButton = navigationView.findViewById(R.id.nav_settings_button);
+        TextView logoutButton = navigationView.findViewById(R.id.nav_logout_button);
 
         settingsButton.setOnClickListener(v -> {
             Snackbar.make(binding.getRoot(), "Настройки в разработке", Snackbar.LENGTH_SHORT).show();
