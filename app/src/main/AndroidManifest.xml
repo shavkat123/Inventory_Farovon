@@ -34,6 +34,10 @@
             android:name=".ui.login.LoginActivity"
             android:exported="false" />
         <activity
+            android:name=".IdentificationActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
             android:name=".AssetMovementActivity"
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
