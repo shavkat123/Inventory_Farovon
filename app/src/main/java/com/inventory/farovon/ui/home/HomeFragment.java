@@ -14,7 +14,6 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.inventory.farovon.AssetMovementActivity;
 import com.inventory.farovon.IdentificationActivity;
 import com.inventory.farovon.R;
 
@@ -45,9 +44,6 @@ public class HomeFragment extends Fragment {
             if (item.getTitle().equals("Инвентаризация")) {
                 NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
                 navController.navigate(R.id.nav_gallery);
-            } else if (item.getTitle().equals("Перемещение МП")) {
-                Intent intent = new Intent(getActivity(), AssetMovementActivity.class);
-                startActivity(intent);
             } else if (item.getTitle().equals("Быстрая идентификация")) {
                 Intent intent = new Intent(getActivity(), IdentificationActivity.class);
                 startActivity(intent);
