@@ -18,6 +18,10 @@
     <uses-permission
         android:name="android.permission.ACCESS_FINE_LOCATION"
         tools:ignore="CoarseFineLocation" />
+    <!-- Permissions for Chainway RFID Scanner -->
+    <uses-permission android:name="com.rscja.device.permission.INSERTSCAN" />
+    <uses-feature android:name="android.hardware.rfid" android:required="true" />
+
 
     <application
         android:allowBackup="true"
@@ -35,10 +39,6 @@
             android:exported="false" />
         <activity
             android:name=".IdentificationActivity"
-            android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
-        <activity
-            android:name=".AssetMovementActivity"
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
         <activity

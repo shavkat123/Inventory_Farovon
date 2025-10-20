@@ -61,6 +61,9 @@ dependencies {
 
 
     implementation fileTree(dir: 'libs', include: ['*.*'])
+    // NOTE: You need to add the Chainway SDK .jar or .aar file to the 'libs' folder.
+    // For example, if the file is named 'rfid-module.jar', the line below will include it.
+    // implementation files('libs/rfid-module.jar')
     implementation files('libs/jxl.jar')
 
     implementation 'androidx.appcompat:appcompat:1.7.0'
