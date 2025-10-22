@@ -5,7 +5,7 @@
     android:orientation="vertical"
     android:padding="16dp"
     android:theme="@style/ThemeOverlay.AppCompat.Dark"
-    android:background="@color/design_default_color_primary_dark">
+    android:background="@color/colorPrimary">
 
     <TextView
         android:id="@+id/nav_header_username"
@@ -45,7 +45,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Оффлайн"
-        android:textColor="@android:color/holo_red_light"
+        android:textColor="@color/teal_200"
         android:textSize="16sp"
         android:textStyle="bold"/>
 

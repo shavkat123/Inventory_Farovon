@@ -291,7 +291,7 @@ public class GalleryFragment extends Fragment {
     }
 
     private void sendBarcodeToServer(String barcode) {
-        String url = "http://192.168.90.112/my1c/hs/hw/say";
+        String url = "http://192.168.89.105/my1c/hs/hw/say";
 
         OkHttpClient client = new OkHttpClient();
 

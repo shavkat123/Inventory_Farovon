@@ -5,55 +5,56 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    tools:context=".IdentificationActivity">
+    tools:context=".IssueFromWarehouseActivity">
 
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
 
-        <androidx.appcompat.widget.Toolbar
+        <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/colorPrimary"
-            app:title="Быстрая идентификация метки" />
+            app:title="Выдача со склада"
+            app:menu="@menu/asset_movement_menu" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center"
         android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <ImageView
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_marginBottom="12dp"
-            android:src="@drawable/___450_x_450____photoroom"
-            app:tint="@color/colorIconGrey" />
-
-        <TextView
-            android:layout_width="wrap_content"
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Для начала считывания нажмите курок\nили выберите из списка"
-            android:textAlignment="center"
-            android:textColor="@color/colorIconGrey"
-            android:textSize="16sp" />
+            android:layout_margin="16dp"
+            android:background="@drawable/tab_unselected_background"
+            app:tabBackground="@drawable/tab_background_selector"
+            app:tabIndicatorHeight="0dp"
+            app:tabMode="fixed"
+            app:tabGravity="fill"
+            app:tabTextColor="@color/tab_text_color_selector"/>
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/view_pager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
     </LinearLayout>
 
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fab_scan"
-        android:layout_width="wrap_content"
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_create"
+        style="@style/PrimaryActionButton"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
+        android:layout_gravity="bottom"
         android:layout_margin="16dp"
-        android:text="ШК"
-        app:icon="@drawable/icons8____2_color_hand_drawn_96"
-        app:iconTint="@color/white"
-        android:textColor="@color/white"
-        android:backgroundTint="@color/colorPrimary"/>
+        android:text="СОЗДАТЬ" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

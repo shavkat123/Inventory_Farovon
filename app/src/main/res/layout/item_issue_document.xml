@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/document_number"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Выдача №123"
+                android:textAppearance="?attr/textAppearanceHeadline6" />
+
+            <TextView
+                android:id="@+id/document_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="К выполнению"
+                android:background="@drawable/status_background"
+                android:padding="8dp"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/document_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="21.10.2025 21:37"
+            android:textAppearance="?attr/textAppearanceBody2" />
+
+        <TextView
+            android:id="@+id/document_to"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Куда: Склад №2"
+            android:textAppearance="?attr/textAppearanceBody2" />
+
+    </LinearLayout>
+</com.google.android.material.card.MaterialCardView>
