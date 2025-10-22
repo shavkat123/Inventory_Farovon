@@ -8,7 +8,6 @@
     tools:context=".IdentificationActivity">
 
     <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/appBarLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
@@ -18,63 +17,43 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/colorPrimary"
-            app:title="Быстрая идентификация" />
+            app:title="Быстрая идентификация метки" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rv_scanned_tags"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_above="@+id/status_bar"
-            android:clipToPadding="false"
-            android:padding="8dp"
-            tools:listitem="@layout/list_item_scanned_tag" />
+        <ImageView
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginBottom="12dp"
+            android:src="@drawable/___450_x_450____photoroom"
+            app:tint="@color/colorIconGrey" />
 
         <TextView
-            android:id="@+id/tv_empty_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:drawableTop="@drawable/ic_scanner_big"
-            android:drawablePadding="12dp"
-            android:gravity="center"
-            android:text="Нажмите курок для начала сканирования"
+            android:text="Для начала считывания нажмите курок\nили выберите из списка"
+            android:textAlignment="center"
             android:textColor="@color/colorIconGrey"
-            android:textSize="16sp"
-            android:visibility="gone"
-            tools:visibility="visible"/>
+            android:textSize="16sp" />
+    </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/status_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:background="#EEEEEE"
-            android:orientation="horizontal"
-            android:padding="8dp">
-
-            <TextView
-                android:id="@+id/tv_status"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Статус: не подключен"
-                android:textColor="@color/black" />
-
-            <TextView
-                android:id="@+id/tv_tag_count"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Меток: 0"
-                android:textColor="@color/black" />
-        </LinearLayout>
-
-    </RelativeLayout>
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+        android:id="@+id/fab_scan"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:text="ШК"
+        app:icon="@drawable/icons8____2_color_hand_drawn_96"
+        app:iconTint="@color/white"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/colorPrimary"/>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

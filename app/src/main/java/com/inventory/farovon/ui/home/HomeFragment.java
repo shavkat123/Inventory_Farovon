@@ -14,7 +14,9 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.inventory.farovon.AssetMovementActivity;
 import com.inventory.farovon.IdentificationActivity;
+import com.inventory.farovon.IssueDocumentListActivity;
 import com.inventory.farovon.R;
 
 import java.util.ArrayList;
@@ -30,20 +32,26 @@ public class HomeFragment extends Fragment {
         recyclerView.setLayoutManager(new GridLayoutManager(getContext(), 3));
 
         List<MenuItem> menuItems = new ArrayList<>();
-        menuItems.add(new MenuItem("Инвентаризация", R.drawable.ic_menu_camera));
-        menuItems.add(new MenuItem("Быстрая идентификация", R.drawable.ic_menu_search));
-        menuItems.add(new MenuItem("Выдача со склада", R.drawable.ic_menu_upload));
-        menuItems.add(new MenuItem("Возврат на склад", R.drawable.ic_menu_download));
-        menuItems.add(new MenuItem("Списание", R.drawable.ic_menu_delete));
-        menuItems.add(new MenuItem("Перемещение МП", R.drawable.ic_menu_send));
-        menuItems.add(new MenuItem("Помещенные МОЛ", R.drawable.ic_menu_myplaces));
-        menuItems.add(new MenuItem("Первичная инвентаризация", R.drawable.ic_menu_add));
+        menuItems.add(new MenuItem("Инвентаризация", R.drawable.icons8__96));
+        menuItems.add(new MenuItem("Быстрая идентификация", R.drawable.icons8___96));
+        menuItems.add(new MenuItem("Выдача со склада", R.drawable.icons8___64));
+        menuItems.add(new MenuItem("Возврат на склад", R.drawable.icons8___900));
+        menuItems.add(new MenuItem("Списание ОС", R.drawable.icons8__11));
+        menuItems.add(new MenuItem("Перемещение МП", R.drawable.icons8____22));
+        menuItems.add(new MenuItem("Помещенные между МОЛ", R.drawable.icons8__12));
+        menuItems.add(new MenuItem("Первичная инвентаризация", R.drawable.icons8___));
 
 
         MainMenuAdapter adapter = new MainMenuAdapter(menuItems, item -> {
             if (item.getTitle().equals("Инвентаризация")) {
                 NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
                 navController.navigate(R.id.nav_gallery);
+            } else if (item.getTitle().equals("Перемещение МП")) {
+                Intent intent = new Intent(getActivity(), AssetMovementActivity.class);
+                startActivity(intent);
+            } else if (item.getTitle().equals("Выдача со склада")) {
+                Intent intent = new Intent(getActivity(), IssueDocumentListActivity.class);
+                startActivity(intent);
             } else if (item.getTitle().equals("Быстрая идентификация")) {
                 Intent intent = new Intent(getActivity(), IdentificationActivity.class);
                 startActivity(intent);

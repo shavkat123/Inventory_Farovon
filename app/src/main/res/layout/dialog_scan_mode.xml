@@ -1,73 +1,67 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@drawable/bottom_sheet_background">
+    android:padding="24dp">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
         android:text="Режим считывания"
-        android:textColor="@color/colorTextPrimary"
         android:textSize="20sp"
+        android:textColor="@color/colorTextPrimary"
         android:textStyle="bold"
-        android:layout_marginBottom="24dp" />
+        android:layout_marginBottom="24dp"/>
 
-    <com.google.android.material.chip.ChipGroup
-        android:id="@+id/chip_group_scan_mode"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:singleSelection="true"
-        app:chipSpacingHorizontal="8dp">
+        android:orientation="horizontal"
+        android:layout_marginBottom="24dp">
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_rfid"
-            style="@style/Widget.App.Chip.Choice"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_rfid"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="RFID"
-            android:textAlignment="center"/>
+            android:text="RFID"/>
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_barcode"
-            style="@style/Widget.App.Chip.Choice"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_barcode"
+            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="ШК"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_sn"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_weight="1"
+            android:text="SN"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_camera"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="ШК"
-            android:checked="true"
-            android:textAlignment="center"/>
+            android:text="КАМЕРА"/>
 
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_sn"
-            style="@style/Widget.App.Chip.Choice"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="SN"
-            android:textAlignment="center"/>
-
-        <com.google.android.material.chip.Chip
-            android:id="@+id/chip_camera"
-            style="@style/Widget.App.Chip.Choice"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="КАМЕРА"
-            android:textAlignment="center"/>
-    </com.google.android.material.chip.ChipGroup>
+    </LinearLayout>
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/button_manual_input"
         style="@style/PrimaryActionButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="РУЧНОЙ ВВОД" />
+        android:text="РУЧНОЙ ВВОД"/>
 
 </LinearLayout>

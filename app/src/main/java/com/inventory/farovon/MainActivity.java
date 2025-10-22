@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         NavigationUI.setupActionBarWithNavController(this, navController, mAppBarConfiguration);
         NavigationUI.setupWithNavController(navigationView, navController);
+
+        setupDrawerButtons(navigationView);
     }
 
     private void updateNavHeader() {
@@ -67,5 +69,22 @@ public class MainActivity extends AppCompatActivity {
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
         return NavigationUI.navigateUp(navController, mAppBarConfiguration)
                 || super.onSupportNavigateUp();
+    }
+
+    private void setupDrawerButtons(NavigationView navigationView) {
+        TextView settingsButton = navigationView.findViewById(R.id.nav_settings_button);
+        TextView logoutButton = navigationView.findViewById(R.id.nav_logout_button);
+
+        settingsButton.setOnClickListener(v -> {
+            Snackbar.make(binding.getRoot(), "Настройки в разработке", Snackbar.LENGTH_SHORT).show();
+            binding.drawerLayout.closeDrawers();
+        });
+
+        logoutButton.setOnClickListener(v -> {
+            sessionManager.logoutUser();
+            Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        });
     }
 }
