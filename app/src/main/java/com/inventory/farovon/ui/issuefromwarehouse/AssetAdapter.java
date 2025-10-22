@@ -15,7 +15,7 @@ public class AssetAdapter extends RecyclerView.Adapter<AssetAdapter.ViewHolder> 
     private List<Asset> assets;
 
     public AssetAdapter(List<Asset> assets) {
-        this.assets = assets;
+        this.assets = assets == null ? new java.util.ArrayList<>() : assets;
     }
 
     @NonNull
