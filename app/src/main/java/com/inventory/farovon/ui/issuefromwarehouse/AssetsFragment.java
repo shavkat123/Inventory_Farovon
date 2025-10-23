@@ -62,12 +62,45 @@ public class AssetsFragment extends Fragment {
 
         updateVisibility();
 
-        view.findViewById(R.id.button_rfid_scan).setOnClickListener(v ->
-                Toast.makeText(getContext(), "RFID Scan clicked", Toast.LENGTH_SHORT).show());
+        view.findViewById(R.id.button_rfid_scan).setOnClickListener(v -> showScannerPowerDialog());
 
         view.findViewById(R.id.button_select).setOnClickListener(v -> showSelectAssetsDialog());
-
         return view;
+    }
+
+    private void showScannerPowerDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_scanner_power, null);
+        builder.setView(dialogView);
+
+        android.widget.SeekBar powerSeekBar = dialogView.findViewById(R.id.power_seekbar);
+        android.widget.TextView powerValueText = dialogView.findViewById(R.id.power_value_text);
+
+        powerSeekBar.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+                powerValueText.setText(String.valueOf(progress + 1));
+            }
+
+            @Override
+            public void onStartTrackingTouch(android.widget.SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(android.widget.SeekBar seekBar) {
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+
+        dialogView.findViewById(R.id.confirm_button).setOnClickListener(v -> {
+            int power = powerSeekBar.getProgress() + 1;
+            Toast.makeText(getContext(), "Установлена мощность сканера: " + power, Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+
+        dialog.show();
     }
 
     private void updateVisibility() {

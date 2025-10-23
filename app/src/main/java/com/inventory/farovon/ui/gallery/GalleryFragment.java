@@ -36,9 +36,11 @@ import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
+import com.inventory.farovon.MainActivity;
 import com.inventory.farovon.NomenclatureActivity;
 import com.inventory.farovon.R;
 import com.inventory.farovon.Nomenclature;
+import com.inventory.farovon.ui.login.SessionManager;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -81,9 +83,13 @@ public class GalleryFragment extends Fragment {
     // 🔹 Поле для рамки overlay
     private Rect overlayRect;
 
+    private SessionManager sessionManager;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        sessionManager = new SessionManager(getActivity());
 
         // Регистрируем launcher разрешения
         requestPermissionLauncher = registerForActivityResult(
@@ -291,8 +297,9 @@ public class GalleryFragment extends Fragment {
     }
 
     private void sendBarcodeToServer(String barcode) {
-        String url = "http://192.168.89.105/my1c/hs/hw/say";
-
+        String serverIP = sessionManager.getIpAddress();
+        String url = "http://" + serverIP +"/my1c/hs/hw/say";
+        Log.i("GalleryFragment", url);
         OkHttpClient client = new OkHttpClient();
 
         // Тело запроса в JSON

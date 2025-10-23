@@ -71,11 +71,32 @@ public class IssueFromWarehouseActivity extends AppCompatActivity {
                 }
         ).attach();
 
+        View createButton = findViewById(R.id.button_create);
+
         if (isEditMode) {
-            findViewById(R.id.button_create).setVisibility(View.GONE);
+            createButton.setVisibility(View.GONE);
         } else {
-            findViewById(R.id.button_create).setOnClickListener(v -> createDocument());
+            createButton.setOnClickListener(v -> createDocument());
         }
+
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                if (tab.getPosition() == 0) {
+                    createButton.setVisibility(View.VISIBLE);
+                } else {
+                    createButton.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
     }
 
     private void createDocument() {

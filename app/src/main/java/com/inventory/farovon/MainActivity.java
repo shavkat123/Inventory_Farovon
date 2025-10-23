@@ -56,11 +56,18 @@ public class MainActivity extends AppCompatActivity {
     private void updateNavHeader() {
         NavigationView navigationView = binding.navView;
         View headerView = navigationView.getHeaderView(0);
+
         TextView navUsername = headerView.findViewById(R.id.nav_header_username);
         String username = sessionManager.getUsername();
 
         if (username != null) {
             navUsername.setText(username);
+        }
+
+        TextView navServerIP = headerView.findViewById(R.id.nav_header_server_ip);
+        String serverIP = sessionManager.getIpAddress();
+        if (serverIP != null) {
+            navServerIP.setText(serverIP);
         }
     }
 
