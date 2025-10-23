@@ -20,12 +20,10 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Здесь будет древовидная структура организаций"
-        app:layout_anchor="@id/toolbar"
-        app:layout_anchorGravity="bottom|center"
-        android:layout_gravity="center" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/organization_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
