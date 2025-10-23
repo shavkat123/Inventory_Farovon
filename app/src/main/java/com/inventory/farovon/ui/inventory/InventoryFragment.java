@@ -21,6 +21,7 @@ public class InventoryFragment extends Fragment {
 
         LinearLayout orgInventoryButton = root.findViewById(R.id.org_inventory_button);
         LinearLayout quickInventoryButton = root.findViewById(R.id.quick_inventory_button);
+        LinearLayout roomInventoryButton = root.findViewById(R.id.room_inventory_button);
 
         orgInventoryButton.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), com.inventory.farovon.OrganizationInventoryActivity.class);
@@ -30,6 +31,11 @@ public class InventoryFragment extends Fragment {
         quickInventoryButton.setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), com.inventory.farovon.IdentificationActivity.class);
             startActivity(intent);
+        });
+
+        roomInventoryButton.setOnClickListener(v -> {
+            androidx.navigation.NavController navController = androidx.navigation.Navigation.findNavController(requireActivity(), com.inventory.farovon.R.id.nav_host_fragment_content_main);
+            navController.navigate(com.inventory.farovon.R.id.nav_room_inventory);
         });
 
         return root;

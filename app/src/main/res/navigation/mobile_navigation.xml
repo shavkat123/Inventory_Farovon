@@ -12,8 +12,13 @@
         tools:layout="@layout/fragment_home" />
 
     <fragment
-        android:id="@+id/nav_gallery"
+        android:id="@+id/nav_inventory"
         android:name="com.inventory.farovon.ui.inventory.InventoryFragment"
         android:label="Инвентаризация"
         tools:layout="@layout/fragment_inventory" />
+    <fragment
+        android:id="@+id/nav_room_inventory"
+        android:name="com.inventory.farovon.ui.gallery.GalleryFragment"
+        android:label="Инвентаризация по помещению"
+        tools:layout="@layout/fragment_gallery" />
 </navigation>

@@ -45,7 +45,7 @@ public class HomeFragment extends Fragment {
         MainMenuAdapter adapter = new MainMenuAdapter(menuItems, item -> {
             if (item.getTitle().equals("Инвентаризация")) {
                 NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-                navController.navigate(R.id.nav_gallery);
+                navController.navigate(R.id.nav_inventory);
             } else if (item.getTitle().equals("Перемещение МП")) {
                 Intent intent = new Intent(getActivity(), AssetMovementActivity.class);
                 startActivity(intent);
