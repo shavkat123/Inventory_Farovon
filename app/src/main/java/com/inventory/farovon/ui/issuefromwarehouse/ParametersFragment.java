@@ -94,7 +94,7 @@ public class ParametersFragment extends Fragment {
                 fromDepartment.getText().toString(),
                 fromOrganization.getText().toString(),
                 toLocation.getText().toString(),
-                "К выполнению",
+                "Выдан",
                 assets
         );
     }

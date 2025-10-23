@@ -30,7 +30,7 @@
                 android:id="@+id/asset_status"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="К выполнению"
+                android:text="Выдан"
                 android:background="@drawable/status_background"
                 android:padding="8dp"
                 android:textColor="@android:color/white" />

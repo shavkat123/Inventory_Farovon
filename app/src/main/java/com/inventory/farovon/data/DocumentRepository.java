@@ -15,12 +15,12 @@ public class DocumentRepository {
     private DocumentRepository() {
         // Add some initial dummy data
         List<Asset> assets1 = new ArrayList<>();
-        assets1.add(new Asset("Ноутбук Dell", "INV001", "SN001", "Склад 1", "Технопарк", "К выполнению"));
-        assets1.add(new Asset("Монитор Samsung", "INV002", "SN002", "Склад 1", "Технопарк", "К выполнению"));
+        assets1.add(new Asset("Ноутбук Dell", "INV001", "SN001", "Склад 1", "Технопарк", "Выдан"));
+        assets1.add(new Asset("Монитор Samsung", "INV002", "SN002", "Склад 1", "Технопарк", "Выдан"));
         documents.add(new IssueDocument("1", new Date(), "Петров И.И.", "IT-отдел", "Технопарк", "Кабинет 101", "Проведен", assets1));
 
         List<Asset> assets2 = new ArrayList<>();
-        assets2.add(new Asset("Клавиатура", "INV003", "SN003", "Склад 1", "Технопарк", "К выполнению"));
+        assets2.add(new Asset("Клавиатура", "INV003", "SN003", "Склад 1", "Технопарк", "Выдан"));
         documents.add(new IssueDocument("2", new Date(), "Сидоров А.А.", "Бухгалтерия", "Технопарк", "Кабинет 205", "К выполнению", assets2));
     }
 
