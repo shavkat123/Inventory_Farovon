@@ -61,4 +61,22 @@
         <item name="android:layout_marginStart">16dp</item>
     </style>
 
+    <!-- Tree View Card Styles -->
+    <style name="TreeNodeCard" parent="Widget.MaterialComponents.CardView">
+        <item name="cardElevation">4dp</item>
+        <item name="cardCornerRadius">8dp</item>
+    </style>
+
+    <style name="TreeNodeCard.Level0" parent="TreeNodeCard">
+        <item name="cardBackgroundColor">@color/tree_level_0</item>
+    </style>
+
+    <style name="TreeNodeCard.Level1" parent="TreeNodeCard">
+        <item name="cardBackgroundColor">@color/tree_level_1</item>
+    </style>
+
+    <style name="TreeNodeCard.Level2" parent="TreeNodeCard">
+        <item name="cardBackgroundColor">@color/tree_level_2</item>
+    </style>
+
 </resources>

@@ -19,4 +19,9 @@
     <color name="colorAccentOrange">#FB8C00</color>
     <color name="colorTextDisabled">#BDBDBD</color>
     <color name="colorIconGrey">#B0BEC5</color>
+
+    <!-- Tree View Colors -->
+    <color name="tree_level_0">#1565C0</color> <!-- Blue 800 -->
+    <color name="tree_level_1">#1976D2</color> <!-- Blue 700 -->
+    <color name="tree_level_2">#1E88E5</color> <!-- Blue 600 -->
 </resources>

@@ -26,6 +26,11 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
 
         RecyclerView recyclerView = findViewById(R.id.organization_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.addItemDecoration(new TreeItemDecoration(
+                ContextCompat.getColor(this, R.color.colorPrimary),
+                4f,
+                64
+        ));
 
         List<OrganizationItem> items = createTestData();
         OrganizationAdapter adapter = new OrganizationAdapter(items);
@@ -35,24 +40,26 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
     private List<OrganizationItem> createTestData() {
         List<OrganizationItem> items = new ArrayList<>();
 
-        OrganizationItem org1 = new OrganizationItem("Организация 1", 0);
-        OrganizationItem room1_1 = new OrganizationItem("Помещение 1.1", 1);
-        OrganizationItem office1_1_1 = new OrganizationItem("Офис 1.1.1", 2);
-        OrganizationItem office1_1_2 = new OrganizationItem("Офис 1.1.2", 2);
-        room1_1.addChild(office1_1_1);
-        room1_1.addChild(office1_1_2);
-        org1.addChild(room1_1);
+        OrganizationItem org1 = new OrganizationItem("Главный офис", 0);
+        OrganizationItem department1_1 = new OrganizationItem("Отдел продаж", 1);
+        OrganizationItem office1_1_1 = new OrganizationItem("Кабинет 101", 2);
+        OrganizationItem office1_1_2 = new OrganizationItem("Кабинет 102", 2);
+        department1_1.addChild(office1_1_1);
+        department1_1.addChild(office1_1_2);
+        org1.addChild(department1_1);
 
-        OrganizationItem room1_2 = new OrganizationItem("Помещение 1.2", 1);
-        OrganizationItem office1_2_1 = new OrganizationItem("Офис 1.2.1", 2);
-        room1_2.addChild(office1_2_1);
-        org1.addChild(room1_2);
+        OrganizationItem department1_2 = new OrganizationItem("Отдел маркетинга", 1);
+        OrganizationItem office1_2_1 = new OrganizationItem("Кабинет 201", 2);
+        department1_2.addChild(office1_2_1);
+        org1.addChild(department1_2);
 
         items.add(org1);
 
-        OrganizationItem org2 = new OrganizationItem("Организация 2", 0);
-        OrganizationItem room2_1 = new OrganizationItem("Помещение 2.1", 1);
-        org2.addChild(room2_1);
+        OrganizationItem org2 = new OrganizationItem("Филиал", 0);
+        OrganizationItem department2_1 = new OrganizationItem("Склад", 1);
+        OrganizationItem office2_1_1 = new OrganizationItem("Помещение A", 2);
+        department2_1.addChild(office2_1_1);
+        org2.addChild(department2_1);
         items.add(org2);
 
         return items;
