@@ -1,6 +1,7 @@
 package com.inventory.farovon.ui.issuefromwarehouse;
 
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,8 +14,6 @@ import com.inventory.farovon.R;
 import com.inventory.farovon.model.Asset;
 import com.inventory.farovon.model.IssueDocument;
 
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -24,7 +23,8 @@ public class ParametersFragment extends Fragment {
     private IssueDocument document;
     private boolean isEditMode = false;
 
-    private EditText fromResponsible, fromDepartment, fromOrganization, toLocation;
+    private EditText fromIssuer, fromIssuerDepartment, fromOrganization, fromLocation;
+    private EditText toRecipient, toRecipientDepartment, toOrganization, toLocation;
 
     public static ParametersFragment newInstance(IssueDocument document, boolean isEditMode) {
         ParametersFragment fragment = new ParametersFragment();
@@ -48,9 +48,13 @@ public class ParametersFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_parameters, container, false);
 
-        fromResponsible = view.findViewById(R.id.from_responsible);
-        fromDepartment = view.findViewById(R.id.from_department);
+        fromIssuer = view.findViewById(R.id.from_issuer);
+        fromIssuerDepartment = view.findViewById(R.id.from_issuer_department);
         fromOrganization = view.findViewById(R.id.from_organization);
+        fromLocation = view.findViewById(R.id.from_location);
+        toRecipient = view.findViewById(R.id.to_recipient);
+        toRecipientDepartment = view.findViewById(R.id.to_recipient_department);
+        toOrganization = view.findViewById(R.id.to_organization);
         toLocation = view.findViewById(R.id.to_location);
 
         if (isEditMode) {
@@ -74,25 +78,74 @@ public class ParametersFragment extends Fragment {
     private void populateUI() {
         if (document == null) return;
 
-        fromResponsible.setText(document.getFromResponsible());
-        fromDepartment.setText(document.getFromDepartment());
+        fromIssuer.setText(document.getFromIssuer());
+        fromIssuerDepartment.setText(document.getFromIssuerDepartment());
         fromOrganization.setText(document.getFromOrganization());
+        fromLocation.setText(document.getFromLocation());
+        toRecipient.setText(document.getToRecipient());
+        toRecipientDepartment.setText(document.getToRecipientDepartment());
+        toOrganization.setText(document.getToOrganization());
         toLocation.setText(document.getToLocation());
 
         // Make fields non-editable
-        fromResponsible.setEnabled(false);
-        fromDepartment.setEnabled(false);
+        fromIssuer.setEnabled(false);
+        fromIssuerDepartment.setEnabled(false);
         fromOrganization.setEnabled(false);
+        fromLocation.setEnabled(false);
+        toRecipient.setEnabled(false);
+        toRecipientDepartment.setEnabled(false);
+        toOrganization.setEnabled(false);
         toLocation.setEnabled(false);
+    }
+
+    public boolean validateFields() {
+        boolean isValid = true;
+        if (TextUtils.isEmpty(fromIssuer.getText())) {
+            fromIssuer.setError("Поле не должно быть пустым");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(fromIssuerDepartment.getText())) {
+            fromIssuerDepartment.setError("Поле не должно быть пустым");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(fromOrganization.getText())) {
+            fromOrganization.setError("Поле не должно быть пустым");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(fromLocation.getText())) {
+            fromLocation.setError("Поле не должно быть пустым");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(toRecipient.getText())) {
+            toRecipient.setError("Поле не должно быть пустым");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(toRecipientDepartment.getText())) {
+            toRecipientDepartment.setError("Поле не должно быть пустым");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(toOrganization.getText())) {
+            toOrganization.setError("Поле не должно быть пустым");
+            isValid = false;
+        }
+        if (TextUtils.isEmpty(toLocation.getText())) {
+            toLocation.setError("Поле не должно быть пустым");
+            isValid = false;
+        }
+        return isValid;
     }
 
     public IssueDocument getDocumentData(List<Asset> assets) {
         return new IssueDocument(
                 UUID.randomUUID().toString(),
                 new Date(),
-                fromResponsible.getText().toString(),
-                fromDepartment.getText().toString(),
+                fromIssuer.getText().toString(),
+                fromIssuerDepartment.getText().toString(),
                 fromOrganization.getText().toString(),
+                fromLocation.getText().toString(),
+                toRecipient.getText().toString(),
+                toRecipientDepartment.getText().toString(),
+                toOrganization.getText().toString(),
                 toLocation.getText().toString(),
                 "Выдан",
                 assets

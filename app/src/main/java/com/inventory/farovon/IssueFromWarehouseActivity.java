@@ -81,10 +81,14 @@ public class IssueFromWarehouseActivity extends AppCompatActivity {
     private void createDocument() {
         ParametersFragment fragment = (ParametersFragment) getSupportFragmentManager().findFragmentByTag("f0");
         if (fragment != null) {
-            IssueDocument newDocument = fragment.getDocumentData(assets);
-            DocumentRepository.getInstance().addDocument(newDocument);
-            Toast.makeText(this, "Документ создан", Toast.LENGTH_SHORT).show();
-            finish();
+            if (fragment.validateFields()) {
+                IssueDocument newDocument = fragment.getDocumentData(assets);
+                DocumentRepository.getInstance().addDocument(newDocument);
+                Toast.makeText(this, "Документ создан", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(this, "Пожалуйста, заполните все поля", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
