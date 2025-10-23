@@ -44,7 +44,8 @@
         <activity
             android:name=".IssueFromWarehouseActivity"
             android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar"
+            android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".IssueDocumentListActivity"
             android:exported="false"

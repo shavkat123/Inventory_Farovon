@@ -71,20 +71,45 @@ public class IssueFromWarehouseActivity extends AppCompatActivity {
                 }
         ).attach();
 
+        View createButton = findViewById(R.id.button_create);
+
         if (isEditMode) {
-            findViewById(R.id.button_create).setVisibility(View.GONE);
+            createButton.setVisibility(View.GONE);
         } else {
-            findViewById(R.id.button_create).setOnClickListener(v -> createDocument());
+            createButton.setOnClickListener(v -> createDocument());
         }
+
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                if (tab.getPosition() == 0) {
+                    createButton.setVisibility(View.VISIBLE);
+                } else {
+                    createButton.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+            }
+        });
     }
 
     private void createDocument() {
         ParametersFragment fragment = (ParametersFragment) getSupportFragmentManager().findFragmentByTag("f0");
         if (fragment != null) {
-            IssueDocument newDocument = fragment.getDocumentData(assets);
-            DocumentRepository.getInstance().addDocument(newDocument);
-            Toast.makeText(this, "Документ создан", Toast.LENGTH_SHORT).show();
-            finish();
+            if (fragment.validateFields()) {
+                IssueDocument newDocument = fragment.getDocumentData(assets);
+                DocumentRepository.getInstance().addDocument(newDocument);
+                Toast.makeText(this, "Документ создан", Toast.LENGTH_SHORT).show();
+                finish();
+            } else {
+                Toast.makeText(this, "Пожалуйста, заполните все поля", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 

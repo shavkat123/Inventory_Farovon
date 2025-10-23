@@ -6,7 +6,24 @@
     android:layout_height="match_parent"
     android:background="@color/white">
 
-    <!-- Empty State -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/assets_recycler_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/footer_actions"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_asset" />
+
+    <!-- Empty State group -->
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/empty_state_group"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:constraint_referenced_ids="empty_state_icon,empty_state_text" />
+
     <ImageView
         android:id="@+id/empty_state_icon"
         android:layout_width="64dp"
@@ -29,7 +46,7 @@
         android:textAlignment="center"
         android:textColor="@color/colorIconGrey"
         android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/footer_actions"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/empty_state_icon" />

@@ -9,6 +9,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.Group;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,6 +25,8 @@ public class AssetsFragment extends Fragment {
 
     private List<Asset> assets = new ArrayList<>();
     private AssetAdapter adapter;
+    private RecyclerView recyclerView;
+    private Group emptyStateGroup;
 
     public static AssetsFragment newInstance(List<Asset> assets) {
         AssetsFragment fragment = new AssetsFragment();
@@ -39,6 +42,9 @@ public class AssetsFragment extends Fragment {
         if (getArguments() != null) {
             assets = (List<Asset>) getArguments().getSerializable("ASSETS");
         }
+        if (assets == null) {
+            assets = new ArrayList<>();
+        }
     }
 
     @Nullable
@@ -46,18 +52,64 @@ public class AssetsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_assets, container, false);
 
-        RecyclerView recyclerView = view.findViewById(R.id.assets_recycler_view);
+        recyclerView = view.findViewById(R.id.assets_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        emptyStateGroup = view.findViewById(R.id.empty_state_group);
 
         adapter = new AssetAdapter(assets);
         recyclerView.setAdapter(adapter);
 
-        view.findViewById(R.id.button_rfid_scan).setOnClickListener(v ->
-                Toast.makeText(getContext(), "RFID Scan clicked", Toast.LENGTH_SHORT).show());
+        updateVisibility();
+
+        view.findViewById(R.id.button_rfid_scan).setOnClickListener(v -> showScannerPowerDialog());
 
         view.findViewById(R.id.button_select).setOnClickListener(v -> showSelectAssetsDialog());
+    }
 
-        return view;
+    private void showScannerPowerDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        LayoutInflater inflater = requireActivity().getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_scanner_power, null);
+        builder.setView(dialogView);
+
+        android.widget.SeekBar powerSeekBar = dialogView.findViewById(R.id.power_seekbar);
+        android.widget.TextView powerValueText = dialogView.findViewById(R.id.power_value_text);
+
+        powerSeekBar.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+                powerValueText.setText(String.valueOf(progress + 1));
+            }
+
+            @Override
+            public void onStartTrackingTouch(android.widget.SeekBar seekBar) {
+            }
+
+            @Override
+            public void onStopTrackingTouch(android.widget.SeekBar seekBar) {
+            }
+        });
+
+        AlertDialog dialog = builder.create();
+
+        dialogView.findViewById(R.id.confirm_button).setOnClickListener(v -> {
+            int power = powerSeekBar.getProgress() + 1;
+            Toast.makeText(getContext(), "Установлена мощность сканера: " + power, Toast.LENGTH_SHORT).show();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private void updateVisibility() {
+        if (assets.isEmpty()) {
+            recyclerView.setVisibility(View.GONE);
+            emptyStateGroup.setVisibility(View.VISIBLE);
+        } else {
+            recyclerView.setVisibility(View.VISIBLE);
+            emptyStateGroup.setVisibility(View.GONE);
+        }
     }
 
     private void showSelectAssetsDialog() {
@@ -79,11 +131,16 @@ public class AssetsFragment extends Fragment {
 
         AlertDialog dialog = builder.create();
         dialogView.findViewById(R.id.confirm_button).setOnClickListener(v -> {
-            assets.addAll(selectableAdapter.getSelectedAssets());
-            adapter.notifyDataSetChanged();
+            addAssets(selectableAdapter.getSelectedAssets());
             dialog.dismiss();
         });
 
         dialog.show();
+    }
+
+    public void addAssets(List<Asset> newAssets) {
+        assets.addAll(newAssets);
+        adapter.notifyDataSetChanged();
+        updateVisibility();
     }
 }
