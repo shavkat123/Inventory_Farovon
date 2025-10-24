@@ -24,6 +24,10 @@ public class OrganizationItem {
         return level;
     }
 
+    public void setLevel(int level) {
+        this.level = level;
+    }
+
     public boolean isExpanded() {
         return isExpanded;
     }
