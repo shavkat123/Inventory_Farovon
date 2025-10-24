@@ -108,18 +108,12 @@ public class OrganizationAdapter extends RecyclerView.Adapter<OrganizationAdapte
             itemView.setPadding(item.getLevel() * 64, itemView.getPaddingTop(), itemView.getPaddingRight(), itemView.getPaddingBottom());
 
             Context context = itemView.getContext();
-            int colorRes;
-            switch (item.getLevel()) {
-                case 0:
-                    colorRes = R.color.tree_level_0;
-                    break;
-                case 1:
-                    colorRes = R.color.tree_level_1;
-                    break;
-                default:
-                    colorRes = R.color.tree_level_2;
-                    break;
-            }
+            int[] colorResources = {
+                    R.color.tree_level_0,
+                    R.color.tree_level_1,
+                    R.color.tree_level_2
+            };
+            int colorRes = colorResources[Math.min(item.getLevel(), colorResources.length - 1)];
             cardView.setCardBackgroundColor(ContextCompat.getColor(context, colorRes));
 
             itemView.setOnClickListener(v -> {
