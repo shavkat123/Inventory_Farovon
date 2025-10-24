@@ -123,10 +123,9 @@ public class OrganizationAdapter extends RecyclerView.Adapter<OrganizationAdapte
                     // If the item has a code, it's a department/room. Open the inventory list.
                     String code = clickedItem.getCode();
                     if (code != null && !code.isEmpty()) {
-                        Context context = itemView.getContext();
-                        android.content.Intent intent = new android.content.Intent(context, InventoryListActivity.class);
+                        android.content.Intent intent = new android.content.Intent(itemView.getContext(), InventoryListActivity.class);
                         intent.putExtra(InventoryListActivity.EXTRA_DEPARTMENT_CODE, code);
-                        context.startActivity(intent);
+                        itemView.getContext().startActivity(intent);
                     }
 
                     // If the item has children, toggle its expanded state.
