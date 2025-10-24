@@ -119,6 +119,14 @@ public class OrganizationAdapter extends RecyclerView.Adapter<OrganizationAdapte
             itemView.setOnClickListener(v -> {
                 if (getAdapterPosition() != RecyclerView.NO_POSITION) {
                     OrganizationItem clickedItem = visibleItems.get(getAdapterPosition());
+
+                    // Display a Toast with the item's code, if it has one.
+                    String code = clickedItem.getCode();
+                    if (code != null && !code.isEmpty()) {
+                        Toast.makeText(itemView.getContext(), code, Toast.LENGTH_SHORT).show();
+                    }
+
+                    // If the item has children, toggle its expanded state.
                     if (!clickedItem.getChildren().isEmpty()) {
                         clickedItem.setExpanded(!clickedItem.isExpanded());
                         updateVisibleItems();

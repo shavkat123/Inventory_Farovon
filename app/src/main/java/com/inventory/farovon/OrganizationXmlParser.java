@@ -44,7 +44,9 @@ public class OrganizationXmlParser {
 
                 for (Element deptElement : departmentElements) {
                     String deptName = deptElement.getAttribute("name");
+                    String deptCode = deptElement.getAttribute("code");
                     OrganizationItem deptItem = new OrganizationItem(deptName, 1);
+                    deptItem.setCode(deptCode);
                     departmentMap.put(deptName, deptItem);
                 }
 

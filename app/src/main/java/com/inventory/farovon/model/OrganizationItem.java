@@ -5,6 +5,7 @@ import java.util.List;
 
 public class OrganizationItem {
     private String name;
+    private String code;
     private int level;
     private boolean isExpanded;
     private List<OrganizationItem> children;
@@ -18,6 +19,14 @@ public class OrganizationItem {
 
     public String getName() {
         return name;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public int getLevel() {
