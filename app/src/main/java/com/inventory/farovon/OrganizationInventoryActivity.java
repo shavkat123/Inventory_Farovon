@@ -93,8 +93,14 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
+                        String xmlString = response.body().string();
+                        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("ref=\"([^\"]*)\"([^\"]*)\"\"");
+                        java.util.regex.Matcher matcher = pattern.matcher(xmlString);
+                        xmlString = matcher.replaceAll("ref=\"$1&quot;$2&quot;\"");
+                        java.io.InputStream is = new java.io.ByteArrayInputStream(xmlString.getBytes());
+
                         OrganizationXmlParser parser = new OrganizationXmlParser();
-                        List<OrganizationItem> items = parser.parse(response.body().byteStream());
+                        List<OrganizationItem> items = parser.parse(is);
                         mainHandler.post(() -> {
                             progressBar.setVisibility(View.GONE);
                             recyclerView.setVisibility(View.VISIBLE);
