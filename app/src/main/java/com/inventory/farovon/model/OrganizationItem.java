@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OrganizationItem {
+    private int id;
     private String name;
     private String code;
     private int level;
@@ -15,6 +16,14 @@ public class OrganizationItem {
         this.level = level;
         this.isExpanded = false;
         this.children = new ArrayList<>();
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {

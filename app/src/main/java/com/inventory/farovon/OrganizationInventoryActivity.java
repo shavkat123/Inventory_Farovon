@@ -7,7 +7,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -15,12 +14,19 @@ import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.DepartmentEntity;
+import com.inventory.farovon.db.OrganizationEntity;
 import com.inventory.farovon.model.OrganizationItem;
 import com.inventory.farovon.ui.login.SessionManager;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -38,7 +44,9 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private OrganizationAdapter adapter;
     private SessionManager sessionManager;
+    private AppDatabase db;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +54,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_organization_inventory);
 
         sessionManager = new SessionManager(this);
+        db = AppDatabase.getDatabase(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -63,18 +72,56 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                 64
         ));
 
-        fetchOrganizationStructure();
+        loadDataFromDb();
+        syncData();
     }
 
-    private void fetchOrganizationStructure() {
+    private void loadDataFromDb() {
         progressBar.setVisibility(View.VISIBLE);
-        recyclerView.setVisibility(View.GONE);
+        databaseExecutor.execute(() -> {
+            List<OrganizationEntity> orgEntities = db.organizationDao().getAll();
+            List<OrganizationItem> orgItems = new ArrayList<>();
 
+            for (OrganizationEntity orgEntity : orgEntities) {
+                OrganizationItem orgItem = new OrganizationItem(orgEntity.name, 0);
+                List<DepartmentEntity> deptEntities = db.departmentDao().getByOrganizationId(orgEntity.id);
+
+                Map<String, OrganizationItem> departmentMap = new HashMap<>();
+                for (DepartmentEntity deptEntity : deptEntities) {
+                    OrganizationItem deptItem = new OrganizationItem(deptEntity.name, 1);
+                    deptItem.setId(deptEntity.id);
+                    deptItem.setCode(deptEntity.code);
+                    departmentMap.put(deptEntity.name, deptItem);
+                }
+
+                for (DepartmentEntity deptEntity : deptEntities) {
+                     OrganizationItem deptItem = departmentMap.get(deptEntity.name);
+                     if (deptEntity.parentRef != null && !deptEntity.parentRef.isEmpty() && departmentMap.containsKey(deptEntity.parentRef)) {
+                         OrganizationItem parentItem = departmentMap.get(deptEntity.parentRef);
+                         if (parentItem != null) {
+                            parentItem.addChild(deptItem);
+                            deptItem.setLevel(parentItem.getLevel() + 1);
+                         }
+                     } else {
+                         orgItem.addChild(deptItem);
+                     }
+                }
+                orgItems.add(orgItem);
+            }
+
+            mainHandler.post(() -> {
+                progressBar.setVisibility(View.GONE);
+                adapter = new OrganizationAdapter(orgItems);
+                recyclerView.setAdapter(adapter);
+            });
+        });
+    }
+
+    private void syncData() {
         String ip = sessionManager.getIpAddress();
         String username = sessionManager.getUsername();
         String password = sessionManager.getPassword();
         String url = "http://" + ip + "/my1c/hs/checking/schema";
-        Log.d(TAG, "Requesting URL: " + url);
 
         OkHttpClient client = new OkHttpClient();
         RequestBody body = RequestBody.create("", null);
@@ -87,117 +134,58 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.e(TAG, "Network request failed", e);
-                mainHandler.post(() -> {
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(OrganizationInventoryActivity.this, "Ошибка сети: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                });
+                Log.e(TAG, "Sync failed", e);
+                mainHandler.post(() -> Toast.makeText(OrganizationInventoryActivity.this, "Ошибка синхронизации", Toast.LENGTH_SHORT).show());
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
-                mainHandler.post(() -> Log.d(TAG, "Response code: " + response.code()));
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         String xmlString = response.body().string();
-                        Log.d(TAG, "Original XML: " + xmlString);
-
-                        // Final, most robust XML recovery logic.
-                        // This handles both malformed attributes (unescaped quotes) and truncated XML (missing closing tags).
-
-                        // 1. Sanitize attributes first, as before.
-                        StringBuilder sanitizedXmlBuilder = new StringBuilder();
-                        int cursor = 0;
-                        while(cursor < xmlString.length()) {
-                            int nextAttrStart = xmlString.indexOf("=\"", cursor);
-                            if (nextAttrStart == -1) {
-                                sanitizedXmlBuilder.append(xmlString.substring(cursor));
-                                break;
-                            }
-                            sanitizedXmlBuilder.append(xmlString, cursor, nextAttrStart + 2);
-                            int valueStart = nextAttrStart + 2;
-                            int valueEnd = -1;
-                            int searchCursor = valueStart;
-                            while (searchCursor < xmlString.length()) {
-                                int nextQuote = xmlString.indexOf('"', searchCursor);
-                                if (nextQuote == -1) {
-                                    valueEnd = -1;
-                                    break;
-                                }
-                                if (nextQuote + 1 >= xmlString.length() || "/ >?".indexOf(xmlString.charAt(nextQuote + 1)) != -1) {
-                                    valueEnd = nextQuote;
-                                    break;
-                                }
-                                searchCursor = nextQuote + 1;
-                            }
-                            if (valueEnd != -1) {
-                                String value = xmlString.substring(valueStart, valueEnd);
-                                sanitizedXmlBuilder.append(value.replace("\"", "&quot;"));
-                                sanitizedXmlBuilder.append('"');
-                                cursor = valueEnd + 1;
-                            } else {
-                                String value = xmlString.substring(valueStart);
-                                sanitizedXmlBuilder.append(value.replace("\"", "&quot;"));
-                                sanitizedXmlBuilder.append('"');
-                                break;
-                            }
-                        }
-                        String sanitizedXml = sanitizedXmlBuilder.toString();
-                        Log.d(TAG, "Sanitized XML: " + sanitizedXml);
-
-                        // 2. Fix truncated XML by closing any open tags.
-                        java.util.Stack<String> tagStack = new java.util.Stack<>();
-                        java.util.regex.Pattern tagPattern = java.util.regex.Pattern.compile("<(/)?([a-zA-Z0-9_]+)[^>]*>");
-                        java.util.regex.Matcher tagMatcher = tagPattern.matcher(sanitizedXml);
-                        while (tagMatcher.find()) {
-                            String tagName = tagMatcher.group(2);
-                            boolean isClosingTag = tagMatcher.group(1) != null;
-                            boolean isSelfClosing = tagMatcher.group(0).endsWith("/>");
-
-                            if (isClosingTag) {
-                                if (!tagStack.isEmpty() && tagStack.peek().equals(tagName)) {
-                                    tagStack.pop();
-                                }
-                            } else if (!isSelfClosing) {
-                                tagStack.push(tagName);
-                            }
-                        }
-
-                        StringBuilder finalXmlBuilder = new StringBuilder(sanitizedXml);
-                        while (!tagStack.isEmpty()) {
-                            finalXmlBuilder.append("</").append(tagStack.pop()).append(">");
-                        }
-                        String finalXml = finalXmlBuilder.toString();
-                        Log.d(TAG, "Final Recovered XML: " + finalXml);
-
-                        java.io.InputStream is = new java.io.ByteArrayInputStream(finalXml.getBytes());
 
                         OrganizationXmlParser parser = new OrganizationXmlParser();
-                        List<OrganizationItem> items = parser.parse(is);
-                        Log.d(TAG, "Parsing successful. Item count: " + items.size());
+                        List<OrganizationItem> orgItems = parser.parse(new java.io.ByteArrayInputStream(xmlString.getBytes()));
 
-                        mainHandler.post(() -> {
-                            progressBar.setVisibility(View.GONE);
-                            recyclerView.setVisibility(View.VISIBLE);
-                            adapter = new OrganizationAdapter(items);
-                            recyclerView.setAdapter(adapter);
+                        databaseExecutor.execute(() -> {
+                            db.organizationDao().clearAll();
+
+                            for (OrganizationItem orgItem : orgItems) {
+                                OrganizationEntity orgEntity = new OrganizationEntity();
+                                orgEntity.name = orgItem.getName();
+                                long orgId = db.organizationDao().insert(orgEntity);
+
+                                saveDepartmentsRecursive(orgItem.getChildren(), (int) orgId, "");
+                            }
+
+                            mainHandler.post(() -> loadDataFromDb());
                         });
+
                     } catch (Exception e) {
-                        Log.e(TAG, "Parsing failed", e);
-                        mainHandler.post(() -> {
-                            progressBar.setVisibility(View.GONE);
-                            Toast.makeText(OrganizationInventoryActivity.this, "Ошибка парсинга: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                        });
+                        Log.e(TAG, "Parsing or DB error", e);
                     }
-                } else {
-                    Log.e(TAG, "Request not successful. Code: " + response.code());
-                    mainHandler.post(() -> {
-                        progressBar.setVisibility(View.GONE);
-                        Toast.makeText(OrganizationInventoryActivity.this, "Ошибка: " + response.code(), Toast.LENGTH_LONG).show();
-                    });
                 }
             }
         });
+    }
+
+    private void saveDepartmentsRecursive(List<OrganizationItem> deptItems, int orgId, String parentRef) {
+        List<DepartmentEntity> deptEntities = new ArrayList<>();
+        for (OrganizationItem deptItem : deptItems) {
+            DepartmentEntity deptEntity = new DepartmentEntity();
+            deptEntity.organizationId = orgId;
+            deptEntity.code = deptItem.getCode();
+            deptEntity.name = deptItem.getName();
+            deptEntity.parentRef = parentRef;
+            deptEntities.add(deptEntity);
+        }
+        db.departmentDao().insertAll(deptEntities);
+
+        for (OrganizationItem deptItem : deptItems) {
+            if (!deptItem.getChildren().isEmpty()) {
+                saveDepartmentsRecursive(deptItem.getChildren(), orgId, deptItem.getName());
+            }
+        }
     }
 
     @Override

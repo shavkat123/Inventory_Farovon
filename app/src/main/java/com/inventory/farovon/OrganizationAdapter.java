@@ -124,6 +124,7 @@ public class OrganizationAdapter extends RecyclerView.Adapter<OrganizationAdapte
                     String code = clickedItem.getCode();
                     if (code != null && !code.isEmpty()) {
                         android.content.Intent intent = new android.content.Intent(itemView.getContext(), InventoryListActivity.class);
+                        intent.putExtra(InventoryListActivity.EXTRA_DEPARTMENT_ID, clickedItem.getId());
                         intent.putExtra(InventoryListActivity.EXTRA_DEPARTMENT_CODE, code);
                         itemView.getContext().startActivity(intent);
                     }
