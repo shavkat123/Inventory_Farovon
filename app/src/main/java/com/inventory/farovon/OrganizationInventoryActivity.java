@@ -26,6 +26,7 @@ import okhttp3.Callback;
 import okhttp3.Credentials;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class OrganizationInventoryActivity extends AppCompatActivity {
@@ -72,8 +73,10 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         String url = "http://" + ip + "/my1c/hs/checking/schema";
 
         OkHttpClient client = new OkHttpClient();
+        RequestBody body = RequestBody.create("", null);
         Request request = new Request.Builder()
                 .url(url)
+                .post(body)
                 .header("Authorization", Credentials.basic(username, password))
                 .build();
 
