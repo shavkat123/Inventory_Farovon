@@ -156,9 +156,13 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                                 sb.append('"');
                                 cursor = valueEnd + 1;
                             } else {
-                                // Malformed attribute, append the rest and give up
-                                sb.append(xmlString.substring(valueStart));
-                                break;
+                                // Malformed attribute (no closing quote found).
+                                // Take the rest of the string as the value, sanitize it, and force-close it.
+                                String value = xmlString.substring(valueStart);
+                                String sanitizedValue = value.replace("\"", "&quot;");
+                                sb.append(sanitizedValue);
+                                sb.append('"'); // Force-close the attribute
+                                break;          // We've consumed the rest of the string, so exit.
                             }
                         }
                         String sanitizedXml = sb.toString();
