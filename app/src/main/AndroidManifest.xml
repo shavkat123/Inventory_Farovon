@@ -76,6 +76,10 @@
             android:name=".OrganizationInventoryActivity"
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
+            android:name=".InventoryListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
     </application>
 
 </manifest>

@@ -120,10 +120,13 @@ public class OrganizationAdapter extends RecyclerView.Adapter<OrganizationAdapte
                 if (getAdapterPosition() != RecyclerView.NO_POSITION) {
                     OrganizationItem clickedItem = visibleItems.get(getAdapterPosition());
 
-                    // Display a Toast with the item's code, if it has one.
+                    // If the item has a code, it's a department/room. Open the inventory list.
                     String code = clickedItem.getCode();
                     if (code != null && !code.isEmpty()) {
-                        Toast.makeText(itemView.getContext(), code, Toast.LENGTH_SHORT).show();
+                        Context context = itemView.getContext();
+                        android.content.Intent intent = new android.content.Intent(context, InventoryListActivity.class);
+                        intent.putExtra(InventoryListActivity.EXTRA_DEPARTMENT_CODE, code);
+                        context.startActivity(intent);
                     }
 
                     // If the item has children, toggle its expanded state.
