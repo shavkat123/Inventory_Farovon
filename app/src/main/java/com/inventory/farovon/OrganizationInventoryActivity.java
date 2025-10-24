@@ -3,6 +3,7 @@ package com.inventory.farovon;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -30,6 +31,8 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class OrganizationInventoryActivity extends AppCompatActivity {
+
+    private static final String TAG = "OrgInventoryActivity";
 
     private RecyclerView recyclerView;
     private ProgressBar progressBar;
@@ -71,6 +74,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         String username = sessionManager.getUsername();
         String password = sessionManager.getPassword();
         String url = "http://" + ip + "/my1c/hs/checking/schema";
+        Log.d(TAG, "Requesting URL: " + url);
 
         OkHttpClient client = new OkHttpClient();
         RequestBody body = RequestBody.create("", null);
@@ -83,6 +87,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "Network request failed", e);
                 mainHandler.post(() -> {
                     progressBar.setVisibility(View.GONE);
                     Toast.makeText(OrganizationInventoryActivity.this, "Ошибка сети: " + e.getMessage(), Toast.LENGTH_LONG).show();
@@ -91,16 +96,23 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
+                mainHandler.post(() -> Log.d(TAG, "Response code: " + response.code()));
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         String xmlString = response.body().string();
+                        Log.d(TAG, "Original XML: " + xmlString);
+
                         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("ref=\"([^\"]*)\"([^\"]*)\"\"");
                         java.util.regex.Matcher matcher = pattern.matcher(xmlString);
-                        xmlString = matcher.replaceAll("ref=\"$1&quot;$2&quot;\"");
-                        java.io.InputStream is = new java.io.ByteArrayInputStream(xmlString.getBytes());
+                        String sanitizedXml = matcher.replaceAll("ref=\"$1&quot;$2&quot;\"");
+                        Log.d(TAG, "Sanitized XML: " + sanitizedXml);
+
+                        java.io.InputStream is = new java.io.ByteArrayInputStream(sanitizedXml.getBytes());
 
                         OrganizationXmlParser parser = new OrganizationXmlParser();
                         List<OrganizationItem> items = parser.parse(is);
+                        Log.d(TAG, "Parsing successful. Item count: " + items.size());
+
                         mainHandler.post(() -> {
                             progressBar.setVisibility(View.GONE);
                             recyclerView.setVisibility(View.VISIBLE);
@@ -108,12 +120,14 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                             recyclerView.setAdapter(adapter);
                         });
                     } catch (Exception e) {
+                        Log.e(TAG, "Parsing failed", e);
                         mainHandler.post(() -> {
                             progressBar.setVisibility(View.GONE);
                             Toast.makeText(OrganizationInventoryActivity.this, "Ошибка парсинга: " + e.getMessage(), Toast.LENGTH_LONG).show();
                         });
                     }
                 } else {
+                    Log.e(TAG, "Request not successful. Code: " + response.code());
                     mainHandler.post(() -> {
                         progressBar.setVisibility(View.GONE);
                         Toast.makeText(OrganizationInventoryActivity.this, "Ошибка: " + response.code(), Toast.LENGTH_LONG).show();
