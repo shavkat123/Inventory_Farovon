@@ -51,7 +51,7 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.View
         public void bind(Nomenclature item) {
             tvName.setText(item.getName());
             tvCode.setText(item.getCode());
-            tvRf.setText(item.getRf());
+            tvRf.setText(item.getRfid());
         }
     }
 }
