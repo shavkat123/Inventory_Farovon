@@ -102,73 +102,75 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                         String xmlString = response.body().string();
                         Log.d(TAG, "Original XML: " + xmlString);
 
-                        // This new logic replaces the flawed regex-based sanitization.
-                        // It manually parses attribute values to correctly handle nested quotes.
-                        StringBuilder sb = new StringBuilder();
+                        // Final, most robust XML recovery logic.
+                        // This handles both malformed attributes (unescaped quotes) and truncated XML (missing closing tags).
+
+                        // 1. Sanitize attributes first, as before.
+                        StringBuilder sanitizedXmlBuilder = new StringBuilder();
                         int cursor = 0;
                         while(cursor < xmlString.length()) {
                             int nextAttrStart = xmlString.indexOf("=\"", cursor);
                             if (nextAttrStart == -1) {
-                                // No more attributes, append the rest of the string
-                                sb.append(xmlString.substring(cursor));
+                                sanitizedXmlBuilder.append(xmlString.substring(cursor));
                                 break;
                             }
-
-                            // Append the text before the attribute value starts
-                            // (up to and including the opening quote)
-                            sb.append(xmlString, cursor, nextAttrStart + 2);
-
+                            sanitizedXmlBuilder.append(xmlString, cursor, nextAttrStart + 2);
                             int valueStart = nextAttrStart + 2;
                             int valueEnd = -1;
                             int searchCursor = valueStart;
-
-                            // Find the correct closing quote for the attribute value
                             while (searchCursor < xmlString.length()) {
                                 int nextQuote = xmlString.indexOf('"', searchCursor);
                                 if (nextQuote == -1) {
-                                    // Malformed, no closing quote at all
                                     valueEnd = -1;
                                     break;
                                 }
-
-                                // A quote is a "real" closing quote if it's the end of the string
-                                // or followed by a space, '>', or '/'
-                                if (nextQuote + 1 >= xmlString.length()) {
+                                if (nextQuote + 1 >= xmlString.length() || "/ >?".indexOf(xmlString.charAt(nextQuote + 1)) != -1) {
                                     valueEnd = nextQuote;
                                     break;
                                 }
-                                char charAfter = xmlString.charAt(nextQuote + 1);
-                                if (charAfter == ' ' || charAfter == '>' || charAfter == '/') {
-                                    valueEnd = nextQuote;
-                                    break;
-                                }
-
-                                // This was an internal quote, continue searching after it
                                 searchCursor = nextQuote + 1;
                             }
-
                             if (valueEnd != -1) {
                                 String value = xmlString.substring(valueStart, valueEnd);
-                                // Sanitize the extracted value
-                                String sanitizedValue = value.replace("\"", "&quot;");
-                                sb.append(sanitizedValue);
-                                // Append the closing quote
-                                sb.append('"');
+                                sanitizedXmlBuilder.append(value.replace("\"", "&quot;"));
+                                sanitizedXmlBuilder.append('"');
                                 cursor = valueEnd + 1;
                             } else {
-                                // Malformed attribute (no closing quote found).
-                                // Take the rest of the string as the value, sanitize it, and force-close it.
                                 String value = xmlString.substring(valueStart);
-                                String sanitizedValue = value.replace("\"", "&quot;");
-                                sb.append(sanitizedValue);
-                                sb.append('"'); // Force-close the attribute
-                                break;          // We've consumed the rest of the string, so exit.
+                                sanitizedXmlBuilder.append(value.replace("\"", "&quot;"));
+                                sanitizedXmlBuilder.append('"');
+                                break;
                             }
                         }
-                        String sanitizedXml = sb.toString();
+                        String sanitizedXml = sanitizedXmlBuilder.toString();
                         Log.d(TAG, "Sanitized XML: " + sanitizedXml);
 
-                        java.io.InputStream is = new java.io.ByteArrayInputStream(sanitizedXml.getBytes());
+                        // 2. Fix truncated XML by closing any open tags.
+                        java.util.Stack<String> tagStack = new java.util.Stack<>();
+                        java.util.regex.Pattern tagPattern = java.util.regex.Pattern.compile("<(/)?([a-zA-Z0-9_]+)[^>]*>");
+                        java.util.regex.Matcher tagMatcher = tagPattern.matcher(sanitizedXml);
+                        while (tagMatcher.find()) {
+                            String tagName = tagMatcher.group(2);
+                            boolean isClosingTag = tagMatcher.group(1) != null;
+                            boolean isSelfClosing = tagMatcher.group(0).endsWith("/>");
+
+                            if (isClosingTag) {
+                                if (!tagStack.isEmpty() && tagStack.peek().equals(tagName)) {
+                                    tagStack.pop();
+                                }
+                            } else if (!isSelfClosing) {
+                                tagStack.push(tagName);
+                            }
+                        }
+
+                        StringBuilder finalXmlBuilder = new StringBuilder(sanitizedXml);
+                        while (!tagStack.isEmpty()) {
+                            finalXmlBuilder.append("</").append(tagStack.pop()).append(">");
+                        }
+                        String finalXml = finalXmlBuilder.toString();
+                        Log.d(TAG, "Final Recovered XML: " + finalXml);
+
+                        java.io.InputStream is = new java.io.ByteArrayInputStream(finalXml.getBytes());
 
                         OrganizationXmlParser parser = new OrganizationXmlParser();
                         List<OrganizationItem> items = parser.parse(is);
