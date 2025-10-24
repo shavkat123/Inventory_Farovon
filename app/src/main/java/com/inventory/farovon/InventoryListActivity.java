@@ -127,8 +127,7 @@ public class InventoryListActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
-                        String xmlResponse = response.body().string();
-                        final List<Nomenclature> items = parseXml(xmlResponse);
+                        final List<Nomenclature> items = parseXml(response.body().byteStream());
 
                         databaseExecutor.execute(() -> {
                             db.inventoryItemDao().clearByDepartmentId(departmentId);
@@ -153,26 +152,38 @@ public class InventoryListActivity extends AppCompatActivity {
         });
     }
 
-    private List<Nomenclature> parseXml(String xmlResponse) {
-        // Same parsing logic as before
+    private List<Nomenclature> parseXml(InputStream is) {
         List<Nomenclature> list = new ArrayList<>();
-        if (xmlResponse == null || xmlResponse.isEmpty()) return list;
         try {
-            InputStream stream = new ByteArrayInputStream(xmlResponse.getBytes(StandardCharsets.UTF_8));
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(stream);
-            doc.getDocumentElement().normalize();
-            NodeList nList = doc.getElementsByTagName("Product");
-            for (int i = 0; i < nList.getLength(); i++) {
-                Node node = nList.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element) node;
-                    String code = element.getElementsByTagName("Code").item(0).getTextContent();
-                    String name = element.getElementsByTagName("Name").item(0).getTextContent();
-                    String rf = element.getElementsByTagName("rf").item(0).getTextContent();
-                    list.add(new Nomenclature(code, name, rf));
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser parser = factory.newPullParser();
+            parser.setInput(is, null);
+
+            String text = "";
+            String code = null, name = null, rf = null;
+            int eventType = parser.getEventType();
+
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                String tagName = parser.getName();
+                switch (eventType) {
+                    case XmlPullParser.TEXT:
+                        text = parser.getText();
+                        break;
+                    case XmlPullParser.END_TAG:
+                        if ("Code".equalsIgnoreCase(tagName)) {
+                            code = text;
+                        } else if ("Name".equalsIgnoreCase(tagName)) {
+                            name = text;
+                        } else if ("rf".equalsIgnoreCase(tagName)) {
+                            rf = text;
+                        } else if ("Product".equalsIgnoreCase(tagName)) {
+                            if (code != null && name != null && rf != null) {
+                                list.add(new Nomenclature(code, name, rf));
+                            }
+                        }
+                        break;
                 }
+                eventType = parser.next();
             }
         } catch (Exception e) {
             Log.e(TAG, "XML parse error", e);

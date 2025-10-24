@@ -1,72 +1,58 @@
 package com.inventory.farovon;
 
 import com.inventory.farovon.model.OrganizationItem;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-
 public class OrganizationXmlParser {
 
     public List<OrganizationItem> parse(InputStream is) throws Exception {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        DocumentBuilder builder = factory.newDocumentBuilder();
-        Document doc = builder.parse(is);
-        doc.getDocumentElement().normalize();
+        XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        XmlPullParser parser = factory.newPullParser();
+        parser.setInput(is, null);
 
         List<OrganizationItem> organizationItems = new ArrayList<>();
-        NodeList organizationNodes = doc.getElementsByTagName("Organization");
+        OrganizationItem currentOrganization = null;
+        Map<String, OrganizationItem> departmentMap = new HashMap<>();
+        int eventType = parser.getEventType();
 
-        for (int i = 0; i < organizationNodes.getLength(); i++) {
-            Node orgNode = organizationNodes.item(i);
-            if (orgNode.getNodeType() == Node.ELEMENT_NODE) {
-                Element orgElement = (Element) orgNode;
-                String orgName = orgElement.getAttribute("ref");
-                OrganizationItem orgItem = new OrganizationItem(orgName, 0);
+        while (eventType != XmlPullParser.END_DOCUMENT) {
+            String tagName = parser.getName();
+            switch (eventType) {
+                case XmlPullParser.START_TAG:
+                    if ("Organization".equalsIgnoreCase(tagName)) {
+                        currentOrganization = new OrganizationItem(parser.getAttributeValue(null, "ref"), 0);
+                        organizationItems.add(currentOrganization);
+                        departmentMap.clear();
+                    } else if ("Department".equalsIgnoreCase(tagName) && currentOrganization != null) {
+                        String name = parser.getAttributeValue(null, "name");
+                        String code = parser.getAttributeValue(null, "code");
+                        String parentRef = parser.getAttributeValue(null, "parentRef");
 
-                Map<String, OrganizationItem> departmentMap = new HashMap<>();
-                List<Element> departmentElements = new ArrayList<>();
+                        OrganizationItem deptItem = new OrganizationItem(name, 1);
+                        deptItem.setCode(code);
 
-                NodeList departmentNodes = orgElement.getElementsByTagName("Department");
-                for (int j = 0; j < departmentNodes.getLength(); j++) {
-                    departmentElements.add((Element) departmentNodes.item(j));
-                }
+                        departmentMap.put(name, deptItem);
 
-                for (Element deptElement : departmentElements) {
-                    String deptName = deptElement.getAttribute("name");
-                    String deptCode = deptElement.getAttribute("code");
-                    OrganizationItem deptItem = new OrganizationItem(deptName, 1);
-                    deptItem.setCode(deptCode);
-                    departmentMap.put(deptName, deptItem);
-                }
-
-                for (Element deptElement : departmentElements) {
-                    String deptName = deptElement.getAttribute("name");
-                    String parentRef = deptElement.getAttribute("parentRef");
-                    OrganizationItem deptItem = departmentMap.get(deptName);
-
-                    if (parentRef != null && !parentRef.isEmpty() && departmentMap.containsKey(parentRef)) {
-                        OrganizationItem parentItem = departmentMap.get(parentRef);
-                        if (parentItem != null) {
-                            parentItem.addChild(deptItem);
-                            deptItem.setLevel(parentItem.getLevel() + 1);
+                        if (parentRef != null && !parentRef.isEmpty() && departmentMap.containsKey(parentRef)) {
+                            OrganizationItem parentItem = departmentMap.get(parentRef);
+                            if (parentItem != null) {
+                                parentItem.addChild(deptItem);
+                                deptItem.setLevel(parentItem.getLevel() + 1);
+                            }
+                        } else {
+                            currentOrganization.addChild(deptItem);
                         }
-                    } else {
-                        orgItem.addChild(deptItem);
                     }
-                }
-                organizationItems.add(orgItem);
+                    break;
             }
+            eventType = parser.next();
         }
         return organizationItems;
     }

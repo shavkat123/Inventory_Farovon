@@ -142,10 +142,8 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
-                        String xmlString = response.body().string();
-
                         OrganizationXmlParser parser = new OrganizationXmlParser();
-                        List<OrganizationItem> orgItems = parser.parse(new java.io.ByteArrayInputStream(xmlString.getBytes()));
+                        List<OrganizationItem> orgItems = parser.parse(response.body().byteStream());
 
                         databaseExecutor.execute(() -> {
                             db.organizationDao().clearAll();
