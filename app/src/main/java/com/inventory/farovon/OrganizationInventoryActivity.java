@@ -142,8 +142,10 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
+                        String rawXml = response.body().string();
+                        String sanitizedXml = sanitizeXml(rawXml);
                         OrganizationXmlParser parser = new OrganizationXmlParser();
-                        List<OrganizationItem> orgItems = parser.parse(response.body().byteStream());
+                        List<OrganizationItem> orgItems = parser.parse(new java.io.ByteArrayInputStream(sanitizedXml.getBytes()));
 
                         databaseExecutor.execute(() -> {
                             db.organizationDao().clearAll();
@@ -190,5 +192,12 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
+    }
+
+    private String sanitizeXml(String xml) {
+        if (xml == null) return null;
+        // This regex finds a closing quote followed by a letter (an attribute)
+        // and inserts a space between them.
+        return xml.replaceAll("(['\"])(\\w)", "$1 $2");
     }
 }
