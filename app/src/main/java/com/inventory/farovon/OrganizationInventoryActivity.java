@@ -102,9 +102,66 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                         String xmlString = response.body().string();
                         Log.d(TAG, "Original XML: " + xmlString);
 
-                        java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("ref=\"([^\"]*)\"([^\"]*)\"\"");
-                        java.util.regex.Matcher matcher = pattern.matcher(xmlString);
-                        String sanitizedXml = matcher.replaceAll("ref=\"$1&quot;$2&quot;\"");
+                        // This new logic replaces the flawed regex-based sanitization.
+                        // It manually parses attribute values to correctly handle nested quotes.
+                        StringBuilder sb = new StringBuilder();
+                        int cursor = 0;
+                        while(cursor < xmlString.length()) {
+                            int nextAttrStart = xmlString.indexOf("=\"", cursor);
+                            if (nextAttrStart == -1) {
+                                // No more attributes, append the rest of the string
+                                sb.append(xmlString.substring(cursor));
+                                break;
+                            }
+
+                            // Append the text before the attribute value starts
+                            // (up to and including the opening quote)
+                            sb.append(xmlString, cursor, nextAttrStart + 2);
+
+                            int valueStart = nextAttrStart + 2;
+                            int valueEnd = -1;
+                            int searchCursor = valueStart;
+
+                            // Find the correct closing quote for the attribute value
+                            while (searchCursor < xmlString.length()) {
+                                int nextQuote = xmlString.indexOf('"', searchCursor);
+                                if (nextQuote == -1) {
+                                    // Malformed, no closing quote at all
+                                    valueEnd = -1;
+                                    break;
+                                }
+
+                                // A quote is a "real" closing quote if it's the end of the string
+                                // or followed by a space, '>', or '/'
+                                if (nextQuote + 1 >= xmlString.length()) {
+                                    valueEnd = nextQuote;
+                                    break;
+                                }
+                                char charAfter = xmlString.charAt(nextQuote + 1);
+                                if (charAfter == ' ' || charAfter == '>' || charAfter == '/') {
+                                    valueEnd = nextQuote;
+                                    break;
+                                }
+
+                                // This was an internal quote, continue searching after it
+                                searchCursor = nextQuote + 1;
+                            }
+
+                            if (valueEnd != -1) {
+                                String value = xmlString.substring(valueStart, valueEnd);
+                                // Sanitize the extracted value
+                                String sanitizedValue = value.replace("\"", "&quot;");
+                                sb.append(sanitizedValue);
+                                // Append the closing quote
+                                sb.append('"');
+                                cursor = valueEnd + 1;
+                            } else {
+                                // Malformed attribute, append the rest and give up
+                                sb.append(xmlString.substring(valueStart));
+                                break;
+                            }
+                        }
+                        String sanitizedXml = sb.toString();
                         Log.d(TAG, "Sanitized XML: " + sanitizedXml);
 
                         java.io.InputStream is = new java.io.ByteArrayInputStream(sanitizedXml.getBytes());
