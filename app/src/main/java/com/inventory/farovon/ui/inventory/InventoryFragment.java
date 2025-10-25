@@ -1,16 +1,14 @@
 package com.inventory.farovon.ui.inventory;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
-import android.content.Intent;
-import android.widget.Toast;
-
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-
+import com.inventory.farovon.IdentificationActivity;
+import com.inventory.farovon.OrganizationInventoryActivity;
 import com.inventory.farovon.R;
 
 public class InventoryFragment extends Fragment {
@@ -19,23 +17,14 @@ public class InventoryFragment extends Fragment {
                              ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_inventory, container, false);
 
-        LinearLayout orgInventoryButton = root.findViewById(R.id.org_inventory_button);
-        LinearLayout quickInventoryButton = root.findViewById(R.id.quick_inventory_button);
-        LinearLayout roomInventoryButton = root.findViewById(R.id.room_inventory_button);
-
-        orgInventoryButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), com.inventory.farovon.OrganizationInventoryActivity.class);
+        root.findViewById(R.id.btn_organization_inventory).setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), OrganizationInventoryActivity.class);
             startActivity(intent);
         });
 
-        quickInventoryButton.setOnClickListener(v -> {
-            Intent intent = new Intent(getActivity(), com.inventory.farovon.IdentificationActivity.class);
+        root.findViewById(R.id.btn_quick_inventory).setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), IdentificationActivity.class);
             startActivity(intent);
-        });
-
-        roomInventoryButton.setOnClickListener(v -> {
-            androidx.navigation.NavController navController = androidx.navigation.Navigation.findNavController(requireActivity(), com.inventory.farovon.R.id.nav_host_fragment_content_main);
-            navController.navigate(com.inventory.farovon.R.id.nav_room_inventory);
         });
 
         return root;

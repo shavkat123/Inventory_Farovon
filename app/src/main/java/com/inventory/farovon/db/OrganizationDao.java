@@ -11,6 +11,9 @@ public interface OrganizationDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     long insert(OrganizationEntity organization);
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void insertAll(List<OrganizationEntity> organizations);
+
     @Query("SELECT * FROM organizations")
     List<OrganizationEntity> getAll();
 

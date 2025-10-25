@@ -1,58 +1,81 @@
 package com.inventory.farovon;
 
 import com.inventory.farovon.model.OrganizationItem;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserFactory;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class OrganizationXmlParser {
 
-    public List<OrganizationItem> parse(InputStream is) throws Exception {
-        XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        XmlPullParser parser = factory.newPullParser();
-        parser.setInput(is, null);
+    // This parser is specifically designed to be extremely lenient.
+    // It does not parse XML as a structure, but rather hunts for specific patterns,
+    // ignoring most syntax rules. This makes it robust against malformed XML from the server.
 
+    public List<OrganizationItem> parse(String xmlString) {
         List<OrganizationItem> organizationItems = new ArrayList<>();
-        OrganizationItem currentOrganization = null;
-        Map<String, OrganizationItem> departmentMap = new HashMap<>();
-        int eventType = parser.getEventType();
+        if (xmlString == null || xmlString.isEmpty()) {
+            return organizationItems;
+        }
 
-        while (eventType != XmlPullParser.END_DOCUMENT) {
-            String tagName = parser.getName();
-            switch (eventType) {
-                case XmlPullParser.START_TAG:
-                    if ("Organization".equalsIgnoreCase(tagName)) {
-                        currentOrganization = new OrganizationItem(parser.getAttributeValue(null, "ref"), 0);
-                        organizationItems.add(currentOrganization);
-                        departmentMap.clear();
-                    } else if ("Department".equalsIgnoreCase(tagName) && currentOrganization != null) {
-                        String name = parser.getAttributeValue(null, "name");
-                        String code = parser.getAttributeValue(null, "code");
-                        String parentRef = parser.getAttributeValue(null, "parentRef");
+        // Split the entire XML string into <Organization> blocks.
+        // This is more robust than a single regex for the whole file.
+        String[] orgBlocks = xmlString.split("</Organization>");
 
-                        OrganizationItem deptItem = new OrganizationItem(name, 1);
-                        deptItem.setCode(code);
-
-                        departmentMap.put(name, deptItem);
-
-                        if (parentRef != null && !parentRef.isEmpty() && departmentMap.containsKey(parentRef)) {
-                            OrganizationItem parentItem = departmentMap.get(parentRef);
-                            if (parentItem != null) {
-                                parentItem.addChild(deptItem);
-                                deptItem.setLevel(parentItem.getLevel() + 1);
-                            }
-                        } else {
-                            currentOrganization.addChild(deptItem);
-                        }
-                    }
-                    break;
+        for (String orgBlock : orgBlocks) {
+            if (!orgBlock.contains("<Organization")) {
+                continue;
             }
-            eventType = parser.next();
+
+            // Regex to find the 'ref' of an Organization. It looks for ref='...' or ref="..."
+            Pattern orgPattern = Pattern.compile("<Organization\\s+ref=['\"]([^'\"]*)['\"]");
+            Matcher orgMatcher = orgPattern.matcher(orgBlock);
+
+            if (orgMatcher.find()) {
+                String orgName = orgMatcher.group(1);
+                OrganizationItem orgItem = new OrganizationItem(orgName, 0);
+
+                // Regex to find all attributes of a Department tag. Very lenient.
+                Pattern deptPattern = Pattern.compile("<Department\\s+([^>]+)/?>");
+                Matcher deptMatcher = deptPattern.matcher(orgBlock);
+
+                Map<String, OrganizationItem> departmentMap = new HashMap<>();
+                List<Map<String, String>> departmentsData = new ArrayList<>();
+
+                while (deptMatcher.find()) {
+                    String attributes = deptMatcher.group(1);
+                    Map<String, String> attrMap = new HashMap<>();
+
+                    // Regex to extract key-value pairs from the attribute string.
+                    Pattern attrPattern = Pattern.compile("(\\w+)=['\"]([^'\"]*)['\"]");
+                    Matcher attrMatcher = attrPattern.matcher(attributes);
+                    while(attrMatcher.find()){
+                        attrMap.put(attrMatcher.group(1), attrMatcher.group(2));
+                    }
+
+                    if(attrMap.containsKey("name")){
+                        departmentsData.add(attrMap);
+                        OrganizationItem deptItem = new OrganizationItem(attrMap.get("name"), 1);
+                        deptItem.setCode(attrMap.get("code"));
+                        departmentMap.put(attrMap.get("name"), deptItem);
+                    }
+                }
+
+                for (Map<String, String> attrs : departmentsData) {
+                    String parentRef = attrs.get("parentRef");
+                    OrganizationItem deptItem = departmentMap.get(attrs.get("name"));
+
+                    if (parentRef != null && !parentRef.isEmpty() && departmentMap.containsKey(parentRef)) {
+                        departmentMap.get(parentRef).addChild(deptItem);
+                        deptItem.setLevel(departmentMap.get(parentRef).getLevel() + 1);
+                    } else {
+                        orgItem.addChild(deptItem);
+                    }
+                }
+                organizationItems.add(orgItem);
+            }
         }
         return organizationItems;
     }

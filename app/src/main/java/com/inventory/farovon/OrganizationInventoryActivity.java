@@ -10,7 +10,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -64,13 +63,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
 
         recyclerView = findViewById(R.id.organization_recycler_view);
         progressBar = findViewById(R.id.progress_bar);
-
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.addItemDecoration(new TreeItemDecoration(
-                ContextCompat.getColor(this, R.color.colorPrimary),
-                4f,
-                64
-        ));
 
         loadDataFromDb();
         syncData();
@@ -78,12 +71,14 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
 
     private void loadDataFromDb() {
         progressBar.setVisibility(View.VISIBLE);
+        recyclerView.setVisibility(View.GONE);
         databaseExecutor.execute(() -> {
             List<OrganizationEntity> orgEntities = db.organizationDao().getAll();
             List<OrganizationItem> orgItems = new ArrayList<>();
 
             for (OrganizationEntity orgEntity : orgEntities) {
                 OrganizationItem orgItem = new OrganizationItem(orgEntity.name, 0);
+                orgItem.setId(orgEntity.id);
                 List<DepartmentEntity> deptEntities = db.departmentDao().getByOrganizationId(orgEntity.id);
 
                 Map<String, OrganizationItem> departmentMap = new HashMap<>();
@@ -111,6 +106,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
 
             mainHandler.post(() -> {
                 progressBar.setVisibility(View.GONE);
+                recyclerView.setVisibility(View.VISIBLE);
                 adapter = new OrganizationAdapter(orgItems);
                 recyclerView.setAdapter(adapter);
             });
@@ -134,7 +130,6 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.e(TAG, "Sync failed", e);
                 mainHandler.post(() -> Toast.makeText(OrganizationInventoryActivity.this, "Ошибка синхронизации", Toast.LENGTH_SHORT).show());
             }
 
@@ -142,22 +137,18 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
-                        String rawXml = response.body().string();
-                        String sanitizedXml = sanitizeXml(rawXml);
+                        String xmlString = response.body().string();
                         OrganizationXmlParser parser = new OrganizationXmlParser();
-                        List<OrganizationItem> orgItems = parser.parse(new java.io.ByteArrayInputStream(sanitizedXml.getBytes()));
+                        List<OrganizationItem> orgItems = parser.parse(xmlString);
 
                         databaseExecutor.execute(() -> {
                             db.organizationDao().clearAll();
-
                             for (OrganizationItem orgItem : orgItems) {
                                 OrganizationEntity orgEntity = new OrganizationEntity();
                                 orgEntity.name = orgItem.getName();
                                 long orgId = db.organizationDao().insert(orgEntity);
-
                                 saveDepartmentsRecursive(orgItem.getChildren(), (int) orgId, "");
                             }
-
                             mainHandler.post(() -> loadDataFromDb());
                         });
 
@@ -170,6 +161,10 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
     }
 
     private void saveDepartmentsRecursive(List<OrganizationItem> deptItems, int orgId, String parentRef) {
+        if (deptItems == null || deptItems.isEmpty()) {
+            return;
+        }
+
         List<DepartmentEntity> deptEntities = new ArrayList<>();
         for (OrganizationItem deptItem : deptItems) {
             DepartmentEntity deptEntity = new DepartmentEntity();
@@ -182,22 +177,13 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         db.departmentDao().insertAll(deptEntities);
 
         for (OrganizationItem deptItem : deptItems) {
-            if (!deptItem.getChildren().isEmpty()) {
-                saveDepartmentsRecursive(deptItem.getChildren(), orgId, deptItem.getName());
-            }
+            saveDepartmentsRecursive(deptItem.getChildren(), orgId, deptItem.getName());
         }
     }
 
     @Override
     public boolean onSupportNavigateUp() {
-        onBackPressed();
+        finish();
         return true;
-    }
-
-    private String sanitizeXml(String xml) {
-        if (xml == null) return null;
-        // This regex finds a closing quote followed by a letter (an attribute)
-        // and inserts a space between them.
-        return xml.replaceAll("(['\"])(\\w)", "$1 $2");
     }
 }
