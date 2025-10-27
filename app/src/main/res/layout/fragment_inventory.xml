@@ -17,4 +17,10 @@
         android:layout_height="wrap_content"
         android:text="Быстрая инвентаризация"/>
 
+    <Button
+        android:id="@+id/btn_room_inventory"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Инвентаризация по помещению"/>
+
 </LinearLayout>

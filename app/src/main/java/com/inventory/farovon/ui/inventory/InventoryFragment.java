@@ -27,6 +27,11 @@ public class InventoryFragment extends Fragment {
             startActivity(intent);
         });
 
+        root.findViewById(R.id.btn_room_inventory).setOnClickListener(v -> {
+            Intent intent = new Intent(getActivity(), NomenclatureActivity.class);
+            startActivity(intent);
+        });
+
         return root;
     }
 }
