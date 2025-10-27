@@ -3,18 +3,27 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center">
+    android:gravity="center"
+    android:padding="16dp">
 
     <Button
         android:id="@+id/btn_organization_inventory"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Инвентаризация Организации"/>
+        android:text="Инвентаризация Организации"
+        android:layout_marginBottom="16dp"/>
 
     <Button
         android:id="@+id/btn_quick_inventory"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Быстрая инвентаризация"/>
+        android:text="Быстрая инвентаризация"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btn_room_inventory"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Инвентаризация по помещению"/>
 
 </LinearLayout>

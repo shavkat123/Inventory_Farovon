@@ -72,14 +72,6 @@
             android:exported="false"
             android:label="@string/app_name"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
-        <activity
-            android:name=".OrganizationInventoryActivity"
-            android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
-        <activity
-            android:name=".InventoryListActivity"
-            android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
     </application>
 
 </manifest>

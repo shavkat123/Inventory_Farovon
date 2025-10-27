@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
+import androidx.navigation.Navigation;
 import com.inventory.farovon.IdentificationActivity;
 import com.inventory.farovon.OrganizationInventoryActivity;
 import com.inventory.farovon.R;
@@ -25,6 +26,10 @@ public class InventoryFragment extends Fragment {
         root.findViewById(R.id.btn_quick_inventory).setOnClickListener(v -> {
             Intent intent = new Intent(getActivity(), IdentificationActivity.class);
             startActivity(intent);
+        });
+
+        root.findViewById(R.id.btn_room_inventory).setOnClickListener(v -> {
+            Navigation.findNavController(v).navigate(R.id.action_inventory_to_gallery);
         });
 
         return root;

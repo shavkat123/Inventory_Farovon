@@ -4,190 +4,124 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.Toast;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.inventory.farovon.db.AppDatabase;
-import com.inventory.farovon.db.InventoryItemEntity;
-import com.inventory.farovon.ui.login.SessionManager;
-import java.io.IOException;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.StringReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import okhttp3.Call;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserFactory;
 
 public class InventoryListActivity extends AppCompatActivity {
 
-    public static final String EXTRA_DEPARTMENT_CODE = "department_code";
-    public static final String EXTRA_DEPARTMENT_ID = "department_id";
-    private static final String TAG = "InventoryListActivity";
-
     private RecyclerView recyclerView;
-    private ProgressBar progressBar;
     private InventoryAdapter adapter;
-    private SessionManager sessionManager;
-    private AppDatabase db;
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
-    private int departmentId;
-    private String departmentCode;
+    private final List<InventoryItem> inventoryItems = new ArrayList<>();
+    private TextView titleText;
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_inventory_list);
 
-        sessionManager = new SessionManager(this);
-        db = AppDatabase.getDatabase(this);
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Список инвентаря");
-        }
-
+        titleText = findViewById(R.id.title_text);
         recyclerView = findViewById(R.id.inventory_recycler_view);
-        progressBar = findViewById(R.id.progress_bar);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new InventoryAdapter();
+        adapter = new InventoryAdapter(inventoryItems);
         recyclerView.setAdapter(adapter);
 
-        departmentCode = getIntent().getStringExtra(EXTRA_DEPARTMENT_CODE);
-        departmentId = getIntent().getIntExtra(EXTRA_DEPARTMENT_ID, -1);
+        String itemCode = getIntent().getStringExtra("ITEM_CODE");
+        String itemName = getIntent().getStringExtra("ITEM_NAME");
 
-        if (departmentId != -1) {
-            loadDataFromDb();
-            syncData();
-        } else {
-            Toast.makeText(this, "ID помещения не найден", Toast.LENGTH_SHORT).show();
+        if (itemName != null) {
+            titleText.setText(itemName);
+        }
+
+        if (itemCode != null) {
+            fetchInventory(itemCode);
         }
     }
 
-    private void loadDataFromDb() {
-        progressBar.setVisibility(View.VISIBLE);
-        databaseExecutor.execute(() -> {
-            List<InventoryItemEntity> itemEntities = db.inventoryItemDao().getByDepartmentId(departmentId);
-            List<Nomenclature> items = new ArrayList<>();
-            for (InventoryItemEntity entity : itemEntities) {
-                items.add(new Nomenclature(entity.code, entity.name, entity.rf));
-            }
-            mainHandler.post(() -> {
-                progressBar.setVisibility(View.GONE);
-                adapter.setItems(items);
+    private void fetchInventory(String code) {
+        executor.execute(() -> {
+            String xmlResult = fetchXmlFromServer(code);
+            List<InventoryItem> parsedItems = parseXmlWithPullParser(xmlResult);
+
+            handler.post(() -> {
+                if (parsedItems != null && !parsedItems.isEmpty()) {
+                    inventoryItems.clear();
+                    inventoryItems.addAll(parsedItems);
+                    adapter.notifyDataSetChanged();
+                } else {
+                     Log.e("InventoryListActivity", "Parsing resulted in an empty list.");
+                }
             });
         });
     }
 
-    private void syncData() {
-        if (departmentCode == null) return;
+    private String fetchXmlFromServer(String code) {
+        try {
+            SessionManager sessionManager = new SessionManager(getApplicationContext());
+            URL url = new URL("http://" + sessionManager.getIP() + "/my1c/hs/hw/say");
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            try {
+                urlConnection.setRequestMethod("POST");
+                urlConnection.setDoOutput(true);
+                urlConnection.setRequestProperty("Content-Type", "text/plain; charset=utf-8");
 
-        String serverIP = sessionManager.getIpAddress();
-        String url = "http://" + serverIP + "/my1c/hs/hw/say";
-
-        OkHttpClient client = new OkHttpClient();
-        String json = "{\"odel\":\"" + departmentCode + "\"}";
-        RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
-        String credentials = okhttp3.Credentials.basic(sessionManager.getUsername(), sessionManager.getPassword());
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .header("Authorization", credentials)
-                .build();
-
-        client.newCall(request).enqueue(new okhttp3.Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                 mainHandler.post(() -> Toast.makeText(InventoryListActivity.this, "Ошибка синхронизации", Toast.LENGTH_SHORT).show());
-            }
-
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        final List<Nomenclature> items = parseXml(response.body().byteStream());
-
-                        databaseExecutor.execute(() -> {
-                            db.inventoryItemDao().clearByDepartmentId(departmentId);
-                            List<InventoryItemEntity> itemEntities = new ArrayList<>();
-                            for (Nomenclature item : items) {
-                                InventoryItemEntity entity = new InventoryItemEntity();
-                                entity.departmentId = departmentId;
-                                entity.code = item.getCode();
-                                entity.name = item.getName();
-                                entity.rf = item.getRfid();
-                                itemEntities.add(entity);
-                            }
-                            db.inventoryItemDao().insertAll(itemEntities);
-
-                            mainHandler.post(() -> loadDataFromDb());
-                        });
-                    } catch (Exception e) {
-                        Log.e(TAG, "Parsing or DB error", e);
-                    }
+                try (OutputStream os = urlConnection.getOutputStream()) {
+                    byte[] input = code.getBytes(StandardCharsets.UTF_8);
+                    os.write(input, 0, input.length);
                 }
+
+                InputStream in = urlConnection.getInputStream();
+                java.util.Scanner s = new java.util.Scanner(in).useDelimiter("\\A");
+                return s.hasNext() ? s.next() : "";
+            } finally {
+                urlConnection.disconnect();
             }
-        });
+        } catch (Exception e) {
+            Log.e("InventoryListActivity", "Error fetching inventory data", e);
+            return null;
+        }
     }
 
-    private List<Nomenclature> parseXml(InputStream is) {
-        List<Nomenclature> list = new ArrayList<>();
+    private List<InventoryItem> parseXmlWithPullParser(String xml) {
+        if (xml == null || xml.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<InventoryItem> items = new ArrayList<>();
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             XmlPullParser parser = factory.newPullParser();
-            parser.setInput(is, null);
+            parser.setInput(new StringReader(xml));
 
-            String text = "";
-            String code = null, name = null, rf = null;
             int eventType = parser.getEventType();
-
             while (eventType != XmlPullParser.END_DOCUMENT) {
-                String tagName = parser.getName();
-                switch (eventType) {
-                    case XmlPullParser.TEXT:
-                        text = parser.getText();
-                        break;
-                    case XmlPullParser.END_TAG:
-                        if ("Code".equalsIgnoreCase(tagName)) {
-                            code = text;
-                        } else if ("Name".equalsIgnoreCase(tagName)) {
-                            name = text;
-                        } else if ("rf".equalsIgnoreCase(tagName)) {
-                            rf = text;
-                        } else if ("Product".equalsIgnoreCase(tagName)) {
-                            if (code != null && name != null && rf != null) {
-                                list.add(new Nomenclature(code, name, rf));
-                            }
-                        }
-                        break;
+                if (eventType == XmlPullParser.START_TAG && "СтрокаН".equals(parser.getName())) {
+                    String name = parser.getAttributeValue(null, "Наименование");
+                    String code = parser.getAttributeValue(null, "Код");
+                    String invCode = parser.getAttributeValue(null, "ИнвКод");
+                    String status = parser.getAttributeValue(null, "Статус");
+                    items.add(new InventoryItem(name, code, invCode, status));
                 }
                 eventType = parser.next();
             }
         } catch (Exception e) {
-            Log.e(TAG, "XML parse error", e);
+            Log.e("InventoryListActivity", "XML parsing error", e);
+            return new ArrayList<>();
         }
-        return list;
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        finish();
-        return true;
+        return items;
     }
 }

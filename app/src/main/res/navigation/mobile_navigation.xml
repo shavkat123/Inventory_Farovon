@@ -11,9 +11,22 @@
         android:label="Главное меню"
         tools:layout="@layout/fragment_home" />
 
+    <!-- This is the new fragment for the inventory menu -->
     <fragment
         android:id="@+id/nav_inventory"
         android:name="com.inventory.farovon.ui.inventory.InventoryFragment"
         android:label="Инвентаризация"
-        tools:layout="@layout/fragment_inventory" />
+        tools:layout="@layout/fragment_inventory">
+        <action
+            android:id="@+id/action_inventory_to_gallery"
+            app:destination="@id/nav_gallery" />
+    </fragment>
+
+    <!-- This is the original inventory screen, now for "by room" -->
+    <fragment
+        android:id="@+id/nav_gallery"
+        android:name="com.inventory.farovon.ui.gallery.GalleryFragment"
+        android:label="Инвентаризация по помещению"
+        tools:layout="@layout/fragment_gallery" />
+
 </navigation>

@@ -4,186 +4,114 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.Toast;
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.inventory.farovon.db.AppDatabase;
-import com.inventory.farovon.db.DepartmentEntity;
-import com.inventory.farovon.db.OrganizationEntity;
-import com.inventory.farovon.model.OrganizationItem;
-import com.inventory.farovon.ui.login.SessionManager;
-
-import java.io.IOException;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+import java.io.InputStream;
+import java.io.StringReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.Credentials;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
 public class OrganizationInventoryActivity extends AppCompatActivity {
 
-    private static final String TAG = "OrgInventoryActivity";
-
     private RecyclerView recyclerView;
-    private ProgressBar progressBar;
     private OrganizationAdapter adapter;
-    private SessionManager sessionManager;
-    private AppDatabase db;
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
-    private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
+    private final List<OrganizationItem> organizationItems = new ArrayList<>();
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_organization_inventory);
 
-        sessionManager = new SessionManager(this);
-        db = AppDatabase.getDatabase(this);
-
-        Toolbar toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
-
-        recyclerView = findViewById(R.id.organization_recycler_view);
-        progressBar = findViewById(R.id.progress_bar);
+        recyclerView = findViewById(R.id.recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new OrganizationAdapter(organizationItems);
+        recyclerView.setAdapter(adapter);
 
-        loadDataFromDb();
-        syncData();
+        fetchData();
     }
 
-    private void loadDataFromDb() {
-        progressBar.setVisibility(View.VISIBLE);
-        recyclerView.setVisibility(View.GONE);
-        databaseExecutor.execute(() -> {
-            List<OrganizationEntity> orgEntities = db.organizationDao().getAll();
-            List<OrganizationItem> orgItems = new ArrayList<>();
+    private void fetchData() {
+        executor.execute(() -> {
+            String xmlResult = fetchXmlFromServer();
+            List<OrganizationItem> parsedItems = parseXmlWithPullParser(xmlResult);
 
-            for (OrganizationEntity orgEntity : orgEntities) {
-                OrganizationItem orgItem = new OrganizationItem(orgEntity.name, 0);
-                orgItem.setId(orgEntity.id);
-                List<DepartmentEntity> deptEntities = db.departmentDao().getByOrganizationId(orgEntity.id);
-
-                Map<String, OrganizationItem> departmentMap = new HashMap<>();
-                for (DepartmentEntity deptEntity : deptEntities) {
-                    OrganizationItem deptItem = new OrganizationItem(deptEntity.name, 1);
-                    deptItem.setId(deptEntity.id);
-                    deptItem.setCode(deptEntity.code);
-                    departmentMap.put(deptEntity.name, deptItem);
+            handler.post(() -> {
+                if (parsedItems != null && !parsedItems.isEmpty()) {
+                    organizationItems.clear();
+                    organizationItems.addAll(parsedItems);
+                    adapter.notifyDataSetChanged();
+                } else {
+                    Log.e("OrgInventoryActivity", "Parsing resulted in an empty list.");
                 }
-
-                for (DepartmentEntity deptEntity : deptEntities) {
-                     OrganizationItem deptItem = departmentMap.get(deptEntity.name);
-                     if (deptEntity.parentRef != null && !deptEntity.parentRef.isEmpty() && departmentMap.containsKey(deptEntity.parentRef)) {
-                         OrganizationItem parentItem = departmentMap.get(deptEntity.parentRef);
-                         if (parentItem != null) {
-                            parentItem.addChild(deptItem);
-                            deptItem.setLevel(parentItem.getLevel() + 1);
-                         }
-                     } else {
-                         orgItem.addChild(deptItem);
-                     }
-                }
-                orgItems.add(orgItem);
-            }
-
-            mainHandler.post(() -> {
-                progressBar.setVisibility(View.GONE);
-                recyclerView.setVisibility(View.VISIBLE);
-                adapter = new OrganizationAdapter(orgItems);
-                recyclerView.setAdapter(adapter);
             });
         });
     }
 
-    private void syncData() {
-        String ip = sessionManager.getIpAddress();
-        String username = sessionManager.getUsername();
-        String password = sessionManager.getPassword();
-        String url = "http://" + ip + "/my1c/hs/checking/schema";
-
-        OkHttpClient client = new OkHttpClient();
-        RequestBody body = RequestBody.create("", null);
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .header("Authorization", Credentials.basic(username, password))
-                .build();
-
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                mainHandler.post(() -> Toast.makeText(OrganizationInventoryActivity.this, "Ошибка синхронизации", Toast.LENGTH_SHORT).show());
+    private String fetchXmlFromServer() {
+        try {
+            SessionManager sessionManager = new SessionManager(getApplicationContext());
+            URL url = new URL("http://" + sessionManager.getIP() + "/my1c/hs/checking/schema");
+            HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
+            try {
+                InputStream in = urlConnection.getInputStream();
+                java.util.Scanner s = new java.util.Scanner(in).useDelimiter("\\A");
+                return s.hasNext() ? s.next() : "";
+            } finally {
+                urlConnection.disconnect();
             }
+        } catch (Exception e) {
+            Log.e("OrgInventoryActivity", "Error fetching data", e);
+            return null;
+        }
+    }
 
-            @Override
-            public void onResponse(@NonNull Call call, @NonNull Response response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    try {
-                        String xmlString = response.body().string();
-                        OrganizationXmlParser parser = new OrganizationXmlParser();
-                        List<OrganizationItem> orgItems = parser.parse(xmlString);
+    private List<OrganizationItem> parseXmlWithPullParser(String xml) {
+        if (xml == null || xml.isEmpty()) {
+            return new ArrayList<>();
+        }
 
-                        databaseExecutor.execute(() -> {
-                            db.organizationDao().clearAll();
-                            for (OrganizationItem orgItem : orgItems) {
-                                OrganizationEntity orgEntity = new OrganizationEntity();
-                                orgEntity.name = orgItem.getName();
-                                long orgId = db.organizationDao().insert(orgEntity);
-                                saveDepartmentsRecursive(orgItem.getChildren(), (int) orgId, "");
+        List<OrganizationItem> items = new ArrayList<>();
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser parser = factory.newPullParser();
+            parser.setInput(new StringReader(xml));
+
+            int eventType = parser.getEventType();
+            int currentLevel = -1;
+
+            while (eventType != XmlPullParser.END_DOCUMENT) {
+                String tagName = parser.getName();
+                switch (eventType) {
+                    case XmlPullParser.START_TAG:
+                        currentLevel++;
+                        if ("Организация".equals(tagName) || "Подразделение".equals(tagName) || "Кабинет".equals(tagName)) {
+                            String ref = parser.getAttributeValue(null, "ref");
+                            String code = parser.getAttributeValue(null, "code");
+                            String name = parser.getAttributeValue(null, "name");
+                            if (name != null && code != null && ref != null) {
+                                items.add(new OrganizationItem(ref, code, name, tagName, currentLevel));
                             }
-                            mainHandler.post(() -> loadDataFromDb());
-                        });
-
-                    } catch (Exception e) {
-                        Log.e(TAG, "Parsing or DB error", e);
-                    }
+                        }
+                        break;
+                    case XmlPullParser.END_TAG:
+                        currentLevel--;
+                        break;
                 }
+                eventType = parser.next();
             }
-        });
-    }
-
-    private void saveDepartmentsRecursive(List<OrganizationItem> deptItems, int orgId, String parentRef) {
-        if (deptItems == null || deptItems.isEmpty()) {
-            return;
+        } catch (Exception e) {
+            Log.e("OrgInventoryActivity", "XML parsing error", e);
+            return new ArrayList<>();
         }
-
-        List<DepartmentEntity> deptEntities = new ArrayList<>();
-        for (OrganizationItem deptItem : deptItems) {
-            DepartmentEntity deptEntity = new DepartmentEntity();
-            deptEntity.organizationId = orgId;
-            deptEntity.code = deptItem.getCode();
-            deptEntity.name = deptItem.getName();
-            deptEntity.parentRef = parentRef;
-            deptEntities.add(deptEntity);
-        }
-        db.departmentDao().insertAll(deptEntities);
-
-        for (OrganizationItem deptItem : deptItems) {
-            saveDepartmentsRecursive(deptItem.getChildren(), orgId, deptItem.getName());
-        }
-    }
-
-    @Override
-    public boolean onSupportNavigateUp() {
-        finish();
-        return true;
+        return items;
     }
 }

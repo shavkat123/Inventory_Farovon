@@ -1,88 +1,66 @@
 package com.inventory.farovon;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
+import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.inventory.farovon.model.OrganizationItem;
-import java.util.ArrayList;
+
 import java.util.List;
 
 public class OrganizationAdapter extends RecyclerView.Adapter<OrganizationAdapter.ViewHolder> {
 
-    private final List<OrganizationItem> items;
-    private final List<OrganizationItem> visibleItems;
+    private final List<OrganizationItem> organizationItems;
 
-    public OrganizationAdapter(List<OrganizationItem> items) {
-        this.items = items;
-        this.visibleItems = new ArrayList<>();
-        updateVisibleItems();
+    public OrganizationAdapter(List<OrganizationItem> organizationItems) {
+        this.organizationItems = organizationItems;
     }
 
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_organization, parent, false);
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.item_organization, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        holder.bind(visibleItems.get(position));
+        OrganizationItem item = organizationItems.get(position);
+        holder.name.setText(item.getName());
+
+        // Set indentation based on level
+        int paddingStart = item.getLevel() * 40; // 40 pixels per level
+        holder.itemView.setPadding(paddingStart, holder.itemView.getPaddingTop(), holder.itemView.getPaddingRight(), holder.itemView.getPaddingBottom());
+
+        holder.scanButton.setOnClickListener(v -> {
+            Context context = v.getContext();
+            Intent intent = new Intent(context, InventoryListActivity.class);
+            intent.putExtra("ITEM_CODE", item.getCode());
+            intent.putExtra("ITEM_NAME", item.getName());
+            context.startActivity(intent);
+        });
     }
 
     @Override
     public int getItemCount() {
-        return visibleItems.size();
+        return organizationItems.size();
     }
 
-    private void updateVisibleItems() {
-        visibleItems.clear();
-        for (OrganizationItem item : items) {
-            addVisibleItem(item);
-        }
-    }
+    public static class ViewHolder extends RecyclerView.ViewHolder {
+        public final TextView name;
+        public final ImageButton scanButton;
 
-    private void addVisibleItem(OrganizationItem item) {
-        visibleItems.add(item);
-        if (item.isExpanded() && !item.getChildren().isEmpty()) {
-            for (OrganizationItem child : item.getChildren()) {
-                addVisibleItem(child);
-            }
-        }
-    }
-
-    class ViewHolder extends RecyclerView.ViewHolder {
-        TextView name;
-        ImageView scanButton;
-
-        ViewHolder(View itemView) {
-            super(itemView);
-            name = itemView.findViewById(R.id.organization_name);
-            scanButton = itemView.findViewById(R.id.scan_button);
-        }
-
-        void bind(OrganizationItem item) {
-            name.setText(item.getName());
-            itemView.setPadding(item.getLevel() * 64, 0, 0, 0);
-
-            itemView.setOnClickListener(v -> {
-                if (!item.getChildren().isEmpty()) {
-                    item.setExpanded(!item.isExpanded());
-                    updateVisibleItems();
-                    notifyDataSetChanged();
-                } else if (item.getCode() != null && !item.getCode().isEmpty()) {
-                    Context context = itemView.getContext();
-                    android.content.Intent intent = new android.content.Intent(context, InventoryListActivity.class);
-                    intent.putExtra(InventoryListActivity.EXTRA_DEPARTMENT_ID, item.getId());
-                    intent.putExtra(InventoryListActivity.EXTRA_DEPARTMENT_CODE, item.getCode());
-                    context.startActivity(intent);
-                }
-            });
+        public ViewHolder(View view) {
+            super(view);
+            name = view.findViewById(R.id.item_name);
+            scanButton = view.findViewById(R.id.scan_button);
         }
     }
 }
