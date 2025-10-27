@@ -16,7 +16,7 @@ import com.inventory.farovon.ui.home.MenuItem;
 import java.util.ArrayList;
 import java.util.List;
 
-public class InventoryFragment extends Fragment implements MainMenuAdapter.OnItemClickListener {
+public class InventoryFragment extends Fragment implements MainMenuAdapter.OnMenuItemClickListener {
 
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
@@ -35,7 +35,7 @@ public class InventoryFragment extends Fragment implements MainMenuAdapter.OnIte
     }
 
     @Override
-    public void onItemClick(MenuItem item) {
+    public void onMenuItemClick(MenuItem item) {
         if (item.getTitle().equals(getString(R.string.menu_organization_inventory))) {
             Intent intent = new Intent(getActivity(), OrganizationInventoryActivity.class);
             startActivity(intent);
