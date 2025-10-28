@@ -44,7 +44,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:text="выполнено"
-        android:textColor="@color/colorAccent"
+        android:textColor="@color/colorAccentOrange"
         android:textSize="12sp"
         android:textStyle="bold"
         android:visibility="gone" />
