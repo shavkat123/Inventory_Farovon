@@ -71,7 +71,10 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         findViewById(R.id.btn_send_data).setOnClickListener(v -> sendCompletedData());
 
         loadDataFromDb();
-        syncData();
+
+        if (isNetworkAvailable()) {
+            startService(new android.content.Intent(this, UploadService.class));
+        }
     }
 
     private void sendCompletedData() {
@@ -87,7 +90,6 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                 codes.add(dept.code);
             }
 
-            // Simple JSON creation, for more complex scenarios consider using a library like Gson
             StringBuilder jsonBuilder = new StringBuilder();
             jsonBuilder.append("{\"inventoried_rooms\": [");
             for (int i = 0; i < codes.size(); i++) {
@@ -99,41 +101,15 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
             jsonBuilder.append("]}");
             String json = jsonBuilder.toString();
 
-            String ip = sessionManager.getIpAddress();
-            String username = sessionManager.getUsername();
-            String password = sessionManager.getPassword();
-            String url = "http://" + ip + "/my1c/hs/hw/say";
+            db.pendingUploadDao().insert(new PendingUploadEntity(json));
 
-            OkHttpClient client = new OkHttpClient();
-            RequestBody body = RequestBody.create(json, okhttp3.MediaType.parse("application/json; charset=utf-8"));
-            Request request = new Request.Builder()
-                    .url(url)
-                    .post(body)
-                    .header("Authorization", Credentials.basic(username, password))
-                    .build();
+            for (DepartmentEntity dept : completedDepts) {
+                db.departmentDao().updateCompletionStatus(dept.id, false);
+            }
 
-            client.newCall(request).enqueue(new Callback() {
-                @Override
-                public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                    mainHandler.post(() -> Toast.makeText(OrganizationInventoryActivity.this, "Ошибка отправки данных", Toast.LENGTH_SHORT).show());
-                }
-
-                @Override
-                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                    if (response.isSuccessful() && response.body() != null && "ok".equals(response.body().string())) {
-                        databaseExecutor.execute(() -> {
-                            for (DepartmentEntity dept : completedDepts) {
-                                db.departmentDao().updateCompletionStatus(dept.id, false);
-                            }
-                            mainHandler.post(() -> {
-                                Toast.makeText(OrganizationInventoryActivity.this, "Данные успешно отправлены", Toast.LENGTH_SHORT).show();
-                                loadDataFromDb();
-                            });
-                        });
-                    } else {
-                        mainHandler.post(() -> Toast.makeText(OrganizationInventoryActivity.this, "Сервер вернул ошибку", Toast.LENGTH_SHORT).show());
-                    }
-                }
+            mainHandler.post(() -> {
+                Toast.makeText(this, "Данные добавлены в очередь на отправку", Toast.LENGTH_SHORT).show();
+                loadDataFromDb();
             });
         });
     }
@@ -159,7 +135,11 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == R.id.action_sync) {
-            syncData();
+            if (isNetworkAvailable()) {
+                syncData();
+            } else {
+                Toast.makeText(this, "Нет подключения к интернету", Toast.LENGTH_SHORT).show();
+            }
             return true;
         }
         return super.onOptionsItemSelected(item);

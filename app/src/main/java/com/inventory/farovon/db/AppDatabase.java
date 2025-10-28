@@ -5,12 +5,13 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-@Database(entities = {OrganizationEntity.class, DepartmentEntity.class, InventoryItemEntity.class}, version = 3, exportSchema = false)
+@Database(entities = {OrganizationEntity.class, DepartmentEntity.class, InventoryItemEntity.class, PendingUploadEntity.class}, version = 4, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract OrganizationDao organizationDao();
     public abstract DepartmentDao departmentDao();
     public abstract InventoryItemDao inventoryItemDao();
+    public abstract PendingUploadDao pendingUploadDao();
 
     private static volatile AppDatabase INSTANCE;
 
