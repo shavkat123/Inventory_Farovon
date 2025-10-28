@@ -2,6 +2,7 @@ package com.inventory.farovon.db;
 
 import androidx.room.Entity;
 import androidx.room.ForeignKey;
+import androidx.room.ColumnInfo;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "departments",
@@ -16,4 +17,7 @@ public class DepartmentEntity {
     public String code;
     public String name;
     public String parentRef;
+
+    @ColumnInfo(name = "is_completed", defaultValue = "false")
+    public boolean isCompleted;
 }

@@ -61,4 +61,14 @@ public class OrganizationItem {
     public void addChild(OrganizationItem child) {
         children.add(child);
     }
+
+    private boolean isCompleted;
+
+    public boolean isCompleted() {
+        return isCompleted;
+    }
+
+    public void setCompleted(boolean completed) {
+        isCompleted = completed;
+    }
 }

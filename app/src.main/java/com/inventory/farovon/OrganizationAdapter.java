@@ -63,6 +63,7 @@ public class OrganizationAdapter extends RecyclerView.Adapter<OrganizationAdapte
         ImageView itemIcon;
         ImageView expandIndicator;
         Space indentationSpace;
+        TextView statusCompleted;
 
         ViewHolder(View itemView) {
             super(itemView);
@@ -70,6 +71,7 @@ public class OrganizationAdapter extends RecyclerView.Adapter<OrganizationAdapte
             itemIcon = itemView.findViewById(R.id.item_icon);
             expandIndicator = itemView.findViewById(R.id.expand_indicator);
             indentationSpace = itemView.findViewById(R.id.indentation_space);
+            statusCompleted = itemView.findViewById(R.id.status_completed);
         }
 
         void bind(OrganizationItem item) {
@@ -89,6 +91,8 @@ public class OrganizationAdapter extends RecyclerView.Adapter<OrganizationAdapte
                 itemIcon.setImageResource(R.drawable.ic_document);
                 expandIndicator.setVisibility(View.INVISIBLE);
             }
+
+            statusCompleted.setVisibility(item.isCompleted() ? View.VISIBLE : View.GONE);
 
             itemView.setOnClickListener(v -> {
                 if (hasChildren) {

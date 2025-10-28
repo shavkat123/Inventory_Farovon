@@ -28,12 +28,14 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import okhttp3.Response;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 public class InventoryListActivity extends AppCompatActivity {
 
+    private List<Nomenclature> unscannedItems = new ArrayList<>();
     public static final String EXTRA_DEPARTMENT_CODE = "department_code";
     public static final String EXTRA_DEPARTMENT_ID = "department_id";
     private static final String TAG = "InventoryListActivity";
@@ -78,6 +80,17 @@ public class InventoryListActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "ID помещения не найден", Toast.LENGTH_SHORT).show();
         }
+
+        FloatingActionButton fab = findViewById(R.id.fab_scan);
+        fab.setOnClickListener(view -> {
+            if (!unscannedItems.isEmpty()) {
+                Nomenclature itemToScan = unscannedItems.remove(0);
+                adapter.addFoundRfid(itemToScan.getRfid());
+                checkCompletionAndFinish();
+            } else {
+                Toast.makeText(this, "Все предметы уже найдены", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void loadDataFromDb() {
@@ -88,6 +101,7 @@ public class InventoryListActivity extends AppCompatActivity {
             for (InventoryItemEntity entity : itemEntities) {
                 items.add(new Nomenclature(entity.code, entity.name, entity.rf));
             }
+            unscannedItems = new ArrayList<>(items);
             mainHandler.post(() -> {
                 progressBar.setVisibility(View.GONE);
                 adapter.setItems(items);
@@ -136,7 +150,10 @@ public class InventoryListActivity extends AppCompatActivity {
                             }
                             db.inventoryItemDao().insertAll(itemEntities);
 
-                            mainHandler.post(() -> loadDataFromDb());
+                            mainHandler.post(() -> {
+                                unscannedItems = new ArrayList<>(items);
+                                loadDataFromDb();
+                            });
                         });
                     } catch (Exception e) {
                         Log.e(TAG, "Parsing or DB error", e);
@@ -144,6 +161,18 @@ public class InventoryListActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void checkCompletionAndFinish() {
+        if (adapter.areAllItemsFound()) {
+            databaseExecutor.execute(() -> {
+                db.departmentDao().updateCompletionStatus(departmentId, true);
+                mainHandler.post(() -> {
+                    Toast.makeText(this, "Помещение проинвентаризировано!", Toast.LENGTH_LONG).show();
+                    finish();
+                });
+            });
+        }
     }
 
     private List<Nomenclature> parseXml(InputStream is) {

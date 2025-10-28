@@ -38,4 +38,15 @@
         android:textSize="16sp"
         android:textColor="?android:attr/textColorPrimary"/>
 
+    <TextView
+        android:id="@+id/status_completed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="выполнено"
+        android:textColor="@color/colorAccent"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        android:visibility="gone" />
+
 </LinearLayout>

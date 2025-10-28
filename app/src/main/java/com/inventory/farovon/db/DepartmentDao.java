@@ -16,4 +16,10 @@ public interface DepartmentDao {
 
     @Query("DELETE FROM departments")
     void clearAll();
+
+    @Query("UPDATE departments SET is_completed = :isCompleted WHERE id = :departmentId")
+    void updateCompletionStatus(int departmentId, boolean isCompleted);
+
+    @Query("SELECT * FROM departments WHERE is_completed = 1")
+    List<DepartmentEntity> getCompletedDepartments();
 }

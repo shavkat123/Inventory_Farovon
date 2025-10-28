@@ -68,8 +68,74 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progress_bar);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
+        findViewById(R.id.btn_send_data).setOnClickListener(v -> sendCompletedData());
+
         loadDataFromDb();
         syncData();
+    }
+
+    private void sendCompletedData() {
+        databaseExecutor.execute(() -> {
+            List<DepartmentEntity> completedDepts = db.departmentDao().getCompletedDepartments();
+            if (completedDepts.isEmpty()) {
+                mainHandler.post(() -> Toast.makeText(this, "Нет выполненных помещений для отправки", Toast.LENGTH_SHORT).show());
+                return;
+            }
+
+            List<String> codes = new ArrayList<>();
+            for (DepartmentEntity dept : completedDepts) {
+                codes.add(dept.code);
+            }
+
+            // Simple JSON creation, for more complex scenarios consider using a library like Gson
+            StringBuilder jsonBuilder = new StringBuilder();
+            jsonBuilder.append("{\"inventoried_rooms\": [");
+            for (int i = 0; i < codes.size(); i++) {
+                jsonBuilder.append("\"").append(codes.get(i)).append("\"");
+                if (i < codes.size() - 1) {
+                    jsonBuilder.append(",");
+                }
+            }
+            jsonBuilder.append("]}");
+            String json = jsonBuilder.toString();
+
+            String ip = sessionManager.getIpAddress();
+            String username = sessionManager.getUsername();
+            String password = sessionManager.getPassword();
+            String url = "http://" + ip + "/my1c/hs/hw/say";
+
+            OkHttpClient client = new OkHttpClient();
+            RequestBody body = RequestBody.create(json, okhttp3.MediaType.parse("application/json; charset=utf-8"));
+            Request request = new Request.Builder()
+                    .url(url)
+                    .post(body)
+                    .header("Authorization", Credentials.basic(username, password))
+                    .build();
+
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                    mainHandler.post(() -> Toast.makeText(OrganizationInventoryActivity.this, "Ошибка отправки данных", Toast.LENGTH_SHORT).show());
+                }
+
+                @Override
+                public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
+                    if (response.isSuccessful() && response.body() != null && "ok".equals(response.body().string())) {
+                        databaseExecutor.execute(() -> {
+                            for (DepartmentEntity dept : completedDepts) {
+                                db.departmentDao().updateCompletionStatus(dept.id, false);
+                            }
+                            mainHandler.post(() -> {
+                                Toast.makeText(OrganizationInventoryActivity.this, "Данные успешно отправлены", Toast.LENGTH_SHORT).show();
+                                loadDataFromDb();
+                            });
+                        });
+                    } else {
+                        mainHandler.post(() -> Toast.makeText(OrganizationInventoryActivity.this, "Сервер вернул ошибку", Toast.LENGTH_SHORT).show());
+                    }
+                }
+            });
+        });
     }
 
     @Override
@@ -123,6 +189,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                     OrganizationItem deptItem = new OrganizationItem(deptEntity.name, 1);
                     deptItem.setId(deptEntity.id);
                     deptItem.setCode(deptEntity.code);
+                    deptItem.setCompleted(deptEntity.isCompleted);
                     departmentMap.put(deptEntity.name, deptItem);
                 }
 
