@@ -114,7 +114,6 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
         h.tvName.setText(name != null ? name : "");
         h.tvCode.setText(code != null ? code : "");
         h.tvRfid.setText(rfid != null ? rfid : "");
-        h.scanCount.setText(String.valueOf(count));
 
         // Жирный шрифт для найденных
         h.tvName.setTypeface(null, count > 0 ? Typeface.BOLD : Typeface.NORMAL);
@@ -133,7 +132,7 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
     /** Хранилище ссылок на вью элемента. */
     static class VH extends RecyclerView.ViewHolder {
         View root;
-        TextView tvName, tvCode, tvRfid, scanCount;
+        TextView tvName, tvCode, tvRfid;
 
         VH(@NonNull View itemView) {
             super(itemView);
@@ -144,7 +143,6 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
             tvName    = itemView.findViewById(R.id.tvName);
             tvCode    = itemView.findViewById(R.id.tvCode);
             tvRfid    = itemView.findViewById(R.id.rfid);
-            scanCount = itemView.findViewById(R.id.scanCount);
         }
     }
 }
