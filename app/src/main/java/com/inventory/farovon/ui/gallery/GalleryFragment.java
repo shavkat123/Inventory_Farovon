@@ -160,7 +160,7 @@ public class GalleryFragment extends Fragment {
                     String name = element.getElementsByTagName("Name").item(0).getTextContent();
                     String rf = element.getElementsByTagName("rf").item(0).getTextContent();
 
-                    list.add(new Nomenclature(code, name, rf));
+                    list.add(new Nomenclature(code, name, rf, null, null));
                 }
             }
 
