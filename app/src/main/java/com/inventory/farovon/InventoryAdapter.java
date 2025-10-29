@@ -127,9 +127,11 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.View
                 int itemId = menuItem.getItemId();
                 if (itemId == R.id.action_move) {
                     Toast.makeText(context, "Перемещение", Toast.LENGTH_SHORT).show();
+                    adapter.ignoreItem(position);
                     return true;
                 } else if (itemId == R.id.action_write_off) {
                     Toast.makeText(context, "Списание", Toast.LENGTH_SHORT).show();
+                    adapter.ignoreItem(position);
                     return true;
                 } else if (itemId == R.id.action_ignore) {
                     adapter.ignoreItem(position);

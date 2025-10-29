@@ -99,7 +99,7 @@ public class InventoryListActivity extends AppCompatActivity {
             List<InventoryItemEntity> itemEntities = db.inventoryItemDao().getByDepartmentId(departmentId);
             List<Nomenclature> items = new ArrayList<>();
             for (InventoryItemEntity entity : itemEntities) {
-                items.add(new Nomenclature(entity.code, entity.name, entity.rf, "", ""));
+                items.add(new Nomenclature(entity.code, entity.name, entity.rf, entity.mol, entity.location));
             }
             unscannedItems = new ArrayList<>(items);
             mainHandler.post(() -> {
@@ -146,6 +146,8 @@ public class InventoryListActivity extends AppCompatActivity {
                                 entity.code = item.getCode();
                                 entity.name = item.getName();
                                 entity.rf = item.getRfid();
+                                entity.mol = item.getMol();
+                                entity.location = item.getLocation();
                                 itemEntities.add(entity);
                             }
                             db.inventoryItemDao().insertAll(itemEntities);

@@ -16,4 +16,6 @@ public class InventoryItemEntity {
     public String code;
     public String name;
     public String rf;
+    public String mol;
+    public String location;
 }
