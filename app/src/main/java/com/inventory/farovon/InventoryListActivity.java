@@ -146,8 +146,8 @@ public class InventoryListActivity extends AppCompatActivity {
                                 entity.code = item.getCode();
                                 entity.name = item.getName();
                                 entity.rf = item.getRfid();
-                                entity.mol = item.getMol();
-                                entity.location = item.getLocation();
+                                entity.mol = item.getMol() != null ? item.getMol() : "";
+                                entity.location = item.getLocation() != null ? item.getLocation() : "";
                                 itemEntities.add(entity);
                             }
                             db.inventoryItemDao().insertAll(itemEntities);
