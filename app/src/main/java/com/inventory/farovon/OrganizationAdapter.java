@@ -84,11 +84,11 @@ public class OrganizationAdapter extends RecyclerView.Adapter<OrganizationAdapte
             boolean hasChildren = !item.getChildren().isEmpty();
 
             if (hasChildren) {
-                itemIcon.setImageResource(R.drawable.ic_folder);
+                itemIcon.setImageResource(R.drawable.icons8_organization);
                 expandIndicator.setVisibility(View.VISIBLE);
                 expandIndicator.setRotation(item.isExpanded() ? 90f : 0f);
             } else {
-                itemIcon.setImageResource(R.drawable.ic_document);
+                itemIcon.setImageResource(R.drawable.icons8__96__1_office);
                 expandIndicator.setVisibility(View.INVISIBLE);
             }
 

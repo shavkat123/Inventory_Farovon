@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.DepartmentEntity;
 import com.inventory.farovon.db.OrganizationEntity;
+import com.inventory.farovon.db.PendingUploadEntity;
 import com.inventory.farovon.model.OrganizationItem;
 import com.inventory.farovon.ui.login.SessionManager;
 import java.io.IOException;
