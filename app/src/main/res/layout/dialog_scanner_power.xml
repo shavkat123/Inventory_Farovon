@@ -8,33 +8,25 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Мощность сканирования"
+        android:text="Настройка мощности сканера"
         android:textSize="20sp"
-        android:textColor="@color/colorTextDark"
+        android:textStyle="bold"
+        android:layout_gravity="center"
         android:layout_marginBottom="16dp"/>
 
     <SeekBar
-        android:id="@+id/power_seekbar"
+        android:id="@+id/seekbar_power"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:max="9"
-        android:progress="4" />
+        android:max="29"
+        android:progress="15" />
 
     <TextView
-        android:id="@+id/power_value_text"
+        android:id="@+id/tv_power_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="5"
-        android:layout_gravity="center_horizontal"
-        android:textSize="18sp"
-        android:textColor="@color/colorPrimary"
+        android:text="Мощность: 16"
+        android:layout_gravity="center"
         android:layout_marginTop="8dp"/>
-
-    <Button
-        android:id="@+id/confirm_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Применить"
-        android:layout_marginTop="24dp"/>
 
 </LinearLayout>

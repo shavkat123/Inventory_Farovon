@@ -1,11 +1,18 @@
 package com.inventory.farovon;
 
 import android.os.Bundle;
+import android.app.AlertDialog;
+import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ProgressBar;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -82,15 +89,47 @@ public class InventoryListActivity extends AppCompatActivity {
         }
 
         FloatingActionButton fab = findViewById(R.id.fab_scan);
-        fab.setOnClickListener(view -> {
-            if (!unscannedItems.isEmpty()) {
-                Nomenclature itemToScan = unscannedItems.remove(0);
-                adapter.addFoundRfid(itemToScan.getRfid());
-                checkCompletionAndFinish();
-            } else {
-                Toast.makeText(this, "Все предметы уже найдены", Toast.LENGTH_SHORT).show();
+        fab.setOnClickListener(view -> showPowerDialog());
+    }
+
+    private void showPowerDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_scanner_power, null);
+        builder.setView(dialogView);
+
+        final SeekBar seekBar = dialogView.findViewById(R.id.seekbar_power);
+        final TextView powerValue = dialogView.findViewById(R.id.tv_power_value);
+
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        int currentPower = prefs.getInt("scanner_power", 15);
+
+        seekBar.setProgress(currentPower - 1);
+        powerValue.setText("Мощность: " + currentPower);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                powerValue.setText("Мощность: " + (progress + 1));
             }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
         });
+
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            int newPower = seekBar.getProgress() + 1;
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt("scanner_power", newPower);
+            editor.apply();
+            Toast.makeText(this, "Мощность установлена: " + newPower, Toast.LENGTH_SHORT).show();
+        });
+        builder.setNegativeButton("Отмена", (dialog, which) -> dialog.cancel());
+
+        builder.create().show();
     }
 
     private void loadDataFromDb() {

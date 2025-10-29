@@ -52,6 +52,6 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
         app:backgroundTint="@color/colorPrimary"
-        app:srcCompat="@drawable/ic_rfid_scan" />
+        app:srcCompat="@drawable/ic_scan" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
