@@ -45,8 +45,7 @@ public class InventoryFragment extends Fragment implements MainMenuAdapter.OnMen
             Intent intent = new Intent(getActivity(), OrganizationInventoryActivity.class);
             startActivity(intent);
         } else if (item.getTitle().equals(getString(R.string.menu_room_inventory))) {
-            Intent intent = new Intent(getActivity(), IdentificationActivity.class);
-            startActivity(intent);
+            NavHostFragment.findNavController(this).navigate(R.id.action_inventory_to_gallery);
         }
     }
 }
