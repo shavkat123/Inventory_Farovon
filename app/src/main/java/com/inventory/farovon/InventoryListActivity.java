@@ -99,7 +99,7 @@ public class InventoryListActivity extends AppCompatActivity {
             List<InventoryItemEntity> itemEntities = db.inventoryItemDao().getByDepartmentId(departmentId);
             List<Nomenclature> items = new ArrayList<>();
             for (InventoryItemEntity entity : itemEntities) {
-                items.add(new Nomenclature(entity.code, entity.name, entity.rf));
+                items.add(new Nomenclature(entity.code, entity.name, entity.rf, "", ""));
             }
             unscannedItems = new ArrayList<>(items);
             mainHandler.post(() -> {
@@ -183,7 +183,7 @@ public class InventoryListActivity extends AppCompatActivity {
             parser.setInput(is, null);
 
             String text = "";
-            String code = null, name = null, rf = null;
+            String code = null, name = null, rf = null, mol = null, location = null;
             int eventType = parser.getEventType();
 
             while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -199,9 +199,13 @@ public class InventoryListActivity extends AppCompatActivity {
                             name = text;
                         } else if ("rf".equalsIgnoreCase(tagName)) {
                             rf = text;
+                        } else if ("mol".equalsIgnoreCase(tagName)) {
+                            mol = text;
+                        } else if ("location".equalsIgnoreCase(tagName)) {
+                            location = text;
                         } else if ("Product".equalsIgnoreCase(tagName)) {
                             if (code != null && name != null && rf != null) {
-                                list.add(new Nomenclature(code, name, rf));
+                                list.add(new Nomenclature(code, name, rf, mol, location));
                             }
                         }
                         break;

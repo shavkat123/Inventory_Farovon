@@ -6,11 +6,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.RecyclerView;
-
-import com.inventory.farovon.IdentificationActivity;
 import com.inventory.farovon.OrganizationInventoryActivity;
 import com.inventory.farovon.R;
 import com.inventory.farovon.ui.home.MainMenuAdapter;
@@ -20,11 +19,17 @@ import java.util.List;
 
 public class InventoryFragment extends Fragment implements MainMenuAdapter.OnMenuItemClickListener {
 
+    @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              ViewGroup container, Bundle savedInstanceState) {
-        View root = inflater.inflate(R.layout.fragment_inventory, container, false);
+        return inflater.inflate(R.layout.fragment_inventory, container, false);
+    }
 
-        RecyclerView recyclerView = root.findViewById(R.id.inventory_recycler_view);
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        RecyclerView recyclerView = view.findViewById(R.id.inventory_recycler_view);
 
         List<MenuItem> menuItems = new ArrayList<>();
         menuItems.add(new MenuItem(getString(R.string.menu_organization_inventory), R.drawable.icons8____2_96));
@@ -32,8 +37,6 @@ public class InventoryFragment extends Fragment implements MainMenuAdapter.OnMen
 
         MainMenuAdapter adapter = new MainMenuAdapter(menuItems, this);
         recyclerView.setAdapter(adapter);
-
-        return root;
     }
 
     @Override

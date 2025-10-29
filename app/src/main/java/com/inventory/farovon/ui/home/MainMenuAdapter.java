@@ -48,9 +48,6 @@ public class MainMenuAdapter extends RecyclerView.Adapter<MainMenuAdapter.ViewHo
         return menuItems.size();
     }
 
-    public interface OnItemClickListener {
-    }
-
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView icon;
         TextView title;

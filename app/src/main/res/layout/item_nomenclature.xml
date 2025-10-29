@@ -47,5 +47,16 @@
         android:text="0"
         android:textSize="14sp" />
 
+    <ImageView
+        android:id="@+id/iv_more_options"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:src="@drawable/ic_more_vert"
+        android:padding="8dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:clickable="true"
+        android:focusable="true"/>
 
 </RelativeLayout>
