@@ -161,7 +161,7 @@ public class ScanningActivity extends AppCompatActivity {
 
                         databaseExecutor.execute(() -> {
                             int departmentId = db.departmentDao().getIdByCode(departmentCode);
-                            db.inventoryItemDao().clearByDepartmentId(departmentId);
+                            db.inventoryItemDao().clearByDepartmentIdAndLocation(departmentId, roomCode);
                             List<InventoryItemEntity> itemEntities = new ArrayList<>();
                             for (Nomenclature item : items) {
                                 InventoryItemEntity entity = new InventoryItemEntity();
