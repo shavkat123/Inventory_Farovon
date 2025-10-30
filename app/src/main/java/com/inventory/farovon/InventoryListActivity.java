@@ -8,6 +8,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -36,11 +37,17 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.rscja.deviceapi.RFIDWithUHFUART;
+import com.rscja.deviceapi.entity.UHFTAGInfo;
 import okhttp3.Response;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 public class InventoryListActivity extends AppCompatActivity {
+
+    private RFIDWithUHFUART mReader;
+    private boolean isScanning = false;
+    private final Handler handler = new Handler(Looper.getMainLooper());
 
     private List<Nomenclature> unscannedItems = new ArrayList<>();
     public static final String EXTRA_DEPARTMENT_CODE = "department_code";
@@ -90,6 +97,12 @@ public class InventoryListActivity extends AppCompatActivity {
 
         FloatingActionButton fab = findViewById(R.id.fab_scan);
         fab.setOnClickListener(view -> showPowerDialog());
+
+        try {
+            mReader = RFIDWithUHFUART.getInstance();
+        } catch (Exception e) {
+            Toast.makeText(this, "SDK init error: " + e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     private void showPowerDialog() {
@@ -263,5 +276,97 @@ public class InventoryListActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         finish();
         return true;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_F9:
+            case KeyEvent.KEYCODE_F10:
+            case 139: // F10 on some devices
+            case 280: // Pistol grip trigger
+            case 293: // Another trigger key
+                if (event.getRepeatCount() == 0) {
+                    startScanning();
+                    return true;
+                }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_F9:
+            case KeyEvent.KEYCODE_F10:
+            case 139:
+            case 280:
+            case 293:
+                stopScanning();
+                return true;
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    private void startScanning() {
+        if (isScanning) return;
+        if (mReader == null) {
+            Toast.makeText(this, "Ридер не инициализирован", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        if (mReader.init(this)) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            int power = prefs.getInt("scanner_power", 15);
+            mReader.setPower(power);
+
+            boolean ok = mReader.startInventoryTag();
+            if (!ok) {
+                Toast.makeText(this, "Не удалось запустить сканирование", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            isScanning = true;
+            handler.post(pollRunnable);
+        } else {
+            Toast.makeText(this, "Ошибка инициализации ридера", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void stopScanning() {
+        if (isScanning && mReader != null) {
+            try { mReader.stopInventory(); } catch (Exception ignored) {}
+        }
+        isScanning = false;
+        handler.removeCallbacks(pollRunnable);
+    }
+
+    private final Runnable pollRunnable = new Runnable() {
+        @Override public void run() {
+            if (!isScanning || mReader == null) return;
+
+            UHFTAGInfo info;
+            while ((info = mReader.readTagFromBuffer()) != null) {
+                String epc = info.getEPC();
+                if (epc != null) {
+                    runOnUiThread(() -> {
+                        adapter.addFoundRfid(epc);
+                        checkCompletionAndFinish();
+                    });
+                }
+            }
+            handler.postDelayed(this, 60);
+        }
+    };
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopScanning();
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopScanning();
+        if (mReader != null) mReader.free();
+        super.onDestroy();
     }
 }
