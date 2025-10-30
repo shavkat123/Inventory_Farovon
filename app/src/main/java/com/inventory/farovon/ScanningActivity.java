@@ -104,9 +104,14 @@ public class ScanningActivity extends AppCompatActivity {
     private void loadDataFromDb() {
         progressBar.setVisibility(View.VISIBLE);
         databaseExecutor.execute(() -> {
-            // Need to find the department by roomCode to get its ID
-            // For now, let's assume we have it. This needs a fix.
-            List<InventoryItemEntity> itemEntities = db.inventoryItemDao().getByDepartmentId(departmentId);
+            if (departmentId == -1 || roomCode == null) {
+                mainHandler.post(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(this, "Ошибка: ID отдела или помещения не найден", Toast.LENGTH_LONG).show();
+                });
+                return;
+            }
+            List<InventoryItemEntity> itemEntities = db.inventoryItemDao().getByDepartmentIdAndLocation(departmentId, roomCode);
             List<Nomenclature> items = new ArrayList<>();
             for (InventoryItemEntity entity : itemEntities) {
                 items.add(new Nomenclature(entity.code, entity.name, entity.rf, entity.mol, entity.location));
