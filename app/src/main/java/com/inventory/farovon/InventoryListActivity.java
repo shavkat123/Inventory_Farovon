@@ -70,16 +70,12 @@ public class InventoryListActivity extends AppCompatActivity {
         recyclerView.setAdapter(adapter);
 
         adapter.setOnScanClickListener(item -> {
-            databaseExecutor.execute(() -> {
-                int deptId = db.departmentDao().getIdByCode(item.getCode());
-                mainHandler.post(() -> {
-                    android.content.Intent intent = new android.content.Intent(InventoryListActivity.this, ScanningActivity.class);
-                    intent.putExtra(ScanningActivity.EXTRA_ROOM_CODE, item.getCode());
-                    intent.putExtra(ScanningActivity.EXTRA_ROOM_NAME, item.getName());
-                    intent.putExtra(ScanningActivity.EXTRA_DEPARTMENT_ID, deptId);
-                    startActivity(intent);
-                });
-            });
+            android.content.Intent intent = new android.content.Intent(InventoryListActivity.this, MainActivity.class);
+            intent.putExtra("navigate_to", "gallery");
+            intent.putExtra("room_code_to_verify", item.getCode());
+            intent.putExtra("room_name_to_verify", item.getName());
+            intent.putExtra("department_code", departmentCode);
+            startActivity(intent);
         });
 
         departmentCode = getIntent().getStringExtra(EXTRA_DEPARTMENT_CODE);

@@ -45,7 +45,7 @@ public class ScanningActivity extends AppCompatActivity {
 
     public static final String EXTRA_ROOM_CODE = "room_code";
     public static final String EXTRA_ROOM_NAME = "room_name";
-    public static final String EXTRA_DEPARTMENT_ID = "department_id";
+    public static final String EXTRA_DEPARTMENT_CODE = "department_code";
     private static final String TAG = "ScanningActivity";
 
     private RFIDWithUHFUART mReader;
@@ -80,11 +80,10 @@ public class ScanningActivity extends AppCompatActivity {
         }
 
         roomCode = getIntent().getStringExtra(EXTRA_ROOM_CODE);
-        int departmentIdFromIntent = getIntent().getIntExtra(EXTRA_DEPARTMENT_ID, -1);
-        if (departmentIdFromIntent != -1) {
-            departmentCode = String.valueOf(departmentIdFromIntent);
-        } else {
-            Toast.makeText(this, "Ошибка: ID отдела не был передан", Toast.LENGTH_LONG).show();
+        departmentCode = getIntent().getStringExtra(EXTRA_DEPARTMENT_CODE);
+
+        if (departmentCode == null) {
+            Toast.makeText(this, "Ошибка: Код отдела не был передан", Toast.LENGTH_LONG).show();
             finish();
             return;
         }

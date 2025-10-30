@@ -51,6 +51,25 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         setupDrawerButtons(navigationView);
+        handleIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        if (intent != null && "gallery".equals(intent.getStringExtra("navigate_to"))) {
+            Bundle bundle = new Bundle();
+            bundle.putString("room_code_to_verify", intent.getStringExtra("room_code_to_verify"));
+            bundle.putString("room_name_to_verify", intent.getStringExtra("room_name_to_verify"));
+            bundle.putString("department_code", intent.getStringExtra("department_code"));
+
+            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+            navController.navigate(R.id.nav_gallery, bundle);
+        }
     }
 
     private void updateNavHeader() {
