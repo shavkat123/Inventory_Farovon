@@ -283,15 +283,9 @@ public class GalleryFragment extends Fragment {
                             tvResult.setText("Сканировано: " + value);
                             if (roomCodeToVerify != null && roomCodeToVerify.equals(value)) {
                                 Toast.makeText(requireContext(), "Код помещения подтвержден!", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(requireContext(), com.inventory.farovon.ScanningActivity.class);
-                                intent.putExtra(com.inventory.farovon.ScanningActivity.EXTRA_ROOM_CODE, roomCodeToVerify);
-                                intent.putExtra(com.inventory.farovon.ScanningActivity.EXTRA_ROOM_NAME, roomNameToVerify);
-                                intent.putExtra(com.inventory.farovon.ScanningActivity.EXTRA_DEPARTMENT_CODE, departmentCode);
-                                startActivity(intent);
-                                // Finish or navigate back from gallery
-                                if (getActivity() != null) {
-                                    getActivity().getSupportFragmentManager().popBackStack();
-                                }
+                                // Теперь вместо запуска ScanningActivity, мы просто вызываем sendBarcodeToServer
+                                sendBarcodeToServer(value);
+                                // Нет необходимости в задержке, так как sendBarcodeToServer запустит новую активность
                             } else if (roomCodeToVerify != null) {
                                 Toast.makeText(requireContext(), "Неверный QR-код помещения. Отсканирован: " + value, Toast.LENGTH_LONG).show();
                                 mainHandler.postDelayed(() -> isProcessingBarcode = false, 2000); // Allow re-scan sooner
