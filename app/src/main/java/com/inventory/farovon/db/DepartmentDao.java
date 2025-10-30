@@ -22,4 +22,7 @@ public interface DepartmentDao {
 
     @Query("SELECT * FROM departments WHERE is_completed = 1")
     List<DepartmentEntity> getCompletedDepartments();
+
+    @Query("SELECT id FROM departments WHERE code = :code")
+    int getIdByCode(String code);
 }

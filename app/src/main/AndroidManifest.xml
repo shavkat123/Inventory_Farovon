@@ -81,6 +81,11 @@
             android:name=".InventoryListActivity"
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
+            android:name=".ScanningActivity"
+            android:parentActivityName=".InventoryListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
 
         <service
             android:name=".UploadService"
