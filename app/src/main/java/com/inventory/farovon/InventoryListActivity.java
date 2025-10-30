@@ -61,6 +61,7 @@ public class InventoryListActivity extends AppCompatActivity {
     private AppDatabase db;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService databaseExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService scanningExecutor = Executors.newSingleThreadExecutor();
     private int departmentId;
     private String departmentCode;
 
@@ -283,7 +284,6 @@ public class InventoryListActivity extends AppCompatActivity {
         switch (keyCode) {
             case KeyEvent.KEYCODE_F9:
             case KeyEvent.KEYCODE_F10:
-            case 139: // F10 on some devices
             case 280: // Pistol grip trigger
             case 293: // Another trigger key
                 if (event.getRepeatCount() == 0) {
@@ -299,7 +299,6 @@ public class InventoryListActivity extends AppCompatActivity {
         switch (keyCode) {
             case KeyEvent.KEYCODE_F9:
             case KeyEvent.KEYCODE_F10:
-            case 139:
             case 280:
             case 293:
                 stopScanning();
@@ -325,35 +324,44 @@ public class InventoryListActivity extends AppCompatActivity {
                 return;
             }
             isScanning = true;
-            handler.post(pollRunnable);
+            scanningExecutor.submit(scanningRunnable);
         } else {
             Toast.makeText(this, "Ошибка инициализации ридера", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void stopScanning() {
-        if (isScanning && mReader != null) {
-            try { mReader.stopInventory(); } catch (Exception ignored) {}
+        if (!isScanning) return;
+        isScanning = false; // Сначала флаг, чтобы цикл в scanningRunnable завершился
+        if (mReader != null) {
+            mReader.stopInventory();
         }
-        isScanning = false;
-        handler.removeCallbacks(pollRunnable);
     }
 
-    private final Runnable pollRunnable = new Runnable() {
-        @Override public void run() {
-            if (!isScanning || mReader == null) return;
-
-            UHFTAGInfo info;
-            while ((info = mReader.readTagFromBuffer()) != null) {
-                String epc = info.getEPC();
-                if (epc != null) {
-                    runOnUiThread(() -> {
-                        adapter.addFoundRfid(epc);
-                        checkCompletionAndFinish();
-                    });
+    private final Runnable scanningRunnable = new Runnable() {
+        @Override
+        public void run() {
+            while (isScanning) {
+                if (mReader != null) {
+                    UHFTAGInfo info = mReader.readTagFromBuffer();
+                    if (info != null) {
+                        String epc = info.getEPC();
+                        if (epc != null) {
+                            mainHandler.post(() -> {
+                                adapter.addFoundRfid(epc);
+                                checkCompletionAndFinish();
+                            });
+                        }
+                    }
+                }
+                try {
+                    // Небольшая пауза, чтобы не перегружать процессор
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
                 }
             }
-            handler.postDelayed(this, 60);
         }
     };
 
