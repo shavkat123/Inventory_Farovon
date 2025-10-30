@@ -277,6 +277,9 @@ public class GalleryFragment extends Fragment {
                     final String value = barcode.getRawValue();
                     if (value != null && !value.isEmpty()) {
                         mainHandler.post(() -> {
+                            if (!isAdded()) {
+                                return; // Fragment not attached, do nothing.
+                            }
                             tvResult.setText("Сканировано: " + value);
                             if (roomCodeToVerify != null && roomCodeToVerify.equals(value)) {
                                 Toast.makeText(requireContext(), "Код помещения подтвержден!", Toast.LENGTH_SHORT).show();
