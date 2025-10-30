@@ -14,7 +14,7 @@ public interface InventoryItemDao {
     @Query("SELECT * FROM inventory_items WHERE departmentId = :departmentId")
     List<InventoryItemEntity> getByDepartmentId(int departmentId);
 
-    @Query("SELECT * FROM inventory_items WHERE department_id = :departmentId AND location = :location")
+    @Query("SELECT * FROM inventory_items WHERE departmentId = :departmentId AND location = :location")
     List<InventoryItemEntity> getByDepartmentIdAndLocation(int departmentId, String location);
 
     @Query("DELETE FROM inventory_items WHERE departmentId = :departmentId")
