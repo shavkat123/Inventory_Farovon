@@ -60,7 +60,7 @@ public class ScanningActivity extends AppCompatActivity {
     private AppDatabase db;
     private SessionManager sessionManager;
     private List<Nomenclature> unscannedItems = new ArrayList<>();
-    private int departmentId; // This needs to be resolved.
+    private String departmentCode;
     private String roomCode;
 
     @Override
@@ -80,7 +80,14 @@ public class ScanningActivity extends AppCompatActivity {
         }
 
         roomCode = getIntent().getStringExtra(EXTRA_ROOM_CODE);
-        departmentId = getIntent().getIntExtra(EXTRA_DEPARTMENT_ID, -1);
+        int departmentIdFromIntent = getIntent().getIntExtra(EXTRA_DEPARTMENT_ID, -1);
+        if (departmentIdFromIntent != -1) {
+            departmentCode = String.valueOf(departmentIdFromIntent);
+        } else {
+            Toast.makeText(this, "Ошибка: ID отдела не был передан", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         recyclerView = findViewById(R.id.inventory_recycler_view);
         progressBar = findViewById(R.id.progress_bar);
@@ -104,13 +111,14 @@ public class ScanningActivity extends AppCompatActivity {
     private void loadDataFromDb() {
         progressBar.setVisibility(View.VISIBLE);
         databaseExecutor.execute(() -> {
-            if (departmentId == -1 || roomCode == null) {
+            if (departmentCode == null || roomCode == null) {
                 mainHandler.post(() -> {
                     progressBar.setVisibility(View.GONE);
                     Toast.makeText(this, "Ошибка: ID отдела или помещения не найден", Toast.LENGTH_LONG).show();
                 });
                 return;
             }
+            int departmentId = db.departmentDao().getIdByCode(departmentCode);
             List<InventoryItemEntity> itemEntities = db.inventoryItemDao().getByDepartmentIdAndLocation(departmentId, roomCode);
             List<Nomenclature> items = new ArrayList<>();
             for (InventoryItemEntity entity : itemEntities) {
@@ -153,6 +161,7 @@ public class ScanningActivity extends AppCompatActivity {
                         final List<Nomenclature> items = parseXml(response.body().byteStream());
 
                         databaseExecutor.execute(() -> {
+                            int departmentId = db.departmentDao().getIdByCode(departmentCode);
                             db.inventoryItemDao().clearByDepartmentId(departmentId);
                             List<InventoryItemEntity> itemEntities = new ArrayList<>();
                             for (Nomenclature item : items) {
@@ -183,6 +192,7 @@ public class ScanningActivity extends AppCompatActivity {
     private void checkCompletionAndFinish() {
         if (adapter.areAllItemsFound()) {
             databaseExecutor.execute(() -> {
+                int departmentId = db.departmentDao().getIdByCode(departmentCode);
                 db.departmentDao().updateCompletionStatus(departmentId, true);
                 mainHandler.post(() -> {
                     Toast.makeText(this, "Помещение проинвентаризировано!", Toast.LENGTH_LONG).show();
