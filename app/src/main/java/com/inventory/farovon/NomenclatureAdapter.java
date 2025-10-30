@@ -96,7 +96,7 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 // это твой layout элемента со строками tvName, tvCode, rfid, scanCount
-                .inflate(R.layout.item_nomenclature, parent, false);
+                .inflate(R.layout.item_inventory, parent, false);
         return new VH(v);
     }
 

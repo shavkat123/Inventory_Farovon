@@ -12,18 +12,18 @@ import java.util.List;
 
 public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder> {
 
-    private List<Nomenclature> items = new ArrayList<>();
+    private List<Room> items = new ArrayList<>();
     private OnScanClickListener listener;
 
     public interface OnScanClickListener {
-        void onScanClick(Nomenclature item);
+        void onScanClick(Room item);
     }
 
     public void setOnScanClickListener(OnScanClickListener listener) {
         this.listener = listener;
     }
 
-    public void setItems(List<Nomenclature> items) {
+    public void setItems(List<Room> items) {
         this.items = items;
         notifyDataSetChanged();
     }
@@ -37,7 +37,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull RoomViewHolder holder, int position) {
-        Nomenclature item = items.get(position);
+        Room item = items.get(position);
         holder.bind(item, listener);
     }
 
@@ -56,7 +56,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
             scanIcon = itemView.findViewById(R.id.iv_scan);
         }
 
-        public void bind(final Nomenclature item, final OnScanClickListener listener) {
+        public void bind(final Room item, final OnScanClickListener listener) {
             roomName.setText(item.getName());
             scanIcon.setOnClickListener(v -> {
                 if (listener != null) {
