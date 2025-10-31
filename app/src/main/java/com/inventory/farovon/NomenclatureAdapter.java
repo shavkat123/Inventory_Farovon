@@ -4,7 +4,10 @@ import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -122,6 +125,26 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
         h.root.setBackgroundResource(count > 0
                 ? R.drawable.bg_item_found     // см. drawable из предыдущего сообщения
                 : R.drawable.bg_item_normal);
+
+        h.ivMoreOptions.setOnClickListener(v -> {
+            PopupMenu popup = new PopupMenu(v.getContext(), v);
+            popup.getMenuInflater().inflate(R.menu.inventory_item_menu, popup.getMenu());
+            popup.setOnMenuItemClickListener(menuItem -> {
+                int itemId = menuItem.getItemId();
+                if (itemId == R.id.action_move) {
+                    Toast.makeText(v.getContext(), "Перемещение: " + name, Toast.LENGTH_SHORT).show();
+                    return true;
+                } else if (itemId == R.id.action_write_off) {
+                    Toast.makeText(v.getContext(), "Списание: " + name, Toast.LENGTH_SHORT).show();
+                    return true;
+                } else if (itemId == R.id.action_ignore) {
+                    Toast.makeText(v.getContext(), "Игнорировать: " + name, Toast.LENGTH_SHORT).show();
+                    return true;
+                }
+                return false;
+            });
+            popup.show();
+        });
     }
 
     @Override
@@ -133,6 +156,7 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
     static class VH extends RecyclerView.ViewHolder {
         View root;
         TextView tvName, tvCode, tvRfid;
+        ImageView ivMoreOptions;
 
         VH(@NonNull View itemView) {
             super(itemView);
@@ -143,6 +167,7 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
             tvName    = itemView.findViewById(R.id.tvName);
             tvCode    = itemView.findViewById(R.id.tvCode);
             tvRfid    = itemView.findViewById(R.id.rfid);
+            ivMoreOptions = itemView.findViewById(R.id.iv_more_options);
         }
     }
 }

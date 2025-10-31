@@ -1,23 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#F3F5F7">
 
-    <!-- Список под заголовком -->
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/Theme.InventoryFarovon.AppBarOverlay">
+
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/Theme.InventoryFarovon.PopupOverlay" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_above="@+id/scanRef"
-        android:layout_below="@+id/textView2"
+        android:layout_below="@+id/toolbar"
         android:layout_alignParentStart="true"
         android:layout_marginHorizontal="0dp"
         android:layout_marginStart="0dp"
         android:layout_marginTop="5dp"
-        android:layout_marginBottom="0dp" />
+        android:layout_marginBottom="0dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <!-- Кнопка слева снизу -->
     <com.google.android.material.button.MaterialButton
@@ -29,7 +44,7 @@
         android:textColor="@android:color/white"
         app:cornerRadius="10dp"
         app:elevation="6dp"
-        app:backgroundTint="@color/purple_500"
+        app:backgroundTint="#1976D2"
         android:layout_margin="16dp"
         android:layout_alignParentStart="true"
         android:layout_alignParentBottom="true" />
@@ -44,22 +59,9 @@
         android:textColor="@android:color/white"
         app:cornerRadius="10dp"
         app:elevation="6dp"
-        app:backgroundTint="@color/teal_700"
+        app:backgroundTint="#FB8C00"
         android:layout_margin="16dp"
         android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true" />
 
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentEnd="true"
-        android:textSize="18dp"
-        android:textAlignment="center"
-        android:textStyle="bold"
-        android:layout_marginTop="5dp"
-        android:text="Список инверторов" />
-
-</RelativeLayout>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
