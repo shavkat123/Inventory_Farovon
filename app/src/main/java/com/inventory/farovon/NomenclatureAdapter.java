@@ -10,6 +10,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.*;
@@ -66,6 +67,15 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
         countsByEpc.put(key, newCount);
         notifyItemChanged(pos);
         return true;
+    }
+
+    public void removeItem(int position) {
+        if (position >= 0 && position < items.size()) {
+            items.remove(position);
+            rebuildIndex();
+            notifyItemRemoved(position);
+            notifyItemRangeChanged(position, items.size());
+        }
     }
 
     private void rebuildIndex() {
@@ -126,19 +136,43 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
                 ? R.drawable.bg_item_found     // см. drawable из предыдущего сообщения
                 : R.drawable.bg_item_normal);
 
+        h.root.setOnClickListener(v -> {
+            // Строим детальное сообщение
+            StringBuilder details = new StringBuilder();
+            details.append("Наименование: ").append(getName(it)).append("\n\n");
+            details.append("Инв. номер: ").append(getCode(it)).append("\n\n");
+            details.append("RFID: ").append(getRfid(it)).append("\n\n");
+            details.append("МОЛ: ").append(it.getMol() != null ? it.getMol() : "—").append("\n\n");
+            details.append("Местоположение: ").append(it.getLocation() != null ? it.getLocation() : "—");
+
+            // Показываем стандартный диалог
+            new AlertDialog.Builder(v.getContext())
+                    .setTitle("Детализация")
+                    .setMessage(details.toString())
+                    .setPositiveButton("OK", null)
+                    .show();
+        });
+
         h.ivMoreOptions.setOnClickListener(v -> {
             PopupMenu popup = new PopupMenu(v.getContext(), v);
             popup.getMenuInflater().inflate(R.menu.inventory_item_menu, popup.getMenu());
             popup.setOnMenuItemClickListener(menuItem -> {
                 int itemId = menuItem.getItemId();
+                int position = h.getAdapterPosition();
+                if (position == RecyclerView.NO_POSITION) {
+                    return false;
+                }
+
                 if (itemId == R.id.action_move) {
                     Toast.makeText(v.getContext(), "Перемещение: " + name, Toast.LENGTH_SHORT).show();
+                    removeItem(position);
                     return true;
                 } else if (itemId == R.id.action_write_off) {
                     Toast.makeText(v.getContext(), "Списание: " + name, Toast.LENGTH_SHORT).show();
+                    removeItem(position);
                     return true;
                 } else if (itemId == R.id.action_ignore) {
-                    Toast.makeText(v.getContext(), "Игнорировать: " + name, Toast.LENGTH_SHORT).show();
+                    removeItem(position);
                     return true;
                 }
                 return false;

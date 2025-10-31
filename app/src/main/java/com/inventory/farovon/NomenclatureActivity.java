@@ -161,6 +161,12 @@ public class NomenclatureActivity extends AppCompatActivity {
         return super.onKeyUp(keyCode, event);
     }
 
+    @Override
+    public boolean onSupportNavigateUp() {
+        finish();
+        return true;
+    }
+
     @Override protected void onDestroy() {
         stopScanning();
         if (toneGenerator != null) {
