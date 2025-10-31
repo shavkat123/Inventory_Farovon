@@ -25,28 +25,20 @@
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_above="@+id/scanRef"
-        android:layout_below="@+id/toolbar"
-        android:layout_alignParentStart="true"
-        android:layout_marginHorizontal="0dp"
-        android:layout_marginStart="0dp"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="0dp"
+        android:clipToPadding="false"
+        android:paddingTop="8dp"
+        android:paddingBottom="88dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
     <!-- Кнопка слева снизу -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/scanRef"
+        style="@style/PrimaryActionButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Проверка"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white"
-        app:cornerRadius="10dp"
-        app:elevation="6dp"
-        app:backgroundTint="#1976D2"
+        android:layout_gravity="bottom"
         android:layout_margin="16dp"
-        android:layout_gravity="bottom" />
+        android:text="Проверка" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
