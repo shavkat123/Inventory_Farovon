@@ -1,6 +1,8 @@
 package com.inventory.farovon; // <-- поправь пакет при необходимости
 
 import android.os.Bundle;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.KeyEvent;
@@ -27,6 +29,7 @@ public class NomenclatureActivity extends AppCompatActivity {
 
     private NomenclatureAdapter adapter;
     private MaterialButton btnScan;   // scanRef
+    private ToneGenerator toneGenerator;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -68,6 +71,8 @@ public class NomenclatureActivity extends AppCompatActivity {
             if (!isScanning) startScanningSafe();
             else             stopScanning();
         });
+
+        toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
     }
 
     private void startScanningSafe() {
@@ -115,7 +120,9 @@ public class NomenclatureActivity extends AppCompatActivity {
             int burst = 0;
             while ((info = mReader.readTagFromBuffer()) != null) {
                 String epc = info.getEPC();
-                if (epc != null) adapter.incrementByEpc(epc);
+                if (epc != null && adapter.incrementByEpc(epc)) {
+                    toneGenerator.startTone(ToneGenerator.TONE_CDMA_PIP, 150);
+                }
                 if (++burst > 200) break;
             }
             handler.postDelayed(this, 60);
@@ -156,6 +163,10 @@ public class NomenclatureActivity extends AppCompatActivity {
 
     @Override protected void onDestroy() {
         stopScanning();
+        if (toneGenerator != null) {
+            toneGenerator.release();
+            toneGenerator = null;
+        }
         super.onDestroy();
     }
 }
