@@ -99,24 +99,20 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.View
             ivMoreOptions.setOnClickListener(v -> showPopupMenu(v.getContext(), v, adapter, getAdapterPosition()));
 
             itemView.setOnClickListener(v -> {
-                Context context = v.getContext();
-                AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                LayoutInflater inflater = LayoutInflater.from(context);
-                View dialogView = inflater.inflate(R.layout.dialog_inventory_item_details, null);
-                builder.setView(dialogView);
+                // Строим детальное сообщение
+                StringBuilder details = new StringBuilder();
+                details.append("Наименование: ").append(item.getName()).append("\n\n");
+                details.append("Инв. номер: ").append(item.getCode()).append("\n\n");
+                details.append("RFID: ").append(item.getRfid()).append("\n\n");
+                details.append("МОЛ: ").append(item.getMol() != null ? item.getMol() : "—").append("\n\n");
+                details.append("Местоположение: ").append(item.getLocation() != null ? item.getLocation() : "—");
 
-                TextView itemName = dialogView.findViewById(R.id.tv_item_name);
-                TextView itemMol = dialogView.findViewById(R.id.tv_item_mol);
-                TextView itemInventoryNumber = dialogView.findViewById(R.id.tv_item_inventory_number);
-                TextView itemLocation = dialogView.findViewById(R.id.tv_item_location);
-
-                itemName.setText(item.getName());
-                itemMol.setText("МОЛ: " + (item.getMol() != null ? item.getMol() : ""));
-                itemInventoryNumber.setText("Инвентарный №: " + item.getCode());
-                itemLocation.setText("Местоположение: " + (item.getLocation() != null ? item.getLocation() : ""));
-
-                builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
-                builder.create().show();
+                // Показываем стандартный диалог
+                new AlertDialog.Builder(v.getContext())
+                        .setTitle("Детализация")
+                        .setMessage(details.toString())
+                        .setPositiveButton("OK", null)
+                        .show();
             });
         }
 
