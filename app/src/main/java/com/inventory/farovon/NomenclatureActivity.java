@@ -27,7 +27,6 @@ public class NomenclatureActivity extends AppCompatActivity {
 
     private NomenclatureAdapter adapter;
     private MaterialButton btnScan;   // scanRef
-    private MaterialButton btnInv;    // button7
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -48,7 +47,6 @@ public class NomenclatureActivity extends AppCompatActivity {
         rv.setAdapter(adapter);
 
         btnScan = findViewById(R.id.scanRef);
-        btnInv  = findViewById(R.id.button7);
 
         // получаем список предполагаемых товаров
         ArrayList<Nomenclature> items = null;
@@ -70,9 +68,6 @@ public class NomenclatureActivity extends AppCompatActivity {
             if (!isScanning) startScanningSafe();
             else             stopScanning();
         });
-
-        btnInv.setOnClickListener(v ->
-                Toast.makeText(this, "Инвентаризация: в разработке", Toast.LENGTH_SHORT).show());
     }
 
     private void startScanningSafe() {

@@ -37,7 +37,7 @@
     <!-- Кнопка слева снизу -->
     <com.google.android.material.button.MaterialButton
         android:id="@+id/scanRef"
-        android:layout_width="130dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Проверка"
         android:textAllCaps="false"
@@ -46,22 +46,7 @@
         app:elevation="6dp"
         app:backgroundTint="#1976D2"
         android:layout_margin="16dp"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentBottom="true" />
+        android:layout_gravity="bottom" />
 
-    <!-- Кнопка справа снизу -->
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button7"
-        android:layout_width="165dp"
-        android:layout_height="wrap_content"
-        android:text="Инвентаризация"
-        android:textAllCaps="false"
-        android:textColor="@android:color/white"
-        app:cornerRadius="10dp"
-        app:elevation="6dp"
-        app:backgroundTint="#FB8C00"
-        android:layout_margin="16dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentBottom="true" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
