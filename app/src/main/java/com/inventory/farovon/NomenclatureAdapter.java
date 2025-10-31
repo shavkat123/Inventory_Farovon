@@ -137,20 +137,27 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
                 : R.drawable.bg_item_normal);
 
         h.root.setOnClickListener(v -> {
-            // Строим детальное сообщение
-            StringBuilder details = new StringBuilder();
-            details.append("Наименование: ").append(getName(it)).append("\n\n");
-            details.append("Инв. номер: ").append(getCode(it)).append("\n\n");
-            details.append("RFID: ").append(getRfid(it)).append("\n\n");
-            details.append("МОЛ: ").append(it.getMol() != null ? it.getMol() : "—").append("\n\n");
-            details.append("Местоположение: ").append(it.getLocation() != null ? it.getLocation() : "—");
+            Context context = v.getContext();
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            LayoutInflater inflater = LayoutInflater.from(context);
+            View dialogView = inflater.inflate(R.layout.dialog_item_details, null);
+            builder.setView(dialogView);
 
-            // Показываем стандартный диалог
-            new AlertDialog.Builder(v.getContext())
-                    .setTitle("Детализация")
-                    .setMessage(details.toString())
-                    .setPositiveButton("OK", null)
-                    .show();
+            TextView itemName = dialogView.findViewById(R.id.tv_item_name);
+            TextView itemInventoryNumber = dialogView.findViewById(R.id.tv_item_inventory_number);
+            TextView itemRfid = dialogView.findViewById(R.id.tv_item_rfid);
+            TextView itemMol = dialogView.findViewById(R.id.tv_item_mol);
+            TextView itemLocation = dialogView.findViewById(R.id.tv_item_location);
+
+            itemName.setText("Наименование: " + (getName(it) != null ? getName(it) : "—"));
+            itemInventoryNumber.setText("Инв. номер: " + (getCode(it) != null ? getCode(it) : "—"));
+            itemRfid.setText("RFID: " + (getRfid(it) != null ? getRfid(it) : "—"));
+            itemMol.setText("МОЛ: " + (it.getMol() != null ? it.getMol() : "—"));
+            itemLocation.setText("Местоположение: " + (it.getLocation() != null ? it.getLocation() : "—"));
+
+            AlertDialog dialog = builder.create();
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.show();
         });
 
         h.ivMoreOptions.setOnClickListener(v -> {

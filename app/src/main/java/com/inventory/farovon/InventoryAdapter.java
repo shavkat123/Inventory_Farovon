@@ -99,20 +99,27 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.View
             ivMoreOptions.setOnClickListener(v -> showPopupMenu(v.getContext(), v, adapter, getAdapterPosition()));
 
             itemView.setOnClickListener(v -> {
-                // Строим детальное сообщение
-                StringBuilder details = new StringBuilder();
-                details.append("Наименование: ").append(item.getName()).append("\n\n");
-                details.append("Инв. номер: ").append(item.getCode()).append("\n\n");
-                details.append("RFID: ").append(item.getRfid()).append("\n\n");
-                details.append("МОЛ: ").append(item.getMol() != null ? item.getMol() : "—").append("\n\n");
-                details.append("Местоположение: ").append(item.getLocation() != null ? item.getLocation() : "—");
+                Context context = v.getContext();
+                AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                LayoutInflater inflater = LayoutInflater.from(context);
+                View dialogView = inflater.inflate(R.layout.dialog_item_details, null);
+                builder.setView(dialogView);
 
-                // Показываем стандартный диалог
-                new AlertDialog.Builder(v.getContext())
-                        .setTitle("Детализация")
-                        .setMessage(details.toString())
-                        .setPositiveButton("OK", null)
-                        .show();
+                TextView itemName = dialogView.findViewById(R.id.tv_item_name);
+                TextView itemInventoryNumber = dialogView.findViewById(R.id.tv_item_inventory_number);
+                TextView itemRfid = dialogView.findViewById(R.id.tv_item_rfid);
+                TextView itemMol = dialogView.findViewById(R.id.tv_item_mol);
+                TextView itemLocation = dialogView.findViewById(R.id.tv_item_location);
+
+                itemName.setText("Наименование: " + (item.getName() != null ? item.getName() : "—"));
+                itemInventoryNumber.setText("Инв. номер: " + (item.getCode() != null ? item.getCode() : "—"));
+                itemRfid.setText("RFID: " + (item.getRfid() != null ? item.getRfid() : "—"));
+                itemMol.setText("МОЛ: " + (item.getMol() != null ? item.getMol() : "—"));
+                itemLocation.setText("Местоположение: " + (item.getLocation() != null ? item.getLocation() : "—"));
+
+                AlertDialog dialog = builder.create();
+                dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+                dialog.show();
             });
         }
 
