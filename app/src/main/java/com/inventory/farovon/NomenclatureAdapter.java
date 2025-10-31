@@ -158,21 +158,21 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
             popup.getMenuInflater().inflate(R.menu.inventory_item_menu, popup.getMenu());
             popup.setOnMenuItemClickListener(menuItem -> {
                 int itemId = menuItem.getItemId();
-                int position = h.getAdapterPosition();
-                if (position == RecyclerView.NO_POSITION) {
+                int adapterPosition = h.getAdapterPosition();
+                if (adapterPosition == RecyclerView.NO_POSITION) {
                     return false;
                 }
 
                 if (itemId == R.id.action_move) {
                     Toast.makeText(v.getContext(), "Перемещение: " + name, Toast.LENGTH_SHORT).show();
-                    removeItem(position);
+                    removeItem(adapterPosition);
                     return true;
                 } else if (itemId == R.id.action_write_off) {
                     Toast.makeText(v.getContext(), "Списание: " + name, Toast.LENGTH_SHORT).show();
-                    removeItem(position);
+                    removeItem(adapterPosition);
                     return true;
                 } else if (itemId == R.id.action_ignore) {
-                    removeItem(position);
+                    removeItem(adapterPosition);
                     return true;
                 }
                 return false;
