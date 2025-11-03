@@ -17,6 +17,7 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
@@ -28,31 +29,39 @@ import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.barcode.BarcodeScanner;
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions;
 import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
+
+import com.inventory.farovon.MainActivity;
 import com.inventory.farovon.NomenclatureActivity;
 import com.inventory.farovon.R;
+import com.inventory.farovon.Nomenclature;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.InventoryItemEntity;
 import com.inventory.farovon.ui.login.SessionManager;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
-import java.io.IOException;
 import java.io.StringReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
 import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 public class GalleryFragment extends Fragment {
 
@@ -71,23 +80,31 @@ public class GalleryFragment extends Fragment {
     private ActivityResultLauncher<String> requestPermissionLauncher;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
+    // 🔹 Поле для рамки overlay
     private Rect overlayRect;
+
     private SessionManager sessionManager;
+
     private String roomCodeToVerify;
     private String roomNameToVerify;
     private String departmentCode;
     private int departmentId;
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        sessionManager = new SessionManager(requireActivity());
+
+        sessionManager = new SessionManager(getActivity());
+
         if (getArguments() != null) {
             roomCodeToVerify = getArguments().getString("room_code_to_verify");
             roomNameToVerify = getArguments().getString("room_name_to_verify");
             departmentCode = getArguments().getString("department_code");
             departmentId = getArguments().getInt("department_id", -1);
         }
+
+        // Регистрируем launcher разрешения
         requestPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
@@ -106,31 +123,41 @@ public class GalleryFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container, Bundle savedInstanceState) {
+
         View root = inflater.inflate(R.layout.fragment_gallery, container, false);
+
         previewView = root.findViewById(R.id.previewView);
         tvResult = root.findViewById(R.id.tvResult);
         tvHint = root.findViewById(R.id.tvScanHint);
         btnRequestPermission = root.findViewById(R.id.btnRequestPermission);
         progressBar = root.findViewById(R.id.progressBar);
+
         cameraExecutor = Executors.newSingleThreadExecutor();
+
         btnRequestPermission.setOnClickListener(v -> {
             Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
                     Uri.fromParts("package", requireContext().getPackageName(), null));
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);
         });
+
+        // 🔹 Получаем координаты overlay после отрисовки
         View overlay = root.findViewById(R.id.overlay);
         overlay.post(() -> {
             overlayRect = new Rect();
             overlay.getGlobalVisibleRect(overlayRect);
         });
+
         checkPermissionAndStart();
+
         return root;
     }
 
     private void checkPermissionAndStart() {
-        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
             tvHint.setVisibility(View.VISIBLE);
             btnRequestPermission.setVisibility(View.GONE);
             startCamera();
@@ -140,49 +167,83 @@ public class GalleryFragment extends Fragment {
     }
 
     private void startCamera() {
-        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(requireContext());
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture =
+                ProcessCameraProvider.getInstance(requireContext());
+
         cameraProviderFuture.addListener(() -> {
             try {
                 cameraProvider = cameraProviderFuture.get();
-                CameraSelector cameraSelector = new CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build();
-                ImageAnalysis imageAnalysis = new ImageAnalysis.Builder().setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST).build();
-                BarcodeScannerOptions options = new BarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS).build();
+
+                CameraSelector cameraSelector = new CameraSelector.Builder()
+                        .requireLensFacing(CameraSelector.LENS_FACING_BACK)
+                        .build();
+
+                ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build();
+
+                BarcodeScannerOptions options =
+                        new BarcodeScannerOptions.Builder()
+                                .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
+                                .build();
+
                 BarcodeScanner scanner = BarcodeScanning.getClient(options);
-                imageAnalysis.setAnalyzer(cameraExecutor, image -> {
-                    if (image.getImage() == null) {
-                        image.close();
-                        return;
+
+                imageAnalysis.setAnalyzer(cameraExecutor, new ImageAnalysis.Analyzer() {
+                    @Override
+                    public void analyze(@NonNull ImageProxy image) {
+                        if (image.getImage() == null) {
+                            image.close();
+                            return;
+                        }
+
+                        InputImage inputImage = InputImage.fromMediaImage(
+                                image.getImage(),
+                                image.getImageInfo().getRotationDegrees()
+                        );
+
+                        scanner.process(inputImage)
+                                .addOnSuccessListener(barcodes -> {
+                                    if (barcodes != null && !barcodes.isEmpty() && !isProcessingBarcode) {
+                                        isProcessingBarcode = true;
+                                        processBarcodes(barcodes, image.getWidth(), image.getHeight());
+                                    }
+                                })
+                                .addOnFailureListener(e -> Log.e("GalleryFragment", "Ошибка сканера", e))
+                                .addOnCompleteListener(task -> image.close());
                     }
-                    InputImage inputImage = InputImage.fromMediaImage(image.getImage(), image.getImageInfo().getRotationDegrees());
-                    scanner.process(inputImage)
-                            .addOnSuccessListener(barcodes -> {
-                                if (barcodes != null && !barcodes.isEmpty() && !isProcessingBarcode) {
-                                    isProcessingBarcode = true;
-                                    processBarcodes(barcodes, image.getWidth(), image.getHeight());
-                                }
-                            })
-                            .addOnFailureListener(e -> Log.e("GalleryFragment", "Ошибка сканера", e))
-                            .addOnCompleteListener(task -> image.close());
                 });
+
                 cameraProvider.unbindAll();
+
                 Preview preview = new Preview.Builder().build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
-                cameraProvider.bindToLifecycle(getViewLifecycleOwner(), cameraSelector, preview, imageAnalysis);
+
+                cameraProvider.bindToLifecycle(
+                        getViewLifecycleOwner(),
+                        cameraSelector,
+                        preview,
+                        imageAnalysis
+                );
+
             } catch (Exception e) {
                 Log.e("GalleryFragment", "Ошибка запуска камеры", e);
             }
         }, ContextCompat.getMainExecutor(requireContext()));
     }
 
+    // 🔹 Обновленный метод обработки штрихкодов
     private void processBarcodes(List<Barcode> barcodes, int imageWidth, int imageHeight) {
         if (overlayRect == null) {
             isProcessingBarcode = false;
             return;
         }
+
         for (Barcode barcode : barcodes) {
             Rect bounds = barcode.getBoundingBox();
             if (bounds != null) {
                 Rect mappedRect = mapToPreviewView(bounds, imageWidth, imageHeight);
+
                 if (overlayRect.contains(mappedRect)) {
                     final String value = barcode.getRawValue();
                     if (value != null && !value.isEmpty()) {
@@ -214,19 +275,14 @@ public class GalleryFragment extends Fragment {
         }
     }
 
-    private Rect mapToPreviewView(Rect bounds, int imageWidth, int imageHeight) {
-        if (previewView.getWidth() == 0 || previewView.getHeight() == 0) return bounds;
-        float scaleX = (float) previewView.getWidth() / imageWidth;
-        float scaleY = (float) previewView.getHeight() / imageHeight;
-        return new Rect((int)(bounds.left * scaleX), (int)(bounds.top * scaleY), (int)(bounds.right * scaleX), (int)(bounds.bottom * scaleY));
-    }
-
     private void fetchAndSaveInventoryData(String roomCode) {
         mainHandler.post(() -> progressBar.setVisibility(View.VISIBLE));
+
         String serverIP = sessionManager.getIpAddress();
         String username = sessionManager.getUsername();
         String password = sessionManager.getPassword();
         String url = "http://" + serverIP + "/my1c/hs/hw/say";
+
         OkHttpClient client = new OkHttpClient();
         String json = "{\"otdel\":\"" + roomCode + "\"}";
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
@@ -235,6 +291,7 @@ public class GalleryFragment extends Fragment {
                 .post(body)
                 .header("Authorization", okhttp3.Credentials.basic(username, password))
                 .build();
+
         client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
@@ -255,17 +312,21 @@ public class GalleryFragment extends Fragment {
                     });
                     return;
                 }
+
                 try {
                     String xmlResponse = response.body().string();
                     List<InventoryItemEntity> items = parseInventoryXml(xmlResponse);
+
                     databaseExecutor.execute(() -> {
                         db.inventoryItemDao().clearByDepartmentIdAndLocation(departmentId, roomCodeToVerify);
                         db.inventoryItemDao().insertAll(items);
+
                         mainHandler.post(() -> {
                             progressBar.setVisibility(View.GONE);
                             navigateToNomenclature();
                         });
                     });
+
                 } catch (Exception e) {
                     mainHandler.post(() -> {
                         progressBar.setVisibility(View.GONE);
@@ -283,6 +344,7 @@ public class GalleryFragment extends Fragment {
         factory.setNamespaceAware(true);
         XmlPullParser xpp = factory.newPullParser();
         xpp.setInput(new StringReader(xml));
+
         InventoryItemEntity currentItem = null;
         String text = "";
         int eventType = xpp.getEventType();
@@ -330,6 +392,7 @@ public class GalleryFragment extends Fragment {
         intent.putExtra("department_id", departmentId);
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
+        // Reset flag after navigation
         mainHandler.postDelayed(() -> isProcessingBarcode = false, 500);
     }
 
