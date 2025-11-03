@@ -263,9 +263,6 @@ public class GalleryFragment extends Fragment {
         isProcessingBarcode = false;
     }
 
-    private void sendBarcodeToServer(String barcode) {
-        // This method is now obsolete and will be removed.
-    }
 
     // 🔹 Масштабируем координаты из кадра камеры в PreviewView
     private Rect mapToPreviewView(Rect bounds, int imageWidth, int imageHeight) {
