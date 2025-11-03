@@ -275,6 +275,20 @@ public class GalleryFragment extends Fragment {
         }
     }
 
+    private Rect mapToPreviewView(Rect bounds, int imageWidth, int imageHeight) {
+        if (previewView.getWidth() == 0 || previewView.getHeight() == 0) return bounds;
+
+        float scaleX = (float) previewView.getWidth() / imageWidth;
+        float scaleY = (float) previewView.getHeight() / imageHeight;
+
+        return new Rect(
+                (int)(bounds.left * scaleX),
+                (int)(bounds.top * scaleY),
+                (int)(bounds.right * scaleX),
+                (int)(bounds.bottom * scaleY)
+        );
+    }
+
     private void fetchAndSaveInventoryData(String roomCode) {
         mainHandler.post(() -> progressBar.setVisibility(View.VISIBLE));
 
