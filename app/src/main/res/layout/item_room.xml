@@ -11,13 +11,30 @@
         android:id="@+id/tv_room_name"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:textColor="@android:color/black"
+        android:textColor="@color/colorTextPrimary"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/iv_scan"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="Название помещения" />
+        app:layout_constraintEnd_toStartOf="@+id/tv_status_completed"
+        app:layout_constraintHorizontal_bias="0.0"
+        tools:text="Название очень длинного помещения, которое может не поместиться" />
+
+    <TextView
+        android:id="@+id/tv_status_completed"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="выполнено"
+        android:textColor="#4CAF50"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/iv_scan"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginEnd="16dp"
+        tools:visibility="visible" />
+
 
     <ImageView
         android:id="@+id/iv_scan"

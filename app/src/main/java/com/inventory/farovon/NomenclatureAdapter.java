@@ -78,6 +78,19 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
         }
     }
 
+    public boolean areAllItemsFound() {
+        if (items.isEmpty()) {
+            return false;
+        }
+        for (Nomenclature item : items) {
+            String key = normalizeEpc(getRfid(item));
+            if (countsByEpc.getOrDefault(key, 0) == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void rebuildIndex() {
         rfIndex.clear();
         for (int i = 0; i < items.size(); i++) {

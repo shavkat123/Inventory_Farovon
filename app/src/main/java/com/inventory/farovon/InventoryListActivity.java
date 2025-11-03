@@ -1,6 +1,11 @@
 package com.inventory.farovon;
 
 import android.os.Bundle;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
@@ -48,6 +53,25 @@ public class InventoryListActivity extends AppCompatActivity {
     private int departmentId;
     private String departmentCode;
 
+    private BroadcastReceiver inventoryCompletionReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if ("com.inventory.farovon.INVENTORY_COMPLETED".equals(intent.getAction())) {
+                String completedRoomCode = intent.getStringExtra("room_code");
+                if (completedRoomCode != null) {
+                    for (int i = 0; i < rooms.size(); i++) {
+                        Room room = rooms.get(i);
+                        if (completedRoomCode.equals(room.getCode())) {
+                            room.setCompleted(true);
+                            adapter.notifyItemChanged(i);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    };
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,6 +111,9 @@ public class InventoryListActivity extends AppCompatActivity {
         } else {
             Toast.makeText(this, "ID отдела не найден", Toast.LENGTH_SHORT).show();
         }
+
+        IntentFilter filter = new IntentFilter("com.inventory.farovon.INVENTORY_COMPLETED");
+        registerReceiver(inventoryCompletionReceiver, filter);
     }
 
     private void loadDataFromDb() {
@@ -194,5 +221,6 @@ public class InventoryListActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        unregisterReceiver(inventoryCompletionReceiver);
     }
 }

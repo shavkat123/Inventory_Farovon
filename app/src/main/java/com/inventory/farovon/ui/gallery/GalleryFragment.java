@@ -364,14 +364,11 @@ public class GalleryFragment extends Fragment {
                     final List<Nomenclature> items = parseXml(xmlResponse);
 
                     mainHandler.post(() -> {
-                        Bundle bundle = new Bundle();
-                        bundle.putSerializable("items", new ArrayList<>(items));
-
                         Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
                         intent.putExtra("items", new ArrayList<>(items));
+                        intent.putExtra("room_code", roomCodeToVerify); // <-- Добавляем код помещения
                         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
-
                     });
                 }
             }

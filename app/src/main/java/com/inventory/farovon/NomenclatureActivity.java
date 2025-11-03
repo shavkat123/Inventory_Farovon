@@ -2,6 +2,8 @@ package com.inventory.farovon; // <-- поправь пакет при необ�
 
 import android.os.Bundle;
 import android.media.AudioManager;
+import android.content.Intent;
+import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Handler;
 import android.os.Looper;
@@ -30,6 +32,7 @@ public class NomenclatureActivity extends AppCompatActivity {
     private NomenclatureAdapter adapter;
     private MaterialButton btnScan;   // scanRef
     private ToneGenerator toneGenerator;
+    private String roomCode;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,8 +57,8 @@ public class NomenclatureActivity extends AppCompatActivity {
         // получаем список предполагаемых товаров
         ArrayList<Nomenclature> items = null;
         try {
-            // если Serializable
             items = (ArrayList<Nomenclature>) getIntent().getSerializableExtra("items");
+            roomCode = getIntent().getStringExtra("room_code");
         } catch (Exception ignored) {}
 
         if (items == null) items = new ArrayList<>();
@@ -161,8 +164,23 @@ public class NomenclatureActivity extends AppCompatActivity {
         return super.onKeyUp(keyCode, event);
     }
 
+    private void checkAndNotifyCompletion() {
+        if (adapter.areAllItemsFound() && roomCode != null) {
+            Intent intent = new Intent("com.inventory.farovon.INVENTORY_COMPLETED");
+            intent.putExtra("room_code", roomCode);
+            sendBroadcast(intent);
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        checkAndNotifyCompletion();
+        super.onBackPressed();
+    }
+
     @Override
     public boolean onSupportNavigateUp() {
+        checkAndNotifyCompletion();
         finish();
         return true;
     }

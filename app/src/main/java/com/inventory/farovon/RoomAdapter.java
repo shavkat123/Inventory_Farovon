@@ -49,15 +49,24 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
     static class RoomViewHolder extends RecyclerView.ViewHolder {
         private final TextView roomName;
         private final ImageView scanIcon;
+        private final TextView statusCompleted;
 
         public RoomViewHolder(@NonNull View itemView) {
             super(itemView);
             roomName = itemView.findViewById(R.id.tv_room_name);
             scanIcon = itemView.findViewById(R.id.iv_scan);
+            statusCompleted = itemView.findViewById(R.id.tv_status_completed);
         }
 
         public void bind(final Room item, final OnScanClickListener listener) {
             roomName.setText(item.getName());
+
+            if (item.isCompleted()) {
+                statusCompleted.setVisibility(View.VISIBLE);
+            } else {
+                statusCompleted.setVisibility(View.GONE);
+            }
+
             scanIcon.setOnClickListener(v -> {
                 if (listener != null) {
                     listener.onScanClick(item);
