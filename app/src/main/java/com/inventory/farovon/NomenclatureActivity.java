@@ -14,16 +14,21 @@ import com.google.android.material.button.MaterialButton;
 import com.inventory.farovon.ui.login.SessionManager;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.InventoryItemEntity;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class NomenclatureActivity extends AppCompatActivity {
 
@@ -38,6 +43,8 @@ public class NomenclatureActivity extends AppCompatActivity {
     private String departmentCode;
     private int departmentId;
     private SessionManager sessionManager;
+    private AppDatabase db;
+    private ExecutorService databaseExecutor;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,6 +52,8 @@ public class NomenclatureActivity extends AppCompatActivity {
         setContentView(R.layout.activity_nomenclature);
 
         sessionManager = new SessionManager(this);
+        db = AppDatabase.getDatabase(this);
+        databaseExecutor = Executors.newSingleThreadExecutor();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -61,17 +70,11 @@ public class NomenclatureActivity extends AppCompatActivity {
 
         btnScan = findViewById(R.id.scanRef);
 
-        // получаем список предполагаемых товаров
-        ArrayList<Nomenclature> items = null;
-        try {
-            items = (ArrayList<Nomenclature>) getIntent().getSerializableExtra("items");
-            roomCode = getIntent().getStringExtra("room_code");
-            departmentCode = getIntent().getStringExtra("department_code");
-            departmentId = getIntent().getIntExtra("department_id", -1);
-        } catch (Exception ignored) {}
+        roomCode = getIntent().getStringExtra("room_code");
+        departmentCode = getIntent().getStringExtra("department_code");
+        departmentId = getIntent().getIntExtra("department_id", -1);
 
-        if (items == null) items = new ArrayList<>();
-        adapter.setItems(items);
+        loadItemsFromDb();
 
         try {
             mReader = RFIDWithUHFUART.getInstance();
@@ -85,6 +88,18 @@ public class NomenclatureActivity extends AppCompatActivity {
         });
 
         toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
+    }
+
+    private void loadItemsFromDb() {
+        if (departmentId != -1 && roomCode != null) {
+            databaseExecutor.execute(() -> {
+                List<InventoryItemEntity> itemEntities = db.inventoryItemDao().getByDepartmentIdAndLocation(departmentId, roomCode);
+                List<Nomenclature> items = itemEntities.stream()
+                        .map(e -> new Nomenclature(e.code, e.name, e.rfid, e.mol, e.location))
+                        .collect(Collectors.toList());
+                handler.post(() -> adapter.setItems(items));
+            });
+        }
     }
 
     private void startScanningSafe() {
@@ -137,6 +152,9 @@ public class NomenclatureActivity extends AppCompatActivity {
                     if (adapter.areAllItemsFound()) {
                         if (roomCode != null) {
                             sessionManager.setRoomCompleted(roomCode);
+                            databaseExecutor.execute(() -> {
+                                db.pendingUploadDao().addToQueue(new com.inventory.farovon.db.PendingUploadEntity(roomCode));
+                            });
                         }
                         handler.post(NomenclatureActivity.this::showCompletionDialog);
                         stopScanning();

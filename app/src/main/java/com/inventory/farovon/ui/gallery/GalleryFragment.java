@@ -42,17 +42,7 @@ import com.inventory.farovon.R;
 import com.inventory.farovon.Nomenclature;
 import com.inventory.farovon.ui.login.SessionManager;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -151,40 +141,6 @@ public class GalleryFragment extends Fragment {
 
         return root;
     }
-
-    private List<Nomenclature> parseXml(String xmlResponse) {
-        List<Nomenclature> list = new ArrayList<>();
-        try {
-            InputStream stream = new ByteArrayInputStream(xmlResponse.getBytes(StandardCharsets.UTF_8));
-
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(stream);
-            doc.getDocumentElement().normalize();
-
-            NodeList nList = doc.getElementsByTagName("Product");
-
-            for (int i = 0; i < nList.getLength(); i++) {
-                Node node = nList.item(i);
-                if (node.getNodeType() == Node.ELEMENT_NODE) {
-                    Element element = (Element) node;
-
-                    String code = element.getElementsByTagName("Code").item(0).getTextContent();
-                    String name = element.getElementsByTagName("Name").item(0).getTextContent();
-                    String rf = element.getElementsByTagName("rf").item(0).getTextContent();
-
-                    list.add(new Nomenclature(code, name, rf, null, null));
-                }
-            }
-
-            Log.d("GalleryFragment", "Parsed items: " + list.size());
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e("GalleryFragment", "XML parse error", e);
-        }
-        return list;
-    }
-
 
     private void checkPermissionAndStart() {
         if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA)
@@ -285,16 +241,17 @@ public class GalleryFragment extends Fragment {
                             tvResult.setText("Сканировано: " + value);
                             if (roomCodeToVerify != null && roomCodeToVerify.equals(value)) {
                                 Toast.makeText(requireContext(), "Код помещения подтвержден!", Toast.LENGTH_SHORT).show();
-                                // Теперь вместо запуска ScanningActivity, мы просто вызываем sendBarcodeToServer
-                                sendBarcodeToServer(value);
-                                // Нет необходимости в задержке, так как sendBarcodeToServer запустит новую активность
+
+                                Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
+                                intent.putExtra("room_code", roomCodeToVerify);
+                                intent.putExtra("department_code", departmentCode);
+                                intent.putExtra("department_id", departmentId);
+                                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                startActivity(intent);
+
                             } else if (roomCodeToVerify != null) {
                                 Toast.makeText(requireContext(), "Неверный QR-код помещения. Отсканирован: " + value, Toast.LENGTH_LONG).show();
                                 mainHandler.postDelayed(() -> isProcessingBarcode = false, 2000); // Allow re-scan sooner
-                            } else {
-                                // Default behavior if no verification code is present
-                                sendBarcodeToServer(value);
-                                mainHandler.postDelayed(() -> isProcessingBarcode = false, 5000);
                             }
                         });
                     }
@@ -304,6 +261,10 @@ public class GalleryFragment extends Fragment {
         }
         // Если ни один штрихкод не попал в рамку — сбрасываем флаг
         isProcessingBarcode = false;
+    }
+
+    private void sendBarcodeToServer(String barcode) {
+        // This method is now obsolete and will be removed.
     }
 
     // 🔹 Масштабируем координаты из кадра камеры в PreviewView

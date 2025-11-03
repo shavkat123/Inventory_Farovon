@@ -141,37 +141,31 @@ public class InventoryListActivity extends AppCompatActivity {
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
-                        final List<Room> parsedRooms = parseXml(response.body().byteStream());
+                        final List<InventoryItemEntity> parsedItems = parseItemsXmlToEntities(response.body().byteStream());
                         databaseExecutor.execute(() -> {
-                            // This part is tricky. The server sends inventory items, not rooms.
-                            // We are faking "rooms" from the "location" field of items.
-                            for (Room room : parsedRooms) {
-                                if (sessionManager.isRoomCompleted(room.getCode())) {
-                                    room.setCompleted(true);
-                                }
-                            }
-                            mainHandler.post(() -> {
-                                rooms = parsedRooms;
-                                adapter.setItems(rooms);
-                            });
+                            db.inventoryItemDao().clearByDepartmentId(departmentId);
+                            db.inventoryItemDao().insertAll(parsedItems);
+                            mainHandler.post(InventoryListActivity.this::loadDataFromDb); // Reload data from DB to update UI
                         });
                     } catch (Exception e) {
-                        // Log error
+                        mainHandler.post(() -> Toast.makeText(InventoryListActivity.this, "Ошибка обработки данных", Toast.LENGTH_SHORT).show());
                     }
+                } else {
+                    mainHandler.post(() -> Toast.makeText(InventoryListActivity.this, "Синхронизация не удалась, показаны оффлайн данные", Toast.LENGTH_LONG).show());
                 }
             }
         });
     }
 
-    private List<Room> parseXml(InputStream is) {
-        List<Room> list = new ArrayList<>();
+    private List<InventoryItemEntity> parseItemsXmlToEntities(InputStream is) {
+        List<InventoryItemEntity> list = new ArrayList<>();
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             XmlPullParser parser = factory.newPullParser();
             parser.setInput(is, null);
 
             String text = "";
-            String code = null, name = null;
+            String code = null, name = null, location = null, mol = null, rfid = null;
             int eventType = parser.getEventType();
 
             while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -181,13 +175,14 @@ public class InventoryListActivity extends AppCompatActivity {
                         text = parser.getText();
                         break;
                     case XmlPullParser.END_TAG:
-                        if ("Code".equalsIgnoreCase(tagName)) {
-                            code = text;
-                        } else if ("Name".equalsIgnoreCase(tagName)) {
-                            name = text;
-                        } else if ("Product".equalsIgnoreCase(tagName)) { // Assuming server returns rooms as products
+                        if ("Code".equalsIgnoreCase(tagName)) code = text;
+                        else if ("Name".equalsIgnoreCase(tagName)) name = text;
+                        else if ("Location".equalsIgnoreCase(tagName)) location = text;
+                        else if ("MOL".equalsIgnoreCase(tagName)) mol = text;
+                        else if ("rf".equalsIgnoreCase(tagName)) rfid = text;
+                        else if ("Product".equalsIgnoreCase(tagName)) {
                             if (code != null && name != null) {
-                                list.add(new Room(code, name));
+                                list.add(new InventoryItemEntity(departmentId, code, name, location, mol, rfid));
                             }
                         }
                         break;
