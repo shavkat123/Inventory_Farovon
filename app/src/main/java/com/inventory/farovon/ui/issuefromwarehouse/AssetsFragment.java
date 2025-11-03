@@ -1,7 +1,9 @@
 package com.inventory.farovon.ui.issuefromwarehouse;
 
 import android.app.AlertDialog;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -74,33 +76,38 @@ public class AssetsFragment extends Fragment {
         View dialogView = inflater.inflate(R.layout.dialog_scanner_power, null);
         builder.setView(dialogView);
 
-        android.widget.SeekBar powerSeekBar = dialogView.findViewById(R.id.power_seekbar);
-        android.widget.TextView powerValueText = dialogView.findViewById(R.id.power_value_text);
+        final android.widget.SeekBar seekBar = dialogView.findViewById(R.id.seekbar_power);
+        final android.widget.TextView powerValue = dialogView.findViewById(R.id.tv_power_value);
 
-        powerSeekBar.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getContext());
+        int currentPower = prefs.getInt("scanner_power", 15);
+
+        seekBar.setProgress(currentPower - 1);
+        powerValue.setText("Мощность: " + currentPower);
+
+        seekBar.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
-                powerValueText.setText(String.valueOf(progress + 1));
+                powerValue.setText("Мощность: " + (progress + 1));
             }
 
             @Override
-            public void onStartTrackingTouch(android.widget.SeekBar seekBar) {
-            }
+            public void onStartTrackingTouch(android.widget.SeekBar seekBar) {}
 
             @Override
-            public void onStopTrackingTouch(android.widget.SeekBar seekBar) {
-            }
+            public void onStopTrackingTouch(android.widget.SeekBar seekBar) {}
         });
 
-        AlertDialog dialog = builder.create();
-
-        dialogView.findViewById(R.id.confirm_button).setOnClickListener(v -> {
-            int power = powerSeekBar.getProgress() + 1;
-            Toast.makeText(getContext(), "Установлена мощность сканера: " + power, Toast.LENGTH_SHORT).show();
-            dialog.dismiss();
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            int newPower = seekBar.getProgress() + 1;
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putInt("scanner_power", newPower);
+            editor.apply();
+            Toast.makeText(getContext(), "Мощность установлена: " + newPower, Toast.LENGTH_SHORT).show();
         });
+        builder.setNegativeButton("Отмена", (dialog, which) -> dialog.cancel());
 
-        dialog.show();
+        builder.create().show();
     }
 
     private void updateVisibility() {

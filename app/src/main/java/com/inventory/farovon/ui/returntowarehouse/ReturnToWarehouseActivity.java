@@ -1,4 +1,4 @@
-package com.inventory.farovon;
+package com.inventory.farovon.ui.returntowarehouse;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,7 +9,7 @@ import android.widget.Toast;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
-import com.inventory.farovon.ui.returntowarehouse.ReturnToWarehousePagerAdapter;
+import com.inventory.farovon.R;
 
 public class ReturnToWarehouseActivity extends AppCompatActivity {
 
@@ -18,7 +18,7 @@ public class ReturnToWarehouseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_return_to_warehouse);
 
-        androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -41,11 +41,18 @@ public class ReturnToWarehouseActivity extends AppCompatActivity {
                 }
         ).attach();
 
-        // Set the "ОУ" tab as the default selected tab
         viewPager.setCurrentItem(1, false);
 
         findViewById(R.id.button_create).setOnClickListener(v ->
-                Toast.makeText(this, "Create Clicked", Toast.LENGTH_SHORT).show());
+                Toast.makeText(this, "Документ 'Возврат на склад' создан", Toast.LENGTH_SHORT).show());
+    }
+
+    public void updateTabTitle(int count) {
+        TabLayout tabLayout = findViewById(R.id.tab_layout);
+        TabLayout.Tab tab = tabLayout.getTabAt(1);
+        if (tab != null) {
+            tab.setText("ОУ (" + count + ")");
+        }
     }
 
     @Override
@@ -56,14 +63,13 @@ public class ReturnToWarehouseActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.return_to_warehouse_menu, menu);
+        getMenuInflater().inflate(R.menu.asset_movement_menu, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_reset) {
-            // Handle reset logic here
             Toast.makeText(this, "Reset Clicked", Toast.LENGTH_SHORT).show();
             return true;
         }

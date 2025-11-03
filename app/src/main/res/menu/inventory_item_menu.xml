@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_move"
+        android:title="Перемещение" />
+    <item
+        android:id="@+id/action_write_off"
+        android:title="Списание" />
+    <item
+        android:id="@+id/action_ignore"
+        android:title="Игнорировать" />
+</menu>

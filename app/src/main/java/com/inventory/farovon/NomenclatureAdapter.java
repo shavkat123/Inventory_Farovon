@@ -1,12 +1,17 @@
 package com.inventory.farovon;
 
+import android.content.Context;
 import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.*;
@@ -65,6 +70,28 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
         return true;
     }
 
+    public void removeItem(int position) {
+        if (position >= 0 && position < items.size()) {
+            items.remove(position);
+            rebuildIndex();
+            notifyItemRemoved(position);
+            notifyItemRangeChanged(position, items.size());
+        }
+    }
+
+    public boolean areAllItemsFound() {
+        if (items.isEmpty()) {
+            return false;
+        }
+        for (Nomenclature item : items) {
+            String key = normalizeEpc(getRfid(item));
+            if (countsByEpc.getOrDefault(key, 0) == 0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void rebuildIndex() {
         rfIndex.clear();
         for (int i = 0; i < items.size(); i++) {
@@ -96,7 +123,7 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
     public VH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 // это твой layout элемента со строками tvName, tvCode, rfid, scanCount
-                .inflate(R.layout.item_nomenclature, parent, false);
+                .inflate(R.layout.item_inventory, parent, false);
         return new VH(v);
     }
 
@@ -114,7 +141,6 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
         h.tvName.setText(name != null ? name : "");
         h.tvCode.setText(code != null ? code : "");
         h.tvRfid.setText(rfid != null ? rfid : "");
-        h.scanCount.setText(String.valueOf(count));
 
         // Жирный шрифт для найденных
         h.tvName.setTypeface(null, count > 0 ? Typeface.BOLD : Typeface.NORMAL);
@@ -123,6 +149,57 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
         h.root.setBackgroundResource(count > 0
                 ? R.drawable.bg_item_found     // см. drawable из предыдущего сообщения
                 : R.drawable.bg_item_normal);
+
+        h.root.setOnClickListener(v -> {
+            Context context = v.getContext();
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            LayoutInflater inflater = LayoutInflater.from(context);
+            View dialogView = inflater.inflate(R.layout.dialog_item_details, null);
+            builder.setView(dialogView);
+
+            TextView itemName = dialogView.findViewById(R.id.tv_item_name);
+            TextView itemInventoryNumber = dialogView.findViewById(R.id.tv_item_inventory_number);
+            TextView itemRfid = dialogView.findViewById(R.id.tv_item_rfid);
+            TextView itemMol = dialogView.findViewById(R.id.tv_item_mol);
+            TextView itemLocation = dialogView.findViewById(R.id.tv_item_location);
+
+            itemName.setText("Наименование: " + (getName(it) != null ? getName(it) : "—"));
+            itemInventoryNumber.setText("Инв. номер: " + (getCode(it) != null ? getCode(it) : "—"));
+            itemRfid.setText("RFID: " + (getRfid(it) != null ? getRfid(it) : "—"));
+            itemMol.setText("МОЛ: " + (it.getMol() != null ? it.getMol() : "—"));
+            itemLocation.setText("Местоположение: " + (it.getLocation() != null ? it.getLocation() : "—"));
+
+            AlertDialog dialog = builder.create();
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+            dialog.show();
+        });
+
+        h.ivMoreOptions.setOnClickListener(v -> {
+            PopupMenu popup = new PopupMenu(v.getContext(), v);
+            popup.getMenuInflater().inflate(R.menu.inventory_item_menu, popup.getMenu());
+            popup.setOnMenuItemClickListener(menuItem -> {
+                int itemId = menuItem.getItemId();
+                int adapterPosition = h.getAdapterPosition();
+                if (adapterPosition == RecyclerView.NO_POSITION) {
+                    return false;
+                }
+
+                if (itemId == R.id.action_move) {
+                    Toast.makeText(v.getContext(), "Перемещение: " + name, Toast.LENGTH_SHORT).show();
+                    removeItem(adapterPosition);
+                    return true;
+                } else if (itemId == R.id.action_write_off) {
+                    Toast.makeText(v.getContext(), "Списание: " + name, Toast.LENGTH_SHORT).show();
+                    removeItem(adapterPosition);
+                    return true;
+                } else if (itemId == R.id.action_ignore) {
+                    removeItem(adapterPosition);
+                    return true;
+                }
+                return false;
+            });
+            popup.show();
+        });
     }
 
     @Override
@@ -133,7 +210,8 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
     /** Хранилище ссылок на вью элемента. */
     static class VH extends RecyclerView.ViewHolder {
         View root;
-        TextView tvName, tvCode, tvRfid, scanCount;
+        TextView tvName, tvCode, tvRfid;
+        ImageView ivMoreOptions;
 
         VH(@NonNull View itemView) {
             super(itemView);
@@ -144,7 +222,7 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
             tvName    = itemView.findViewById(R.id.tvName);
             tvCode    = itemView.findViewById(R.id.tvCode);
             tvRfid    = itemView.findViewById(R.id.rfid);
-            scanCount = itemView.findViewById(R.id.scanCount);
+            ivMoreOptions = itemView.findViewById(R.id.iv_more_options);
         }
     }
 }

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/dialog_background_rounded">
+
+    <TextView
+        android:id="@+id/dialog_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Детализация"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/tv_item_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Наименование: "
+        android:textColor="@color/colorTextDark"
+        android:textSize="16sp"
+        android:layout_marginBottom="12dp"/>
+
+    <TextView
+        android:id="@+id/tv_item_inventory_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Инв. номер: "
+        android:textColor="@color/colorTextDark"
+        android:textSize="16sp"
+        android:layout_marginBottom="12dp"/>
+
+    <TextView
+        android:id="@+id/tv_item_rfid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="RFID: "
+        android:textColor="@color/colorTextDark"
+        android:textSize="16sp"
+        android:layout_marginBottom="12dp"/>
+
+    <TextView
+        android:id="@+id/tv_item_mol"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="МОЛ: "
+        android:textColor="@color/colorTextDark"
+        android:textSize="16sp"
+        android:layout_marginBottom="12dp"/>
+
+    <TextView
+        android:id="@+id/tv_item_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Местоположение: "
+        android:textColor="@color/colorTextDark"
+        android:textSize="16sp" />
+
+</LinearLayout>

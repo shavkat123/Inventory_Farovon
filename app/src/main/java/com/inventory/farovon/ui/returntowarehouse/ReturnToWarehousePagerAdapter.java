@@ -15,13 +15,13 @@ public class ReturnToWarehousePagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         if (position == 0) {
-            return new ParametersFragment();
+            return new ReturnParametersFragment();
         }
-        return new AssetsFragment();
+        return new ReturnAssetsFragment();
     }
 
     @Override
     public int getItemCount() {
-        return 2; // We have two tabs
+        return 2;
     }
 }
