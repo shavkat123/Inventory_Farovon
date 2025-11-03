@@ -40,9 +40,15 @@ import com.inventory.farovon.MainActivity;
 import com.inventory.farovon.NomenclatureActivity;
 import com.inventory.farovon.R;
 import com.inventory.farovon.Nomenclature;
+import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.InventoryItemEntity;
 import com.inventory.farovon.ui.login.SessionManager;
-
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+import java.io.StringReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -62,8 +68,11 @@ public class GalleryFragment extends Fragment {
     private TextView tvResult;
     private TextView tvHint;
     private Button btnRequestPermission;
+    private ProgressBar progressBar;
+    private AppDatabase db;
 
     private ExecutorService cameraExecutor;
+    private ExecutorService databaseExecutor;
     private ProcessCameraProvider cameraProvider;
     private volatile boolean isProcessingBarcode = false;
 
@@ -108,6 +117,8 @@ public class GalleryFragment extends Fragment {
                         Toast.makeText(requireContext(), "Нужно разрешение на камеру", Toast.LENGTH_SHORT).show();
                     }
                 });
+        databaseExecutor = Executors.newSingleThreadExecutor();
+        db = AppDatabase.getDatabase(requireContext());
     }
 
     @Override
@@ -120,6 +131,7 @@ public class GalleryFragment extends Fragment {
         tvResult = root.findViewById(R.id.tvResult);
         tvHint = root.findViewById(R.id.tvScanHint);
         btnRequestPermission = root.findViewById(R.id.btnRequestPermission);
+        progressBar = root.findViewById(R.id.progressBar);
 
         cameraExecutor = Executors.newSingleThreadExecutor();
 
@@ -236,105 +248,151 @@ public class GalleryFragment extends Fragment {
                     if (value != null && !value.isEmpty()) {
                         mainHandler.post(() -> {
                             if (!isAdded()) {
-                                return; // Fragment not attached, do nothing.
+                                isProcessingBarcode = false;
+                                return;
                             }
                             tvResult.setText("Сканировано: " + value);
                             if (roomCodeToVerify != null && roomCodeToVerify.equals(value)) {
                                 Toast.makeText(requireContext(), "Код помещения подтвержден!", Toast.LENGTH_SHORT).show();
-
-                                Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
-                                intent.putExtra("room_code", roomCodeToVerify);
-                                intent.putExtra("department_code", departmentCode);
-                                intent.putExtra("department_id", departmentId);
-                                intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                                startActivity(intent);
-
+                                fetchAndSaveInventoryData(value);
                             } else if (roomCodeToVerify != null) {
-                                Toast.makeText(requireContext(), "Неверный QR-код помещения. Отсканирован: " + value, Toast.LENGTH_LONG).show();
-                                mainHandler.postDelayed(() -> isProcessingBarcode = false, 2000); // Allow re-scan sooner
+                                Toast.makeText(requireContext(), "Неверный QR-код. Отсканирован: " + value, Toast.LENGTH_LONG).show();
+                                mainHandler.postDelayed(() -> isProcessingBarcode = false, 2000);
+                            } else {
+                                isProcessingBarcode = false;
                             }
                         });
+                    } else {
+                        isProcessingBarcode = false;
                     }
                     break;
                 }
             }
         }
-        // Если ни один штрихкод не попал в рамку — сбрасываем флаг
-        isProcessingBarcode = false;
+        if (!isProcessingBarcode) {
+            isProcessingBarcode = false;
+        }
     }
 
+    private void fetchAndSaveInventoryData(String roomCode) {
+        mainHandler.post(() -> progressBar.setVisibility(View.VISIBLE));
 
-    // 🔹 Масштабируем координаты из кадра камеры в PreviewView
-    private Rect mapToPreviewView(Rect bounds, int imageWidth, int imageHeight) {
-        if (previewView.getWidth() == 0 || previewView.getHeight() == 0) return bounds;
-
-        float scaleX = (float) previewView.getWidth() / imageWidth;
-        float scaleY = (float) previewView.getHeight() / imageHeight;
-
-        return new Rect(
-                (int)(bounds.left * scaleX),
-                (int)(bounds.top * scaleY),
-                (int)(bounds.right * scaleX),
-                (int)(bounds.bottom * scaleY)
-        );
-    }
-
-    private void sendBarcodeToServer(String barcode) {
         String serverIP = sessionManager.getIpAddress();
-        String url = "http://" + serverIP +"/my1c/hs/hw/say";
-        Log.i("GalleryFragment", url);
+        String username = sessionManager.getUsername();
+        String password = sessionManager.getPassword();
+        String url = "http://" + serverIP + "/my1c/hs/hw/say";
+
         OkHttpClient client = new OkHttpClient();
-
-        // Тело запроса в JSON
-        String json = "{\"odel\":\"" + barcode + "\"}";
-        RequestBody body = RequestBody.create(
-                json,
-                MediaType.parse("application/json; charset=utf-8")
-        );
-
-        // Авторизация Basic
-        String credentials = okhttp3.Credentials.basic("admin", "1");
-
-        // Запрос
+        String json = "{\"otdel\":\"" + roomCode + "\"}";
+        RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
-                .header("Authorization", credentials)
-                .header("Content-Type", "application/json")
+                .header("Authorization", okhttp3.Credentials.basic(username, password))
                 .build();
 
         client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                Log.e("GalleryFragment", "Ошибка сети", e);
                 mainHandler.post(() -> {
-                    String errorMsg = "Ошибка сети: " + e.getMessage();
-                    Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
-                    android.content.ClipboardManager clipboard =
-                            (android.content.ClipboardManager) requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
-                    android.content.ClipData clip = android.content.ClipData.newPlainText("Ошибка", errorMsg);
-                    clipboard.setPrimaryClip(clip);
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(requireContext(), "Ошибка сети: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                    isProcessingBarcode = false;
                 });
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    final String xmlResponse = response.body().string();
-                    final List<Nomenclature> items = parseXml(xmlResponse);
-
+                if (!response.isSuccessful()) {
                     mainHandler.post(() -> {
-                        Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
-                        intent.putExtra("items", new ArrayList<>(items));
-                        intent.putExtra("room_code", roomCodeToVerify);
-                        intent.putExtra("department_code", departmentCode);
-                        intent.putExtra("department_id", departmentId);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        startActivity(intent);
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(requireContext(), "Ошибка сервера: " + response.code(), Toast.LENGTH_LONG).show();
+                        isProcessingBarcode = false;
+                    });
+                    return;
+                }
+
+                try {
+                    String xmlResponse = response.body().string();
+                    List<InventoryItemEntity> items = parseInventoryXml(xmlResponse);
+
+                    databaseExecutor.execute(() -> {
+                        db.inventoryItemDao().clearByDepartmentIdAndLocation(departmentId, roomCodeToVerify);
+                        db.inventoryItemDao().insertAll(items);
+
+                        mainHandler.post(() -> {
+                            progressBar.setVisibility(View.GONE);
+                            navigateToNomenclature();
+                        });
+                    });
+
+                } catch (Exception e) {
+                    mainHandler.post(() -> {
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(requireContext(), "Ошибка обработки данных: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        isProcessingBarcode = false;
                     });
                 }
             }
         });
+    }
+
+    private List<InventoryItemEntity> parseInventoryXml(String xml) throws Exception {
+        List<InventoryItemEntity> items = new ArrayList<>();
+        XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+        factory.setNamespaceAware(true);
+        XmlPullParser xpp = factory.newPullParser();
+        xpp.setInput(new StringReader(xml));
+
+        InventoryItemEntity currentItem = null;
+        String text = "";
+        int eventType = xpp.getEventType();
+        while (eventType != XmlPullParser.END_DOCUMENT) {
+            String tagName = xpp.getName();
+            switch (eventType) {
+                case XmlPullParser.START_TAG:
+                    if ("Product".equalsIgnoreCase(tagName)) {
+                        currentItem = new InventoryItemEntity();
+                        currentItem.departmentId = departmentId;
+                    }
+                    break;
+                case XmlPullParser.TEXT:
+                    text = xpp.getText();
+                    break;
+                case XmlPullParser.END_TAG:
+                    if (currentItem != null) {
+                        if ("code".equalsIgnoreCase(tagName)) {
+                            currentItem.code = text;
+                        } else if ("name".equalsIgnoreCase(tagName)) {
+                            currentItem.name = text;
+                        } else if ("rf".equalsIgnoreCase(tagName)) {
+                            currentItem.rf = text != null ? text : "";
+                        } else if ("mol".equalsIgnoreCase(tagName)) {
+                            currentItem.mol = text != null ? text : "";
+                        } else if ("location".equalsIgnoreCase(tagName)) {
+                            currentItem.location = text != null ? text : "";
+                        } else if ("Product".equalsIgnoreCase(tagName)) {
+                            items.add(currentItem);
+                            currentItem = null;
+                        }
+                    }
+                    break;
+            }
+            eventType = xpp.next();
+        }
+        return items;
+    }
+
+    private void navigateToNomenclature() {
+        if (!isAdded()) return;
+        Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
+        intent.putExtra("room_code", roomCodeToVerify);
+        intent.putExtra("department_code", departmentCode);
+        intent.putExtra("department_id", departmentId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        // Reset flag after navigation
+        mainHandler.postDelayed(() -> isProcessingBarcode = false, 500);
     }
 
     @Override
