@@ -121,7 +121,7 @@ public class NomenclatureActivity extends AppCompatActivity {
             while ((info = mReader.readTagFromBuffer()) != null) {
                 String epc = info.getEPC();
                 if (epc != null && adapter.incrementByEpc(epc)) {
-                    toneGenerator.startTone(ToneGenerator.TONE_CDMA_PIP, 150);
+                    toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150);
                 }
                 if (++burst > 200) break;
             }
