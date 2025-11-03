@@ -17,7 +17,8 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:background="@color/colorPrimary"
-            app:title="Возврат на склад" />
+            app:title="Возврат на склад"
+            app:menu="@menu/asset_movement_menu" />
 
     </com.google.android.material.appbar.AppBarLayout>
 

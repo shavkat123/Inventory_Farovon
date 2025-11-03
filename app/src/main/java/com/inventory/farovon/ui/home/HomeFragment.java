@@ -18,7 +18,7 @@ import com.inventory.farovon.AssetMovementActivity;
 import com.inventory.farovon.IdentificationActivity;
 import com.inventory.farovon.IssueDocumentListActivity;
 import com.inventory.farovon.R;
-import com.inventory.farovon.ReturnToWarehouseActivity;
+import com.inventory.farovon.ui.returntowarehouse.ReturnToWarehouseActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +46,7 @@ public class HomeFragment extends Fragment {
         MainMenuAdapter adapter = new MainMenuAdapter(menuItems, item -> {
             if (item.getTitle().equals("Инвентаризация")) {
                 NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
-                navController.navigate(R.id.nav_gallery);
+                navController.navigate(R.id.nav_inventory);
             } else if (item.getTitle().equals("Перемещение МП")) {
                 Intent intent = new Intent(getActivity(), AssetMovementActivity.class);
                 startActivity(intent);

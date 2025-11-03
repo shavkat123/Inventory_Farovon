@@ -36,9 +36,11 @@ import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
+import com.inventory.farovon.MainActivity;
 import com.inventory.farovon.NomenclatureActivity;
 import com.inventory.farovon.R;
 import com.inventory.farovon.Nomenclature;
+import com.inventory.farovon.ui.login.SessionManager;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -81,9 +83,26 @@ public class GalleryFragment extends Fragment {
     // 🔹 Поле для рамки overlay
     private Rect overlayRect;
 
+    private SessionManager sessionManager;
+
+    private String roomCodeToVerify;
+    private String roomNameToVerify;
+    private String departmentCode;
+    private int departmentId;
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        sessionManager = new SessionManager(getActivity());
+
+        if (getArguments() != null) {
+            roomCodeToVerify = getArguments().getString("room_code_to_verify");
+            roomNameToVerify = getArguments().getString("room_name_to_verify");
+            departmentCode = getArguments().getString("department_code");
+            departmentId = getArguments().getInt("department_id", -1);
+        }
 
         // Регистрируем launcher разрешения
         requestPermissionLauncher = registerForActivityResult(
@@ -154,7 +173,7 @@ public class GalleryFragment extends Fragment {
                     String name = element.getElementsByTagName("Name").item(0).getTextContent();
                     String rf = element.getElementsByTagName("rf").item(0).getTextContent();
 
-                    list.add(new Nomenclature(code, name, rf));
+                    list.add(new Nomenclature(code, name, rf, null, null));
                 }
             }
 
@@ -260,12 +279,24 @@ public class GalleryFragment extends Fragment {
                     final String value = barcode.getRawValue();
                     if (value != null && !value.isEmpty()) {
                         mainHandler.post(() -> {
+                            if (!isAdded()) {
+                                return; // Fragment not attached, do nothing.
+                            }
                             tvResult.setText("Сканировано: " + value);
-                            //Toast.makeText(requireContext(), "Сканировано: " + value, Toast.LENGTH_SHORT).show();
-                            sendBarcodeToServer(value);
-                            mainHandler.postDelayed(() -> isProcessingBarcode = false, 5000);
+                            if (roomCodeToVerify != null && roomCodeToVerify.equals(value)) {
+                                Toast.makeText(requireContext(), "Код помещения подтвержден!", Toast.LENGTH_SHORT).show();
+                                // Теперь вместо запуска ScanningActivity, мы просто вызываем sendBarcodeToServer
+                                sendBarcodeToServer(value);
+                                // Нет необходимости в задержке, так как sendBarcodeToServer запустит новую активность
+                            } else if (roomCodeToVerify != null) {
+                                Toast.makeText(requireContext(), "Неверный QR-код помещения. Отсканирован: " + value, Toast.LENGTH_LONG).show();
+                                mainHandler.postDelayed(() -> isProcessingBarcode = false, 2000); // Allow re-scan sooner
+                            } else {
+                                // Default behavior if no verification code is present
+                                sendBarcodeToServer(value);
+                                mainHandler.postDelayed(() -> isProcessingBarcode = false, 5000);
+                            }
                         });
-                        mainHandler.postDelayed(() -> isProcessingBarcode = false, 5000);
                     }
                     break;
                 }
@@ -291,8 +322,9 @@ public class GalleryFragment extends Fragment {
     }
 
     private void sendBarcodeToServer(String barcode) {
-        String url = "http://192.168.89.105/my1c/hs/hw/say";
-
+        String serverIP = sessionManager.getIpAddress();
+        String url = "http://" + serverIP +"/my1c/hs/hw/say";
+        Log.i("GalleryFragment", url);
         OkHttpClient client = new OkHttpClient();
 
         // Тело запроса в JSON
@@ -334,14 +366,13 @@ public class GalleryFragment extends Fragment {
                     final List<Nomenclature> items = parseXml(xmlResponse);
 
                     mainHandler.post(() -> {
-                        Bundle bundle = new Bundle();
-                        bundle.putSerializable("items", new ArrayList<>(items));
-
                         Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
                         intent.putExtra("items", new ArrayList<>(items));
+                        intent.putExtra("room_code", roomCodeToVerify);
+                        intent.putExtra("department_code", departmentCode);
+                        intent.putExtra("department_id", departmentId);
                         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
-
                     });
                 }
             }

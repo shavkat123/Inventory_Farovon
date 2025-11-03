@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
         // Passing each menu ID as a set of Ids because each
         // menu should be considered as top level destinations.
         mAppBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_gallery)
+                R.id.nav_home)
                 .setOpenableLayout(drawer)
                 .build();
         NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
@@ -51,16 +51,42 @@ public class MainActivity extends AppCompatActivity {
         NavigationUI.setupWithNavController(navigationView, navController);
 
         setupDrawerButtons(navigationView);
+        handleIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleIntent(intent);
+    }
+
+    private void handleIntent(Intent intent) {
+        if (intent != null && "gallery".equals(intent.getStringExtra("navigate_to"))) {
+            Bundle bundle = new Bundle();
+            bundle.putString("room_code_to_verify", intent.getStringExtra("room_code_to_verify"));
+            bundle.putString("room_name_to_verify", intent.getStringExtra("room_name_to_verify"));
+            bundle.putString("department_code", intent.getStringExtra("department_code"));
+
+            NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
+            navController.navigate(R.id.nav_gallery, bundle);
+        }
     }
 
     private void updateNavHeader() {
         NavigationView navigationView = binding.navView;
         View headerView = navigationView.getHeaderView(0);
+
         TextView navUsername = headerView.findViewById(R.id.nav_header_username);
         String username = sessionManager.getUsername();
 
         if (username != null) {
             navUsername.setText(username);
+        }
+
+        TextView navServerIP = headerView.findViewById(R.id.nav_header_server_ip);
+        String serverIP = sessionManager.getIpAddress();
+        if (serverIP != null) {
+            navServerIP.setText(serverIP);
         }
     }
 

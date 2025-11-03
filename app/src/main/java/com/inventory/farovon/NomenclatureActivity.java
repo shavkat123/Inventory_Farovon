@@ -1,14 +1,21 @@
 package com.inventory.farovon; // <-- поправь пакет при необходимости
 
 import android.os.Bundle;
+import android.media.AudioManager;
+import android.content.Intent;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.KeyEvent;
 import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -25,12 +32,23 @@ public class NomenclatureActivity extends AppCompatActivity {
 
     private NomenclatureAdapter adapter;
     private MaterialButton btnScan;   // scanRef
-    private MaterialButton btnInv;    // button7
+    private ToneGenerator toneGenerator;
+    private String roomCode;
+    private String departmentCode;
+    private int departmentId;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nomenclature);
+
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("Список инвентаря");
+        }
+
 
         RecyclerView rv = findViewById(R.id.recyclerView);
         rv.setLayoutManager(new LinearLayoutManager(this));
@@ -38,13 +56,14 @@ public class NomenclatureActivity extends AppCompatActivity {
         rv.setAdapter(adapter);
 
         btnScan = findViewById(R.id.scanRef);
-        btnInv  = findViewById(R.id.button7);
 
         // получаем список предполагаемых товаров
         ArrayList<Nomenclature> items = null;
         try {
-            // если Serializable
             items = (ArrayList<Nomenclature>) getIntent().getSerializableExtra("items");
+            roomCode = getIntent().getStringExtra("room_code");
+            departmentCode = getIntent().getStringExtra("department_code");
+            departmentId = getIntent().getIntExtra("department_id", -1);
         } catch (Exception ignored) {}
 
         if (items == null) items = new ArrayList<>();
@@ -61,8 +80,7 @@ public class NomenclatureActivity extends AppCompatActivity {
             else             stopScanning();
         });
 
-        btnInv.setOnClickListener(v ->
-                Toast.makeText(this, "Инвентаризация: в разработке", Toast.LENGTH_SHORT).show());
+        toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
     }
 
     private void startScanningSafe() {
@@ -110,7 +128,13 @@ public class NomenclatureActivity extends AppCompatActivity {
             int burst = 0;
             while ((info = mReader.readTagFromBuffer()) != null) {
                 String epc = info.getEPC();
-                if (epc != null) adapter.incrementByEpc(epc);
+                if (epc != null && adapter.incrementByEpc(epc)) {
+                    toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150);
+                    if (adapter.areAllItemsFound()) {
+                        handler.post(NomenclatureActivity.this::showCompletionDialog);
+                        stopScanning();
+                    }
+                }
                 if (++burst > 200) break;
             }
             handler.postDelayed(this, 60);
@@ -122,8 +146,78 @@ public class NomenclatureActivity extends AppCompatActivity {
         stopScanning();
     }
 
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_F9:
+            case KeyEvent.KEYCODE_F10:
+            case 280:
+            case 293:
+                if (event.getRepeatCount() == 0) {
+                    btnScan.performClick();
+                    return true;
+                }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_F9:
+            case KeyEvent.KEYCODE_F10:
+            case 280:
+            case 293:
+                return true;
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    private void checkAndNotifyCompletion() {
+        if (adapter.areAllItemsFound() && roomCode != null) {
+            Intent intent = new Intent("com.inventory.farovon.INVENTORY_COMPLETED");
+            intent.putExtra("room_code", roomCode);
+            sendBroadcast(intent);
+        }
+    }
+
+    private void navigateBackToRoomList() {
+        checkAndNotifyCompletion();
+        Intent intent = new Intent(this, InventoryListActivity.class);
+        intent.putExtra(InventoryListActivity.EXTRA_DEPARTMENT_CODE, departmentCode);
+        intent.putExtra(InventoryListActivity.EXTRA_DEPARTMENT_ID, departmentId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public void onBackPressed() {
+        navigateBackToRoomList();
+    }
+
+    @Override
+    public boolean onSupportNavigateUp() {
+        navigateBackToRoomList();
+        return true;
+    }
+
+    private void showCompletionDialog() {
+        if (!isFinishing()) {
+            new AlertDialog.Builder(this)
+                .setTitle("Инвентаризация завершена")
+                .setMessage("Все метки в данном помещении найдены.")
+                .setPositiveButton("OK", null)
+                .show();
+        }
+    }
+
     @Override protected void onDestroy() {
         stopScanning();
+        if (toneGenerator != null) {
+            toneGenerator.release();
+            toneGenerator = null;
+        }
         super.onDestroy();
     }
 }

@@ -7,13 +7,24 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import com.inventory.farovon.R;
 
-public class ParametersFragment extends Fragment {
+import com.google.android.material.textfield.TextInputEditText;
+import com.inventory.farovon.R;
+import com.inventory.farovon.ui.login.SessionManager;
+
+public class ReturnParametersFragment extends Fragment {
+
+    private SessionManager sessionManager;
+    private TextInputEditText fromIssuer;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_parameters, container, false);
+        View view = inflater.inflate(R.layout.fragment_return_parameters, container, false);
+
+        sessionManager = new SessionManager(requireContext());
+        fromIssuer = view.findViewById(R.id.from_issuer);
+
+        fromIssuer.setText(sessionManager.getUsername());
 
         View fromHeader = view.findViewById(R.id.from_header);
         View fromBody = view.findViewById(R.id.from_body);
