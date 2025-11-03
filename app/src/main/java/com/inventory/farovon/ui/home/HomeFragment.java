@@ -18,6 +18,7 @@ import com.inventory.farovon.AssetMovementActivity;
 import com.inventory.farovon.IdentificationActivity;
 import com.inventory.farovon.IssueDocumentListActivity;
 import com.inventory.farovon.R;
+import com.inventory.farovon.ReturnToWarehouseActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +55,9 @@ public class HomeFragment extends Fragment {
                 startActivity(intent);
             } else if (item.getTitle().equals("Быстрая идентификация")) {
                 Intent intent = new Intent(getActivity(), IdentificationActivity.class);
+                startActivity(intent);
+            } else if (item.getTitle().equals("Возврат на склад")) {
+                Intent intent = new Intent(getActivity(), ReturnToWarehouseActivity.class);
                 startActivity(intent);
             } else {
                 Toast.makeText(getContext(), item.getTitle() + " - в разработке", Toast.LENGTH_SHORT).show();
