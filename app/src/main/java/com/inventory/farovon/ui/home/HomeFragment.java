@@ -55,6 +55,9 @@ public class HomeFragment extends Fragment {
             } else if (item.getTitle().equals("Быстрая идентификация")) {
                 Intent intent = new Intent(getActivity(), IdentificationActivity.class);
                 startActivity(intent);
+            } else if (item.getTitle().equals("Возврат на склад")) {
+                Intent intent = new Intent(getActivity(), com.inventory.farovon.ReturnToWarehouseActivity.class);
+                startActivity(intent);
             } else {
                 Toast.makeText(getContext(), item.getTitle() + " - в разработке", Toast.LENGTH_SHORT).show();
             }
