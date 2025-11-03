@@ -91,21 +91,9 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                 codes.add(dept.code);
             }
 
-            StringBuilder jsonBuilder = new StringBuilder();
-            jsonBuilder.append("{\"inventoried_rooms\": [");
-            for (int i = 0; i < codes.size(); i++) {
-                jsonBuilder.append("\"").append(codes.get(i)).append("\"");
-                if (i < codes.size() - 1) {
-                    jsonBuilder.append(",");
-                }
-            }
-            jsonBuilder.append("]}");
-            String json = jsonBuilder.toString();
-
-            db.pendingUploadDao().insert(new PendingUploadEntity(json));
-
             for (DepartmentEntity dept : completedDepts) {
-                db.departmentDao().updateCompletionStatus(dept.id, false);
+                db.pendingUploadDao().addToQueue(new PendingUploadEntity(dept.code));
+                db.departmentDao().updateCompletionStatus(dept.id, false); // Reset status after queueing
             }
 
             mainHandler.post(() -> {
