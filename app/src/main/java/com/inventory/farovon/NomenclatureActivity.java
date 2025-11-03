@@ -130,7 +130,7 @@ public class NomenclatureActivity extends AppCompatActivity {
                 if (epc != null && adapter.incrementByEpc(epc)) {
                     toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150);
                     if (adapter.areAllItemsFound()) {
-                        handler.post(this::showCompletionDialog);
+                        handler.post(NomenclatureActivity.this::showCompletionDialog);
                         stopScanning();
                     }
                 }
