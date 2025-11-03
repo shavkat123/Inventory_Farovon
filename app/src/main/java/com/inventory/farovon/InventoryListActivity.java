@@ -182,8 +182,17 @@ public class InventoryListActivity extends AppCompatActivity {
                         else if ("rf".equalsIgnoreCase(tagName)) rfid = text;
                         else if ("Product".equalsIgnoreCase(tagName)) {
                             if (code != null && name != null) {
-                                list.add(new InventoryItemEntity(departmentId, code, name, location, mol, rfid));
+                                InventoryItemEntity entity = new InventoryItemEntity();
+                                entity.departmentId = departmentId;
+                                entity.code = code;
+                                entity.name = name;
+                                entity.location = location != null ? location : "";
+                                entity.mol = mol != null ? mol : "";
+                                entity.rf = rfid != null ? rfid : "";
+                                list.add(entity);
                             }
+                            // Reset for next item
+                            code = null; name = null; location = null; mol = null; rfid = null;
                         }
                         break;
                 }
