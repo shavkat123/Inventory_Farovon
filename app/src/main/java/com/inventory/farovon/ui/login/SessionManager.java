@@ -41,4 +41,13 @@ public class SessionManager {
         editor.clear();
         editor.commit();
     }
+
+    public void setRoomCompleted(String roomCode) {
+        editor.putBoolean("room_completed_" + roomCode, true);
+        editor.commit();
+    }
+
+    public boolean isRoomCompleted(String roomCode) {
+        return pref.getBoolean("room_completed_" + roomCode, false);
+    }
 }

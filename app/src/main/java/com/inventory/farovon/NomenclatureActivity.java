@@ -11,9 +11,9 @@ import android.view.KeyEvent;
 import android.widget.Toast;
 
 import com.google.android.material.button.MaterialButton;
+import com.inventory.farovon.ui.login.SessionManager;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -36,11 +36,14 @@ public class NomenclatureActivity extends AppCompatActivity {
     private String roomCode;
     private String departmentCode;
     private int departmentId;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_nomenclature);
+
+        sessionManager = new SessionManager(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -131,6 +134,9 @@ public class NomenclatureActivity extends AppCompatActivity {
                 if (epc != null && adapter.incrementByEpc(epc)) {
                     toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150);
                     if (adapter.areAllItemsFound()) {
+                        if (roomCode != null) {
+                            sessionManager.setRoomCompleted(roomCode);
+                        }
                         handler.post(NomenclatureActivity.this::showCompletionDialog);
                         stopScanning();
                     }
@@ -174,11 +180,7 @@ public class NomenclatureActivity extends AppCompatActivity {
     }
 
     private void checkAndNotifyCompletion() {
-        if (adapter.areAllItemsFound() && roomCode != null) {
-            Intent intent = new Intent("com.inventory.farovon.INVENTORY_COMPLETED");
-            intent.putExtra("room_code", roomCode);
-            sendBroadcast(intent);
-        }
+        // No longer needed here, moved to pollRunnable
     }
 
     private void navigateBackToRoomList() {
