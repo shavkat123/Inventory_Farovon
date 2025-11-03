@@ -96,7 +96,7 @@ public class NomenclatureActivity extends AppCompatActivity {
             databaseExecutor.execute(() -> {
                 List<InventoryItemEntity> itemEntities = db.inventoryItemDao().getByDepartmentIdAndLocation(departmentId, roomCode);
                 List<Nomenclature> items = itemEntities.stream()
-                        .map(e -> new Nomenclature(e.code, e.name, e.rfid, e.mol, e.location))
+                        .map(e -> new Nomenclature(e.code, e.name, e.rf, e.mol, e.location))
                         .collect(Collectors.toList());
                 handler.post(() -> adapter.setItems(items));
             });
