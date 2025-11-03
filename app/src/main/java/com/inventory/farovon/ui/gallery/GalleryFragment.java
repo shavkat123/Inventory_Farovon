@@ -88,6 +88,7 @@ public class GalleryFragment extends Fragment {
     private String roomCodeToVerify;
     private String roomNameToVerify;
     private String departmentCode;
+    private int departmentId;
 
 
     @Override
@@ -100,6 +101,7 @@ public class GalleryFragment extends Fragment {
             roomCodeToVerify = getArguments().getString("room_code_to_verify");
             roomNameToVerify = getArguments().getString("room_name_to_verify");
             departmentCode = getArguments().getString("department_code");
+            departmentId = getArguments().getInt("department_id", -1);
         }
 
         // Регистрируем launcher разрешения
@@ -366,7 +368,9 @@ public class GalleryFragment extends Fragment {
                     mainHandler.post(() -> {
                         Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
                         intent.putExtra("items", new ArrayList<>(items));
-                        intent.putExtra("room_code", roomCodeToVerify); // <-- Добавляем код помещения
+                        intent.putExtra("room_code", roomCodeToVerify);
+                        intent.putExtra("department_code", departmentCode);
+                        intent.putExtra("department_id", departmentId);
                         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
                     });

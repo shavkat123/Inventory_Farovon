@@ -99,6 +99,7 @@ public class InventoryListActivity extends AppCompatActivity {
             intent.putExtra("room_code_to_verify", item.getCode());
             intent.putExtra("room_name_to_verify", item.getName());
             intent.putExtra("department_code", departmentCode);
+            intent.putExtra("department_id", departmentId); // <-- Добавляем ID
             startActivity(intent);
         });
 

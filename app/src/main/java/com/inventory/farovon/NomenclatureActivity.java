@@ -33,6 +33,8 @@ public class NomenclatureActivity extends AppCompatActivity {
     private MaterialButton btnScan;   // scanRef
     private ToneGenerator toneGenerator;
     private String roomCode;
+    private String departmentCode;
+    private int departmentId;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -59,6 +61,8 @@ public class NomenclatureActivity extends AppCompatActivity {
         try {
             items = (ArrayList<Nomenclature>) getIntent().getSerializableExtra("items");
             roomCode = getIntent().getStringExtra("room_code");
+            departmentCode = getIntent().getStringExtra("department_code");
+            departmentId = getIntent().getIntExtra("department_id", -1);
         } catch (Exception ignored) {}
 
         if (items == null) items = new ArrayList<>();
@@ -125,6 +129,10 @@ public class NomenclatureActivity extends AppCompatActivity {
                 String epc = info.getEPC();
                 if (epc != null && adapter.incrementByEpc(epc)) {
                     toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150);
+                    if (adapter.areAllItemsFound()) {
+                        handler.post(this::showCompletionDialog);
+                        stopScanning();
+                    }
                 }
                 if (++burst > 200) break;
             }
@@ -172,17 +180,35 @@ public class NomenclatureActivity extends AppCompatActivity {
         }
     }
 
+    private void navigateBackToRoomList() {
+        checkAndNotifyCompletion();
+        Intent intent = new Intent(this, InventoryListActivity.class);
+        intent.putExtra(InventoryListActivity.EXTRA_DEPARTMENT_CODE, departmentCode);
+        intent.putExtra(InventoryListActivity.EXTRA_DEPARTMENT_ID, departmentId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(intent);
+        finish();
+    }
+
     @Override
     public void onBackPressed() {
-        checkAndNotifyCompletion();
-        super.onBackPressed();
+        navigateBackToRoomList();
     }
 
     @Override
     public boolean onSupportNavigateUp() {
-        checkAndNotifyCompletion();
-        finish();
+        navigateBackToRoomList();
         return true;
+    }
+
+    private void showCompletionDialog() {
+        if (!isFinishing()) {
+            new AlertDialog.Builder(this)
+                .setTitle("Инвентаризация завершена")
+                .setMessage("Все метки в данном помещении найдены.")
+                .setPositiveButton("OK", null)
+                .show();
+        }
     }
 
     @Override protected void onDestroy() {
