@@ -65,6 +65,7 @@ public class AssetsFragment extends Fragment {
         view.findViewById(R.id.button_rfid_scan).setOnClickListener(v -> showScannerPowerDialog());
 
         view.findViewById(R.id.button_select).setOnClickListener(v -> showSelectAssetsDialog());
+        return view;
     }
 
     private void showScannerPowerDialog() {
