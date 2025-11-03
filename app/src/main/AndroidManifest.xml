@@ -43,6 +43,10 @@
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
         <activity
+            android:name=".ReturnToWarehouseActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
             android:name=".IssueFromWarehouseActivity"
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar"
