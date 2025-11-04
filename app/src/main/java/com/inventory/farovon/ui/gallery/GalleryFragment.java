@@ -369,6 +369,12 @@ public class GalleryFragment extends Fragment {
                     if ("Product".equalsIgnoreCase(tagName)) {
                         currentItem = new InventoryItemEntity();
                         currentItem.departmentId = departmentId;
+                        // Инициализируем поля пустыми строками, чтобы избежать NullPointerException
+                        currentItem.code = "";
+                        currentItem.name = "";
+                        currentItem.rf = "";
+                        currentItem.mol = "";
+                        currentItem.location = "";
                     }
                     break;
                 case XmlPullParser.TEXT:
