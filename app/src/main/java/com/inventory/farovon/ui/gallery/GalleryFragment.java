@@ -381,11 +381,11 @@ public class GalleryFragment extends Fragment {
                         } else if ("Name".equalsIgnoreCase(tagName)) {
                             currentItem.name = text;
                         } else if ("rf".equalsIgnoreCase(tagName)) {
-                            currentItem.rf = text != null ? text : "";
+                            currentItem.rf = (text != null) ? text : "";
                         } else if ("mol".equalsIgnoreCase(tagName)) {
-                            currentItem.mol = text != null ? text : "";
+                            currentItem.mol = (text != null) ? text : "";
                         } else if ("location".equalsIgnoreCase(tagName)) {
-                            currentItem.location = text != null ? text : "";
+                            currentItem.location = (text != null) ? text : "";
                         } else if ("Product".equalsIgnoreCase(tagName)) {
                             if (currentItem.code != null && currentItem.name != null && currentItem.rf != null) {
                                 items.add(currentItem);
