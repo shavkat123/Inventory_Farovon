@@ -1,67 +1,93 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:background="@drawable/dialog_background_rounded"
+    android:padding="16dp">
 
     <TextView
+        android:id="@+id/dialog_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Режим считывания"
         android:textSize="20sp"
-        android:textColor="@color/colorTextPrimary"
         android:textStyle="bold"
-        android:layout_marginBottom="24dp"/>
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="24dp">
+        android:layout_marginBottom="16dp">
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/button_rfid"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="RFID"/>
+            android:text="RFID"
+            android:backgroundTint="@color/colorPrimary"
+            android:textColor="@android:color/white"/>
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/button_barcode"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:text="ШК"/>
+            android:text="ШК"
+            android:backgroundTint="@color/colorLightGreyBackground"
+            android:textColor="@android:color/darker_gray"/>
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/button_sn"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="8dp"
             android:layout_weight="1"
-            android:text="SN"/>
+            android:text="SN"
+            android:backgroundTint="@color/colorLightGreyBackground"
+            android:textColor="@android:color/darker_gray"/>
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/button_camera"
-            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="КАМЕРА"/>
-
+            android:text="КАМЕРА"
+            android:backgroundTint="@color/colorLightGreyBackground"
+            android:textColor="@android:color/darker_gray"/>
     </LinearLayout>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_manual_input"
-        style="@style/PrimaryActionButton"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="РУЧНОЙ ВВОД"/>
+        android:layout_height="wrap_content">
 
+        <ImageButton
+            android:id="@+id/button_scanner_settings"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
+            android:src="@drawable/ic_scanner"
+            android:background="@drawable/button_background_blue_rounded"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            app:tint="@android:color/white" />
+
+        <Button
+            android:id="@+id/button_manual_input"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_alignParentEnd="true"
+            android:layout_toEndOf="@id/button_scanner_settings"
+            android:layout_marginStart="16dp"
+            android:text="РУЧНОЙ ВВОД"
+            android:enabled="false"
+            android:backgroundTint="@color/colorLightGreyBackground"
+            android:textColor="@android:color/darker_gray"/>
+    </RelativeLayout>
 </LinearLayout>
