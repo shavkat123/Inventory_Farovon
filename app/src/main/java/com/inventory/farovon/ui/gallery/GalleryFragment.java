@@ -333,17 +333,23 @@ public class GalleryFragment extends Fragment {
                         try {
                             // Сначала получаем правильный ID отдела из базы данных, используя departmentCode
                             int correctDepartmentId = db.departmentDao().getIdByCode(departmentCode);
+                            List<InventoryItemEntity> items = parseInventoryXml(xmlResponse, correctDepartmentId, roomCode);
 
-                            List<InventoryItemEntity> items = parseInventoryXml(xmlResponse, correctDepartmentId);
+                            if (items.isEmpty()) {
+                                mainHandler.post(() -> {
+                                    progressBar.setVisibility(View.GONE);
+                                    Toast.makeText(requireContext(), "Для данного помещения не найдено номенклатуры", Toast.LENGTH_LONG).show();
+                                    isProcessingBarcode = false;
+                                });
+                            } else {
+                                db.inventoryItemDao().clearByDepartmentIdAndLocation(correctDepartmentId, roomCodeToVerify);
+                                db.inventoryItemDao().insertAll(items);
 
-                            // Теперь выполняем операции с базой данных, используя правильный ID
-                            db.inventoryItemDao().clearByDepartmentIdAndLocation(correctDepartmentId, roomCodeToVerify);
-                            db.inventoryItemDao().insertAll(items);
-
-                            mainHandler.post(() -> {
-                                progressBar.setVisibility(View.GONE);
-                                navigateToNomenclature(correctDepartmentId);
-                            });
+                                mainHandler.post(() -> {
+                                    progressBar.setVisibility(View.GONE);
+                                    navigateToNomenclature(correctDepartmentId);
+                                });
+                            }
                         } catch (Exception e) {
                              mainHandler.post(() -> {
                                 progressBar.setVisibility(View.GONE);
@@ -364,7 +370,7 @@ public class GalleryFragment extends Fragment {
         });
     }
 
-    private List<InventoryItemEntity> parseInventoryXml(String xml, int resolvedDepartmentId) throws Exception {
+    private List<InventoryItemEntity> parseInventoryXml(String xml, int resolvedDepartmentId, String roomCode) throws Exception {
         List<InventoryItemEntity> items = new ArrayList<>();
         XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
         XmlPullParser parser = factory.newPullParser();
@@ -405,6 +411,7 @@ public class GalleryFragment extends Fragment {
                         } else if ("location".equalsIgnoreCase(tagName)) {
                             currentItem.location = (text != null) ? text : "";
                         } else if ("Product".equalsIgnoreCase(tagName)) {
+                            currentItem.location = roomCode;
                             // Only add item if it has the essential fields
                             if (currentItem.code != null && !currentItem.code.isEmpty() &&
                                 currentItem.name != null && !currentItem.name.isEmpty()) {
