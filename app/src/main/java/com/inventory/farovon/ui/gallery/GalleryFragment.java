@@ -329,22 +329,34 @@ public class GalleryFragment extends Fragment {
 
                 try {
                     String xmlResponse = response.body().string();
-                    List<InventoryItemEntity> items = parseInventoryXml(xmlResponse);
-
                     databaseExecutor.execute(() -> {
-                        db.inventoryItemDao().clearByDepartmentIdAndLocation(departmentId, roomCodeToVerify);
-                        db.inventoryItemDao().insertAll(items);
+                        try {
+                            // Сначала получаем правильный ID отдела из базы данных, используя departmentCode
+                            int correctDepartmentId = db.departmentDao().getIdByCode(departmentCode);
 
-                        mainHandler.post(() -> {
-                            progressBar.setVisibility(View.GONE);
-                            navigateToNomenclature();
-                        });
+                            List<InventoryItemEntity> items = parseInventoryXml(xmlResponse, correctDepartmentId);
+
+                            // Теперь выполняем операции с базой данных, используя правильный ID
+                            db.inventoryItemDao().clearByDepartmentIdAndLocation(correctDepartmentId, roomCodeToVerify);
+                            db.inventoryItemDao().insertAll(items);
+
+                            mainHandler.post(() -> {
+                                progressBar.setVisibility(View.GONE);
+                                navigateToNomenclature();
+                            });
+                        } catch (Exception e) {
+                             mainHandler.post(() -> {
+                                progressBar.setVisibility(View.GONE);
+                                Toast.makeText(requireContext(), "Ошибка обработки данных: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                                isProcessingBarcode = false;
+                            });
+                        }
                     });
 
-                } catch (Exception e) {
+                } catch (IOException e) {
                     mainHandler.post(() -> {
                         progressBar.setVisibility(View.GONE);
-                        Toast.makeText(requireContext(), "Ошибка обработки данных: " + e.getMessage(), Toast.LENGTH_LONG).show();
+                        Toast.makeText(requireContext(), "Ошибка сети: " + e.getMessage(), Toast.LENGTH_LONG).show();
                         isProcessingBarcode = false;
                     });
                 }
@@ -352,7 +364,7 @@ public class GalleryFragment extends Fragment {
         });
     }
 
-    private List<InventoryItemEntity> parseInventoryXml(String xml) throws Exception {
+    private List<InventoryItemEntity> parseInventoryXml(String xml, int resolvedDepartmentId) throws Exception {
         List<InventoryItemEntity> items = new ArrayList<>();
         XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
         XmlPullParser parser = factory.newPullParser();
@@ -368,7 +380,7 @@ public class GalleryFragment extends Fragment {
                 case XmlPullParser.START_TAG:
                     if ("Product".equalsIgnoreCase(tagName)) {
                         currentItem = new InventoryItemEntity();
-                        currentItem.departmentId = departmentId;
+                        currentItem.departmentId = resolvedDepartmentId;
                         // Инициализируем поля пустыми строками, чтобы избежать NullPointerException
                         currentItem.code = "";
                         currentItem.name = "";
