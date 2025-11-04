@@ -342,7 +342,7 @@ public class GalleryFragment extends Fragment {
 
                             mainHandler.post(() -> {
                                 progressBar.setVisibility(View.GONE);
-                                navigateToNomenclature();
+                                navigateToNomenclature(correctDepartmentId);
                             });
                         } catch (Exception e) {
                              mainHandler.post(() -> {
@@ -420,12 +420,12 @@ public class GalleryFragment extends Fragment {
         return items;
     }
 
-    private void navigateToNomenclature() {
+    private void navigateToNomenclature(int correctDepartmentId) {
         if (!isAdded()) return;
         Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
         intent.putExtra("room_code", roomCodeToVerify);
         intent.putExtra("department_code", departmentCode);
-        intent.putExtra("department_id", departmentId);
+        intent.putExtra("department_id", correctDepartmentId);
         intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         // Reset flag after navigation
