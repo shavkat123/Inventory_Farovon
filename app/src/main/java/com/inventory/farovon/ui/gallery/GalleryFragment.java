@@ -377,9 +377,9 @@ public class GalleryFragment extends Fragment {
                 case XmlPullParser.END_TAG:
                     if (currentItem != null) {
                         if ("Code".equalsIgnoreCase(tagName)) {
-                            currentItem.code = text;
+                            currentItem.code = (text != null) ? text : "";
                         } else if ("Name".equalsIgnoreCase(tagName)) {
-                            currentItem.name = text;
+                            currentItem.name = (text != null) ? text : "";
                         } else if ("rf".equalsIgnoreCase(tagName)) {
                             currentItem.rf = (text != null) ? text : "";
                         } else if ("mol".equalsIgnoreCase(tagName)) {
@@ -387,7 +387,9 @@ public class GalleryFragment extends Fragment {
                         } else if ("location".equalsIgnoreCase(tagName)) {
                             currentItem.location = (text != null) ? text : "";
                         } else if ("Product".equalsIgnoreCase(tagName)) {
-                            if (currentItem.code != null && currentItem.name != null && currentItem.rf != null) {
+                            // Only add item if it has the essential fields
+                            if (currentItem.code != null && !currentItem.code.isEmpty() &&
+                                currentItem.name != null && !currentItem.name.isEmpty()) {
                                 items.add(currentItem);
                             }
                             currentItem = null;
