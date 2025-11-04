@@ -4,8 +4,15 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:background="@drawable/dialog_background_rounded"
+    android:background="@drawable/bottom_sheet_background"
     android:padding="16dp">
+
+    <View
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="16dp"
+        android:background="@android:color/darker_gray" />
 
     <TextView
         android:id="@+id/dialog_title"
@@ -14,13 +21,13 @@
         android:text="Режим считывания"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp"/>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
+        android:background="@drawable/segmented_control_background"
         android:layout_marginBottom="16dp">
 
         <Button
@@ -30,8 +37,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="RFID"
-            android:backgroundTint="@color/colorPrimary"
+            android:backgroundTint="@color/colorPrimaryBright"
             android:textColor="@android:color/white"/>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/darker_gray" />
 
         <Button
             android:id="@+id/button_barcode"
@@ -40,8 +52,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="ШК"
-            android:backgroundTint="@color/colorLightGreyBackground"
+            android:backgroundTint="@android:color/transparent"
             android:textColor="@android:color/darker_gray"/>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/darker_gray" />
 
         <Button
             android:id="@+id/button_sn"
@@ -50,8 +67,13 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="SN"
-            android:backgroundTint="@color/colorLightGreyBackground"
+            android:backgroundTint="@android:color/transparent"
             android:textColor="@android:color/darker_gray"/>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/darker_gray" />
 
         <Button
             android:id="@+id/button_camera"
@@ -60,7 +82,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="КАМЕРА"
-            android:backgroundTint="@color/colorLightGreyBackground"
+            android:backgroundTint="@android:color/transparent"
             android:textColor="@android:color/darker_gray"/>
     </LinearLayout>
 
@@ -74,6 +96,7 @@
             android:layout_height="56dp"
             android:src="@drawable/ic_scanner"
             android:background="@drawable/button_background_blue_rounded"
+            android:backgroundTint="@color/colorPrimaryBright"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             app:tint="@android:color/white" />
