@@ -298,7 +298,7 @@ public class GalleryFragment extends Fragment {
         String url = "http://" + serverIP + "/my1c/hs/hw/say";
 
         OkHttpClient client = new OkHttpClient();
-        String json = "{\"otdel\":\"" + roomCode + "\"}";
+        String json = "{\"odel\":\"" + roomCode + "\"}";
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
         Request request = new Request.Builder()
                 .url(url)
@@ -355,15 +355,15 @@ public class GalleryFragment extends Fragment {
     private List<InventoryItemEntity> parseInventoryXml(String xml) throws Exception {
         List<InventoryItemEntity> items = new ArrayList<>();
         XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-        factory.setNamespaceAware(true);
-        XmlPullParser xpp = factory.newPullParser();
-        xpp.setInput(new StringReader(xml));
+        XmlPullParser parser = factory.newPullParser();
+        parser.setInput(new StringReader(xml));
 
         InventoryItemEntity currentItem = null;
-        String text = "";
-        int eventType = xpp.getEventType();
+        String text = null;
+        int eventType = parser.getEventType();
+
         while (eventType != XmlPullParser.END_DOCUMENT) {
-            String tagName = xpp.getName();
+            String tagName = parser.getName();
             switch (eventType) {
                 case XmlPullParser.START_TAG:
                     if ("Product".equalsIgnoreCase(tagName)) {
@@ -372,13 +372,13 @@ public class GalleryFragment extends Fragment {
                     }
                     break;
                 case XmlPullParser.TEXT:
-                    text = xpp.getText();
+                    text = parser.getText();
                     break;
                 case XmlPullParser.END_TAG:
                     if (currentItem != null) {
-                        if ("code".equalsIgnoreCase(tagName)) {
+                        if ("Code".equalsIgnoreCase(tagName)) {
                             currentItem.code = text;
-                        } else if ("name".equalsIgnoreCase(tagName)) {
+                        } else if ("Name".equalsIgnoreCase(tagName)) {
                             currentItem.name = text;
                         } else if ("rf".equalsIgnoreCase(tagName)) {
                             currentItem.rf = text != null ? text : "";
@@ -387,13 +387,15 @@ public class GalleryFragment extends Fragment {
                         } else if ("location".equalsIgnoreCase(tagName)) {
                             currentItem.location = text != null ? text : "";
                         } else if ("Product".equalsIgnoreCase(tagName)) {
-                            items.add(currentItem);
+                            if (currentItem.code != null && currentItem.name != null && currentItem.rf != null) {
+                                items.add(currentItem);
+                            }
                             currentItem = null;
                         }
                     }
                     break;
             }
-            eventType = xpp.next();
+            eventType = parser.next();
         }
         return items;
     }
