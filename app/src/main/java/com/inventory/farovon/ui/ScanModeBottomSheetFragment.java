@@ -23,6 +23,7 @@ public class ScanModeBottomSheetFragment extends BottomSheetDialogFragment {
     }
 
     private ScanModeListener mListener;
+    private Button btnRfid, btnBarcode, btnSn, btnCamera;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -44,13 +45,13 @@ public class ScanModeBottomSheetFragment extends BottomSheetDialogFragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        final Button btnRfid = view.findViewById(R.id.button_rfid);
-        final Button btnBarcode = view.findViewById(R.id.button_barcode);
-        final Button btnSn = view.findViewById(R.id.button_sn);
-        final Button btnCamera = view.findViewById(R.id.button_camera);
+        btnRfid = view.findViewById(R.id.button_rfid);
+        btnBarcode = view.findViewById(R.id.button_barcode);
+        btnSn = view.findViewById(R.id.button_sn);
+        btnCamera = view.findViewById(R.id.button_camera);
 
         View.OnClickListener tabClickListener = v -> {
-            updateTabSelection(v.getId());
+            selectTab((Button) v);
             if (v.getId() == R.id.button_rfid) {
                 mListener.onRfidSelected();
             } else if (v.getId() == R.id.button_barcode) {
@@ -63,7 +64,19 @@ public class ScanModeBottomSheetFragment extends BottomSheetDialogFragment {
         btnSn.setOnClickListener(tabClickListener);
         btnCamera.setOnClickListener(tabClickListener);
 
+        // Set default selection
+        selectTab(btnRfid);
+
         view.findViewById(R.id.button_scanner_settings).setOnClickListener(v -> showScannerPowerDialog());
+    }
+
+    private void selectTab(Button selectedButton) {
+        btnRfid.setSelected(false);
+        btnBarcode.setSelected(false);
+        btnSn.setSelected(false);
+        btnCamera.setSelected(false);
+
+        selectedButton.setSelected(true);
     }
 
     private void showScannerPowerDialog() {
@@ -72,27 +85,5 @@ public class ScanModeBottomSheetFragment extends BottomSheetDialogFragment {
         View dialogView = inflater.inflate(R.layout.dialog_scanner_power, null);
         builder.setView(dialogView);
         builder.create().show();
-    }
-
-    private void updateTabSelection(int selectedId) {
-        View view = getView();
-        if (view == null) return;
-
-        final Button btnRfid = view.findViewById(R.id.button_rfid);
-        final Button btnBarcode = view.findViewById(R.id.button_barcode);
-        final Button btnSn = view.findViewById(R.id.button_sn);
-        final Button btnCamera = view.findViewById(R.id.button_camera);
-
-        btnRfid.setBackgroundResource(selectedId == R.id.button_rfid ? R.drawable.tab_background_active : android.R.color.transparent);
-        btnRfid.setTextColor(selectedId == R.id.button_rfid ? ContextCompat.getColor(getContext(), android.R.color.white) : ContextCompat.getColor(getContext(), android.R.color.darker_gray));
-
-        btnBarcode.setBackgroundResource(selectedId == R.id.button_barcode ? R.drawable.tab_background_active : android.R.color.transparent);
-        btnBarcode.setTextColor(selectedId == R.id.button_barcode ? ContextCompat.getColor(getContext(), android.R.color.white) : ContextCompat.getColor(getContext(), android.R.color.darker_gray));
-
-        btnSn.setBackgroundResource(selectedId == R.id.button_sn ? R.drawable.tab_background_active : android.R.color.transparent);
-        btnSn.setTextColor(selectedId == R.id.button_sn ? ContextCompat.getColor(getContext(), android.R.color.white) : ContextCompat.getColor(getContext(), android.R.color.darker_gray));
-
-        btnCamera.setBackgroundResource(selectedId == R.id.button_camera ? R.drawable.tab_background_active : android.R.color.transparent);
-        btnCamera.setTextColor(selectedId == R.id.button_camera ? ContextCompat.getColor(getContext(), android.R.color.white) : ContextCompat.getColor(getContext(), android.R.color.darker_gray));
     }
 }
