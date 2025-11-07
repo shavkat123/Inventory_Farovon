@@ -32,13 +32,13 @@
 
         <Button
             android:id="@+id/button_rfid"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="RFID"
             android:background="@drawable/tab_background_active"
-            android:textColor="@android:color/white"
-            android:textAllCaps="true"/>
+            android:textColor="@android:color/white"/>
 
         <View
             android:layout_width="1dp"
@@ -47,13 +47,13 @@
 
         <Button
             android:id="@+id/button_barcode"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="ШК"
             android:background="@android:color/transparent"
-            android:textColor="@android:color/darker_gray"
-            android:textAllCaps="true"/>
+            android:textColor="@android:color/darker_gray"/>
 
         <View
             android:layout_width="1dp"
@@ -62,13 +62,13 @@
 
         <Button
             android:id="@+id/button_sn"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="SN"
             android:background="@android:color/transparent"
-            android:textColor="@android:color/darker_gray"
-            android:textAllCaps="true"/>
+            android:textColor="@android:color/darker_gray"/>
 
         <View
             android:layout_width="1dp"
@@ -77,13 +77,13 @@
 
         <Button
             android:id="@+id/button_camera"
+            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="КАМЕРА"
             android:background="@android:color/transparent"
-            android:textColor="@android:color/darker_gray"
-            android:textAllCaps="true"/>
+            android:textColor="@android:color/darker_gray"/>
     </LinearLayout>
 
     <RelativeLayout
