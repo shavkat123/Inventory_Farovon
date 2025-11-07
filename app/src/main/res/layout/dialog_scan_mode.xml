@@ -40,6 +40,11 @@
             android:background="@drawable/tab_background_active"
             android:textColor="@android:color/white"/>
 
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/colorDivider" />
+
         <Button
             android:id="@+id/button_barcode"
             style="?android:attr/buttonBarButtonStyle"
@@ -50,6 +55,11 @@
             android:background="@android:color/transparent"
             android:textColor="@android:color/darker_gray"/>
 
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/colorDivider" />
+
         <Button
             android:id="@+id/button_sn"
             style="?android:attr/buttonBarButtonStyle"
@@ -59,6 +69,11 @@
             android:text="SN"
             android:background="@android:color/transparent"
             android:textColor="@android:color/darker_gray"/>
+
+        <View
+            android:layout_width="1dp"
+            android:layout_height="match_parent"
+            android:background="@color/colorDivider" />
 
         <Button
             android:id="@+id/button_camera"
