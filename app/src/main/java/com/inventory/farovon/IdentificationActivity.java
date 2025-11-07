@@ -1,29 +1,16 @@
 package com.inventory.farovon;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
-import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
-import com.rscja.deviceapi.RFIDWithUHFUART;
-import com.rscja.deviceapi.entity.UHFTAGInfo;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-public class IdentificationActivity extends AppCompatActivity implements ScanModeBottomSheetFragment.ScanModeListener {
-
-    private RFIDWithUHFUART mReader;
-    private ExecutorService executor;
-    private Handler handler;
-    private boolean isScanning = false;
-
-    private ExtendedFloatingActionButton fabScan;
+public class IdentificationActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,132 +23,29 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        fabScan = findViewById(R.id.fab_scan);
-        fabScan.setOnClickListener(view -> {
-            if (isScanning) {
-                stopRfidScanning();
-            } else {
-                showScanModeDialog();
-            }
-        });
-
-        handler = new Handler(Looper.getMainLooper());
-
-        try {
-            mReader = RFIDWithUHFUART.getInstance();
-        } catch (Exception e) {
-            Toast.makeText(this, "SDK init error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        stopRfidScanning();
-        if (mReader != null) {
-            mReader.free();
-        }
-    }
-
-    private void startRfidScanning() {
-        if (mReader == null) {
-            postToast("Ридер не инициализирован");
-            return;
-        }
-        if (isScanning) {
-            return;
-        }
-
-        executor = Executors.newSingleThreadExecutor();
-        executor.submit(() -> {
-            if (!mReader.init(this)) {
-                postToast("Ошибка инициализации ридера");
-                return;
-            }
-
-            setIsScanning(true);
-
-            mReader.setPower(30);
-            if (!mReader.startInventoryTag()) {
-                postToast("Не удалось запустить инвентарь");
-                mReader.free();
-                setIsScanning(false);
-                return;
-            }
-
-            while (isScanning) {
-                UHFTAGInfo info;
-                while ((info = mReader.readTagFromBuffer()) != null) {
-                    String epc = info.getEPC();
-                    if (epc != null) {
-                        handler.post(() -> {
-                            Toast.makeText(IdentificationActivity.this, "Найдена метка: " + epc, Toast.LENGTH_SHORT).show();
-                        });
-                    }
-                }
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-
-            if (mReader != null) {
-                mReader.stopInventory();
-            }
-        });
-    }
-
-    private void stopRfidScanning() {
-        if (!isScanning) {
-            return;
-        }
-        setIsScanning(false);
-    }
-
-    private void setIsScanning(boolean scanning) {
-        isScanning = scanning;
-        handler.post(() -> {
-            if (scanning) {
-                fabScan.setText("ОСТАНОВИТЬ");
-            } else {
-                fabScan.setText("СКАНИРОВАТЬ");
-            }
-        });
-        if (!scanning && executor != null && !executor.isShutdown()) {
-             executor.shutdown();
-        }
-    }
-
-    private void postToast(final String message) {
-        handler.post(() -> Toast.makeText(this, message, Toast.LENGTH_SHORT).show());
+        ExtendedFloatingActionButton fabScan = findViewById(R.id.fab_scan);
+        fabScan.setOnClickListener(view -> showScanModeDialog());
     }
 
     private void showScanModeDialog() {
-        ScanModeBottomSheetFragment bottomSheet = new ScanModeBottomSheetFragment();
-        bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.dialog_scan_mode, null);
+        builder.setView(dialogView);
+
+        // Placeholder listeners for dialog buttons
+        dialogView.findViewById(R.id.button_rfid).setOnClickListener(v -> Toast.makeText(this, "RFID Clicked", Toast.LENGTH_SHORT).show());
+        dialogView.findViewById(R.id.button_barcode).setOnClickListener(v -> Toast.makeText(this, "Barcode Clicked", Toast.LENGTH_SHORT).show());
+        dialogView.findViewById(R.id.button_sn).setOnClickListener(v -> Toast.makeText(this, "SN Clicked", Toast.LENGTH_SHORT).show());
+        dialogView.findViewById(R.id.button_camera).setOnClickListener(v -> Toast.makeText(this, "Camera Clicked", Toast.LENGTH_SHORT).show());
+        dialogView.findViewById(R.id.button_manual_input).setOnClickListener(v -> Toast.makeText(this, "Manual Input Clicked", Toast.LENGTH_SHORT).show());
+
+        builder.create().show();
     }
 
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
-    }
-
-    @Override
-    public void onRfidSelected() {
-        startRfidScanning();
-    }
-
-    @Override
-    public void onBarcodeSelected() {
-        try {
-            Intent intent = new Intent("com.google.zxing.client.android.SCAN");
-            intent.putExtra("SCAN_MODE", "QR_CODE_MODE");
-            startActivityForResult(intent, 0);
-        } catch (Exception e) {
-            Toast.makeText(this, "Сканер штрих-кодов не найден", Toast.LENGTH_LONG).show();
-        }
     }
 }
