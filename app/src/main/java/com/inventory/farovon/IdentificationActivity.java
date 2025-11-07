@@ -2,23 +2,27 @@ package com.inventory.farovon;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.widget.Button;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.appcompat.widget.Toolbar;
 
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
-
 import com.rscja.deviceapi.RFIDWithUHFUART;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class IdentificationActivity extends AppCompatActivity implements ScanModeBottomSheetFragment.ScanModeListener {
 
     private RFIDWithUHFUART mReader;
+    private ExecutorService executor;
+    private Handler handler;
+    private boolean isScanning = false;
+
+    private ExtendedFloatingActionButton fabScan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,8 +35,16 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        ExtendedFloatingActionButton fabScan = findViewById(R.id.fab_scan);
-        fabScan.setOnClickListener(view -> showScanModeDialog());
+        fabScan = findViewById(R.id.fab_scan);
+        fabScan.setOnClickListener(view -> {
+            if (isScanning) {
+                stopRfidScanning();
+            } else {
+                showScanModeDialog();
+            }
+        });
+
+        handler = new Handler(Looper.getMainLooper());
 
         try {
             mReader = RFIDWithUHFUART.getInstance();
@@ -41,20 +53,87 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopRfidScanning();
+        if (mReader != null) {
+            mReader.free();
+        }
+    }
+
     private void startRfidScanning() {
         if (mReader == null) {
-            Toast.makeText(this, "Ридер не инициализирован", Toast.LENGTH_SHORT).show();
+            postToast("Ридер не инициализирован");
             return;
         }
-        if (mReader.init(this)) {
-            mReader.setPower(30);
-            boolean ok = mReader.startInventoryTag();
-            if (!ok) {
-                Toast.makeText(this, "Не удалось запустить инвентарь", Toast.LENGTH_SHORT).show();
-            }
-        } else {
-            Toast.makeText(this, "Ошибка инициализации ридера", Toast.LENGTH_SHORT).show();
+        if (isScanning) {
+            return;
         }
+
+        executor = Executors.newSingleThreadExecutor();
+        executor.submit(() -> {
+            if (!mReader.init(this)) {
+                postToast("Ошибка инициализации ридера");
+                return;
+            }
+
+            setIsScanning(true);
+
+            mReader.setPower(30);
+            if (!mReader.startInventoryTag()) {
+                postToast("Не удалось запустить инвентарь");
+                mReader.free();
+                setIsScanning(false);
+                return;
+            }
+
+            while (isScanning) {
+                String[] tags = mReader.readTagFromBuffer();
+                if (tags != null) {
+                    for (String tag : tags) {
+                        handler.post(() -> {
+                            Toast.makeText(IdentificationActivity.this, "Найдена метка: " + tag, Toast.LENGTH_SHORT).show();
+                        });
+                    }
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+
+            if (mReader != null) {
+                mReader.stopInventory();
+            }
+        });
+    }
+
+    private void stopRfidScanning() {
+        if (!isScanning) {
+            return;
+        }
+        setIsScanning(false);
+    }
+
+    private void setIsScanning(boolean scanning) {
+        isScanning = scanning;
+        handler.post(() -> {
+            if (scanning) {
+                fabScan.setText("ОСТАНОВИТЬ");
+            } else {
+                fabScan.setText("СКАНИРОВАТЬ");
+            }
+        });
+        if (!scanning && executor != null && !executor.isShutdown()) {
+             executor.shutdown();
+        }
+    }
+
+    private void postToast(final String message) {
+        handler.post(() -> Toast.makeText(this, message, Toast.LENGTH_SHORT).show());
     }
 
     private void showScanModeDialog() {
