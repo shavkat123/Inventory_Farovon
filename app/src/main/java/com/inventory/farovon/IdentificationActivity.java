@@ -11,6 +11,7 @@ import androidx.appcompat.widget.Toolbar;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
 import com.rscja.deviceapi.RFIDWithUHFUART;
+import com.rscja.deviceapi.entity.UHFTAGInfo;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -89,11 +90,12 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
             }
 
             while (isScanning) {
-                String[] tags = mReader.readTagFromBuffer();
-                if (tags != null) {
-                    for (String tag : tags) {
+                UHFTAGInfo info;
+                while ((info = mReader.readTagFromBuffer()) != null) {
+                    String epc = info.getEPC();
+                    if (epc != null) {
                         handler.post(() -> {
-                            Toast.makeText(IdentificationActivity.this, "Найдена метка: " + tag, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(IdentificationActivity.this, "Найдена метка: " + epc, Toast.LENGTH_SHORT).show();
                         });
                     }
                 }
