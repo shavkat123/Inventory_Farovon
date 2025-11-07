@@ -27,63 +27,63 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:background="@drawable/bottom_sheet_background"
+        android:background="@drawable/segmented_control_background"
         android:layout_marginBottom="16dp">
 
         <Button
             android:id="@+id/button_rfid"
-            style="?android:attr/buttonBarButtonStyle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/button_background_blue_rounded"
             android:text="RFID"
-            android:textColor="@color/colorPrimaryBright" />
+            android:background="@drawable/tab_background_active"
+            android:textColor="@android:color/white"
+            android:textAllCaps="true"/>
 
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/colorPrimaryBright" />
+            android:background="@color/colorDivider" />
 
         <Button
             android:id="@+id/button_barcode"
-            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="ШК"
             android:background="@android:color/transparent"
-            android:textColor="@color/colorPrimaryBright"/>
+            android:textColor="@android:color/darker_gray"
+            android:textAllCaps="true"/>
 
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/colorPrimaryBright" />
+            android:background="@color/colorDivider" />
 
         <Button
             android:id="@+id/button_sn"
-            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="SN"
             android:background="@android:color/transparent"
-            android:textColor="@color/colorPrimaryBright"/>
+            android:textColor="@android:color/darker_gray"
+            android:textAllCaps="true"/>
 
         <View
             android:layout_width="1dp"
             android:layout_height="match_parent"
-            android:background="@color/colorPrimaryBright" />
+            android:background="@color/colorDivider" />
 
         <Button
             android:id="@+id/button_camera"
-            style="?android:attr/buttonBarButtonStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="КАМЕРА"
             android:background="@android:color/transparent"
-            android:textColor="@color/colorPrimaryBright"/>
+            android:textColor="@android:color/darker_gray"
+            android:textAllCaps="true"/>
     </LinearLayout>
 
     <RelativeLayout
@@ -94,12 +94,12 @@
             android:id="@+id/button_scanner_settings"
             android:layout_width="56dp"
             android:layout_height="56dp"
-            android:src="@drawable/icons8____2_color_hand_drawn_32"
+            android:src="@drawable/ic_scanner"
             android:background="@drawable/button_background_blue_rounded"
             android:backgroundTint="@color/colorPrimaryBright"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
-            app:tint="@color/colorLightGreyBackground" />
+            app:tint="@android:color/white" />
 
         <Button
             android:id="@+id/button_manual_input"
@@ -110,7 +110,7 @@
             android:layout_marginStart="16dp"
             android:text="РУЧНОЙ ВВОД"
             android:enabled="false"
-            android:backgroundTint="@color/colorPrimaryBright"
-            android:textColor="@color/colorLightGreyBackground"/>
+            android:backgroundTint="@color/colorLightGreyBackground"
+            android:textColor="@android:color/darker_gray"/>
     </RelativeLayout>
 </LinearLayout>
