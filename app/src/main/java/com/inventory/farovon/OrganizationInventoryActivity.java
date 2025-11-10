@@ -258,17 +258,26 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
             }
 
             AtomicInteger completedCount = new AtomicInteger(0);
+            java.util.concurrent.atomic.AtomicBoolean syncHasErrors = new java.util.concurrent.atomic.AtomicBoolean(false);
             int total = locations.size();
 
             for (DepartmentEntity location : locations) {
-                fetchInventoryForLocation(location, () -> {
+                fetchInventoryForLocation(location, syncHasErrors, () -> {
                     int current = completedCount.incrementAndGet();
                     if (current == total) {
-                        Log.i(TAG, "Full synchronization process completed successfully.");
-                        mainHandler.post(() -> {
-                            Toast.makeText(this, "Полная синхронизация завершена!", Toast.LENGTH_LONG).show();
-                            loadDataFromDb();
-                        });
+                        if (syncHasErrors.get()) {
+                            Log.e(TAG, "Full synchronization process completed with errors.");
+                            mainHandler.post(() -> {
+                                Toast.makeText(this, "Синхронизация завершена с ошибками. Проверьте логи.", Toast.LENGTH_LONG).show();
+                                loadDataFromDb();
+                            });
+                        } else {
+                            Log.i(TAG, "Full synchronization process completed successfully.");
+                            mainHandler.post(() -> {
+                                Toast.makeText(this, "Полная синхронизация завершена!", Toast.LENGTH_LONG).show();
+                                loadDataFromDb();
+                            });
+                        }
                     }
                 });
             }
@@ -285,7 +294,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         return locations;
     }
 
-    private void fetchInventoryForLocation(DepartmentEntity location, Runnable onComplete) {
+    private void fetchInventoryForLocation(DepartmentEntity location, java.util.concurrent.atomic.AtomicBoolean syncHasErrors, Runnable onComplete) {
         Log.d(TAG, "Fetching inventory for location: " + location.name + " (Code: " + location.code + ")");
         String ip = sessionManager.getIpAddress();
         String username = sessionManager.getUsername();
@@ -315,9 +324,11 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                     }
                 } else {
                     Log.e(TAG, "Server error fetching inventory for location " + location.code + ": " + response.code());
+                    syncHasErrors.set(true);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Failed to fetch or parse inventory for location: " + location.code, e);
+                syncHasErrors.set(true);
             } finally {
                 onComplete.run();
             }
