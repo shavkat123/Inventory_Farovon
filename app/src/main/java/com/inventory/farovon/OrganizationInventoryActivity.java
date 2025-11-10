@@ -26,7 +26,6 @@ import com.inventory.farovon.db.PendingUploadEntity;
 import com.inventory.farovon.model.OrganizationItem;
 import com.inventory.farovon.ui.login.SessionManager;
 import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
 import java.io.IOException;
 import java.io.StringReader;
@@ -93,11 +92,6 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                 return;
             }
 
-            List<String> codes = new ArrayList<>();
-            for (DepartmentEntity dept : completedDepts) {
-                codes.add(dept.code);
-            }
-
             for (DepartmentEntity dept : completedDepts) {
                 db.pendingUploadDao().addToQueue(new PendingUploadEntity(dept.code));
                 db.departmentDao().updateCompletionStatus(dept.id, false);
@@ -148,6 +142,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
     }
 
     private void syncData() {
+        Log.i(TAG, "Starting full synchronization process.");
         mainHandler.post(() -> {
             progressBar.setVisibility(View.VISIBLE);
             Toast.makeText(this, "Начинается полная синхронизация...", Toast.LENGTH_SHORT).show();
@@ -156,6 +151,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
     }
 
     private void syncOrganizationStructure(Runnable onComplete) {
+        Log.i(TAG, "Step 1: Synchronizing organization structure.");
         String ip = sessionManager.getIpAddress();
         String username = sessionManager.getUsername();
         String password = sessionManager.getPassword();
@@ -172,6 +168,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "Failed to synchronize organization structure.", e);
                 mainHandler.post(() -> {
                     Toast.makeText(OrganizationInventoryActivity.this, "Ошибка синхронизации структуры", Toast.LENGTH_SHORT).show();
                     progressBar.setVisibility(View.GONE);
@@ -183,10 +180,12 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         String xmlString = response.body().string();
+                        Log.d(TAG, "Successfully received organization structure XML.");
                         OrganizationXmlParser parser = new OrganizationXmlParser();
                         List<OrganizationItem> orgItems = parser.parse(xmlString);
 
                         databaseExecutor.execute(() -> {
+                            Log.i(TAG, "Clearing old structure data and saving new structure.");
                             db.organizationDao().clearAll();
                             db.departmentDao().clearAll();
                             for (OrganizationItem orgItem : orgItems) {
@@ -195,6 +194,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                                 long orgId = db.organizationDao().insert(orgEntity);
                                 saveDepartmentsRecursive(orgItem.getChildren(), (int) orgId, "");
                             }
+                            Log.i(TAG, "Organization structure synchronization complete.");
                             mainHandler.post(onComplete);
                         });
 
@@ -206,6 +206,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                         });
                     }
                 } else {
+                    Log.e(TAG, "Server error during structure synchronization: " + response.code());
                     mainHandler.post(() -> {
                         Toast.makeText(OrganizationInventoryActivity.this, "Ошибка сервера при синхронизации структуры", Toast.LENGTH_SHORT).show();
                         progressBar.setVisibility(View.GONE);
@@ -237,12 +238,16 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
     }
 
     private void syncAllInventory() {
+        Log.i(TAG, "Step 2: Synchronizing inventory for all locations.");
         mainHandler.post(() -> Toast.makeText(this, "Загрузка инвентаря для каждого помещения...", Toast.LENGTH_SHORT).show());
 
         databaseExecutor.execute(() -> {
+            Log.i(TAG, "Clearing old inventory data.");
             db.inventoryItemDao().clearAll();
             List<DepartmentEntity> allDepartments = db.departmentDao().getAll();
             List<DepartmentEntity> locations = filterLocations(allDepartments);
+
+            Log.i(TAG, "Found " + locations.size() + " locations to synchronize.");
 
             if (locations.isEmpty()) {
                 mainHandler.post(() -> {
@@ -258,13 +263,13 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
             for (DepartmentEntity location : locations) {
                 fetchInventoryForLocation(location, () -> {
                     int current = completedCount.incrementAndGet();
-                    mainHandler.post(() -> {
-                        Toast.makeText(this, "Синхронизация: " + current + " / " + total, Toast.LENGTH_SHORT).show();
-                        if (current == total) {
+                    if (current == total) {
+                        Log.i(TAG, "Full synchronization process completed successfully.");
+                        mainHandler.post(() -> {
                             Toast.makeText(this, "Полная синхронизация завершена!", Toast.LENGTH_LONG).show();
                             loadDataFromDb();
-                        }
-                    });
+                        });
+                    }
                 });
             }
         });
@@ -281,6 +286,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
     }
 
     private void fetchInventoryForLocation(DepartmentEntity location, Runnable onComplete) {
+        Log.d(TAG, "Fetching inventory for location: " + location.name + " (Code: " + location.code + ")");
         String ip = sessionManager.getIpAddress();
         String username = sessionManager.getUsername();
         String password = sessionManager.getPassword();
@@ -303,10 +309,15 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                     List<InventoryItemEntity> items = parseInventoryXml(xmlString, location.id, location.code);
                     if (!items.isEmpty()) {
                         db.inventoryItemDao().insertAll(items);
+                        Log.i(TAG, "Successfully saved " + items.size() + " inventory items for location: " + location.name);
+                    } else {
+                        Log.i(TAG, "No inventory items found for location: " + location.name);
                     }
+                } else {
+                    Log.e(TAG, "Server error fetching inventory for location " + location.code + ": " + response.code());
                 }
             } catch (Exception e) {
-                Log.e(TAG, "Failed to fetch inventory for location: " + location.code, e);
+                Log.e(TAG, "Failed to fetch or parse inventory for location: " + location.code, e);
             } finally {
                 onComplete.run();
             }
@@ -368,6 +379,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
     }
 
     private void loadDataFromDb() {
+        Log.d(TAG, "Loading data from DB to display.");
         progressBar.setVisibility(View.VISIBLE);
         recyclerView.setVisibility(View.GONE);
         databaseExecutor.execute(() -> {
@@ -404,6 +416,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
             }
 
             mainHandler.post(() -> {
+                Log.d(TAG, "Data loaded. Updating RecyclerView.");
                 progressBar.setVisibility(View.GONE);
                 recyclerView.setVisibility(View.VISIBLE);
                 adapter = new OrganizationAdapter(orgItems);
