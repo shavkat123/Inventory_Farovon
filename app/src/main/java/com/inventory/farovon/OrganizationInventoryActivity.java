@@ -181,6 +181,9 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
                     try {
                         String xmlString = response.body().string();
                         Log.d(TAG, "Successfully received organization structure XML.");
+                        Log.d("SERVER_RESPONSE_XML", "--- Raw XML Response from Server ---");
+                        Log.d("SERVER_RESPONSE_XML", xmlString);
+                        Log.d("SERVER_RESPONSE_XML", "--- End of Raw XML Response ---");
                         OrganizationXmlParser parser = new OrganizationXmlParser();
                         List<OrganizationItem> orgItems = parser.parse(xmlString);
 
