@@ -251,7 +251,10 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
             List<DepartmentEntity> allDepartments = db.departmentDao().getAll();
             List<DepartmentEntity> locations = filterLocations(allDepartments);
 
-            Log.i(TAG, "Found " + locations.size() + " locations to synchronize.");
+            Log.i(TAG, "Found " + locations.size() + " locations to synchronize. See details below:");
+            for (DepartmentEntity loc : locations) {
+                Log.d(TAG, "  -> Location for sync: Name='" + loc.name + "', Code='" + loc.code + "'");
+            }
 
             if (locations.isEmpty()) {
                 mainHandler.post(() -> {

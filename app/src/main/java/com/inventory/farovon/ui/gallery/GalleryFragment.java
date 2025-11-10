@@ -200,6 +200,16 @@ public class GalleryFragment extends Fragment {
                     }
                 });
             } else {
+                // Log detailed debug info when a room is not found.
+                List<DepartmentEntity> allDeptsInDb = db.departmentDao().getAll();
+                Log.e("GalleryFragment", "Room lookup failed.");
+                Log.e("GalleryFragment", "Scanned room code: '" + roomCode + "'");
+                Log.e("Gallery-Fragment-Debug", "--- Start: All Department Codes in DB ---");
+                for (DepartmentEntity entity : allDeptsInDb) {
+                    Log.d("Gallery-Fragment-Debug", "DB Record: Name='" + entity.name + "', Code='" + entity.code + "'");
+                }
+                Log.e("Gallery-Fragment-Debug", "--- End: All Department Codes in DB ---");
+
                 mainHandler.post(() -> {
                     progressBar.setVisibility(View.GONE);
                     Toast.makeText(requireContext(), "Помещение не найдено в базе. Выполните синхронизацию.", Toast.LENGTH_LONG).show();
