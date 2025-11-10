@@ -186,8 +186,19 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         });
     }
 
+    private final ExecutorService networkExecutor = Executors.newFixedThreadPool(4);
+
     private void syncData() {
-        invalidateOptionsMenu();
+        Log.i(TAG, "Starting full synchronization process.");
+        mainHandler.post(() -> {
+            progressBar.setVisibility(View.VISIBLE);
+            Toast.makeText(this, "Начинается полная синхронизация...", Toast.LENGTH_SHORT).show();
+        });
+        syncOrganizationStructure(this::syncAllInventory);
+    }
+
+    private void syncOrganizationStructure(Runnable onComplete) {
+        Log.i(TAG, "Step 1: Synchronizing organization structure.");
         String ip = sessionManager.getIpAddress();
         String username = sessionManager.getUsername();
         String password = sessionManager.getPassword();
@@ -204,35 +215,52 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
+                Log.e(TAG, "Failed to synchronize organization structure.", e);
                 mainHandler.post(() -> {
-                    Toast.makeText(OrganizationInventoryActivity.this, "Ошибка синхронизации", Toast.LENGTH_SHORT).show();
-                    invalidateOptionsMenu();
+                    Toast.makeText(OrganizationInventoryActivity.this, "Ошибка синхронизации структуры", Toast.LENGTH_SHORT).show();
+                    progressBar.setVisibility(View.GONE);
                 });
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
-                mainHandler.post(() -> invalidateOptionsMenu());
                 if (response.isSuccessful() && response.body() != null) {
                     try {
                         String xmlString = response.body().string();
+                        Log.d(TAG, "Successfully received organization structure XML.");
+                        Log.d("SERVER_RESPONSE_XML", "--- Raw XML Response from Server ---");
+                        Log.d("SERVER_RESPONSE_XML", xmlString);
+                        Log.d("SERVER_RESPONSE_XML", "--- End of Raw XML Response ---");
                         OrganizationXmlParser parser = new OrganizationXmlParser();
                         List<OrganizationItem> orgItems = parser.parse(xmlString);
 
                         databaseExecutor.execute(() -> {
+                            Log.i(TAG, "Clearing old structure data and saving new structure.");
                             db.organizationDao().clearAll();
+                            db.departmentDao().clearAll();
                             for (OrganizationItem orgItem : orgItems) {
                                 OrganizationEntity orgEntity = new OrganizationEntity();
                                 orgEntity.name = orgItem.getName();
                                 long orgId = db.organizationDao().insert(orgEntity);
                                 saveDepartmentsRecursive(orgItem.getChildren(), (int) orgId, "");
                             }
-                            mainHandler.post(() -> loadDataFromDb());
+                            Log.i(TAG, "Organization structure synchronization complete.");
+                            mainHandler.post(onComplete);
                         });
 
                     } catch (Exception e) {
-                        Log.e(TAG, "Parsing or DB error", e);
+                        Log.e(TAG, "Parsing or DB error on structure sync", e);
+                        mainHandler.post(() -> {
+                            Toast.makeText(OrganizationInventoryActivity.this, "Ошибка обработки структуры", Toast.LENGTH_SHORT).show();
+                            progressBar.setVisibility(View.GONE);
+                        });
                     }
+                } else {
+                    Log.e(TAG, "Server error during structure synchronization: " + response.code());
+                    mainHandler.post(() -> {
+                        Toast.makeText(OrganizationInventoryActivity.this, "Ошибка сервера при синхронизации структуры", Toast.LENGTH_SHORT).show();
+                        progressBar.setVisibility(View.GONE);
+                    });
                 }
             }
         });
@@ -247,7 +275,11 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         for (OrganizationItem deptItem : deptItems) {
             DepartmentEntity deptEntity = new DepartmentEntity();
             deptEntity.organizationId = orgId;
-            deptEntity.code = deptItem.getCode();
+            if (deptItem.getCode() != null) {
+                deptEntity.code = deptItem.getCode().trim();
+            } else {
+                deptEntity.code = null;
+            }
             deptEntity.name = deptItem.getName();
             deptEntity.parentRef = parentRef;
             deptEntities.add(deptEntity);
@@ -257,6 +289,161 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         for (OrganizationItem deptItem : deptItems) {
             saveDepartmentsRecursive(deptItem.getChildren(), orgId, deptItem.getName());
         }
+    }
+
+    private void syncAllInventory() {
+        Log.i(TAG, "Step 2: Synchronizing inventory for all locations.");
+        mainHandler.post(() -> Toast.makeText(this, "Загрузка инвентаря для каждого помещения...", Toast.LENGTH_SHORT).show());
+
+        databaseExecutor.execute(() -> {
+            Log.i(TAG, "Clearing old inventory data.");
+            db.inventoryItemDao().clearAll();
+            List<DepartmentEntity> allDepartments = db.departmentDao().getAll();
+            List<DepartmentEntity> locations = filterLocations(allDepartments);
+
+            Log.i(TAG, "Found " + locations.size() + " locations to synchronize. See details below:");
+            for (DepartmentEntity loc : locations) {
+                Log.d(TAG, "  -> Location for sync: Name='" + loc.name + "', Code='" + loc.code + "'");
+            }
+
+            if (locations.isEmpty()) {
+                mainHandler.post(() -> {
+                    Toast.makeText(this, "Помещения не найдены. Синхронизация инвентаря пропущена.", Toast.LENGTH_LONG).show();
+                    loadDataFromDb();
+                });
+                return;
+            }
+
+            java.util.concurrent.atomic.AtomicInteger completedCount = new java.util.concurrent.atomic.AtomicInteger(0);
+            java.util.concurrent.atomic.AtomicBoolean syncHasErrors = new java.util.concurrent.atomic.AtomicBoolean(false);
+            int total = locations.size();
+
+            for (DepartmentEntity location : locations) {
+                fetchInventoryForLocation(location, syncHasErrors, () -> {
+                    int current = completedCount.incrementAndGet();
+                    if (current == total) {
+                        if (syncHasErrors.get()) {
+                            Log.e(TAG, "Full synchronization process completed with errors.");
+                            mainHandler.post(() -> {
+                                Toast.makeText(this, "Синхронизация завершена с ошибками. Проверьте логи.", Toast.LENGTH_LONG).show();
+                                loadDataFromDb();
+                            });
+                        } else {
+                            Log.i(TAG, "Full synchronization process completed successfully.");
+                            mainHandler.post(() -> {
+                                Toast.makeText(this, "Полная синхронизация завершена!", Toast.LENGTH_LONG).show();
+                                loadDataFromDb();
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    private List<DepartmentEntity> filterLocations(List<DepartmentEntity> allDepts) {
+        List<DepartmentEntity> locations = new ArrayList<>();
+        for (DepartmentEntity dept : allDepts) {
+            if (dept.code != null && dept.code.matches("\\d+")) {
+                locations.add(dept);
+            }
+        }
+        return locations;
+    }
+
+    private void fetchInventoryForLocation(DepartmentEntity location, java.util.concurrent.atomic.AtomicBoolean syncHasErrors, Runnable onComplete) {
+        Log.d(TAG, "Fetching inventory for location: " + location.name + " (Code: " + location.code + ")");
+        String ip = sessionManager.getIpAddress();
+        String username = sessionManager.getUsername();
+        String password = sessionManager.getPassword();
+        String url = "http://" + ip + "/my1c/hs/hw/say";
+        String json = "{\"otdel\":\"" + location.code + "\"}";
+        RequestBody body = RequestBody.create(json, okhttp3.MediaType.get("application/json; charset=utf-8"));
+
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .header("Authorization", Credentials.basic(username, password))
+                .build();
+
+        networkExecutor.execute(() -> {
+            try {
+                Response response = client.newCall(request).execute();
+                if (response.isSuccessful() && response.body() != null) {
+                    String xmlString = response.body().string();
+                    List<com.inventory.farovon.db.InventoryItemEntity> items = parseInventoryXml(xmlString, location.id, location.code);
+                    if (!items.isEmpty()) {
+                        db.inventoryItemDao().insertAll(items);
+                        Log.i(TAG, "Successfully saved " + items.size() + " inventory items for location: " + location.name);
+                    } else {
+                        Log.i(TAG, "No inventory items found for location: " + location.name);
+                    }
+                } else {
+                    Log.e(TAG, "Server error fetching inventory for location " + location.code + ": " + response.code());
+                    syncHasErrors.set(true);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to fetch or parse inventory for location: " + location.code, e);
+                syncHasErrors.set(true);
+            } finally {
+                onComplete.run();
+            }
+        });
+    }
+
+    private List<com.inventory.farovon.db.InventoryItemEntity> parseInventoryXml(String xml, int resolvedDepartmentId, String roomCode) throws Exception {
+        List<com.inventory.farovon.db.InventoryItemEntity> items = new ArrayList<>();
+        org.xmlpull.v1.XmlPullParserFactory factory = org.xmlpull.v1.XmlPullParserFactory.newInstance();
+        org.xmlpull.v1.XmlPullParser parser = factory.newPullParser();
+        parser.setInput(new java.io.StringReader(xml));
+
+        com.inventory.farovon.db.InventoryItemEntity currentItem = null;
+        String text = null;
+        int eventType = parser.getEventType();
+
+        while (eventType != org.xmlpull.v1.XmlPullParser.END_DOCUMENT) {
+            String tagName = parser.getName();
+            switch (eventType) {
+                case org.xmlpull.v1.XmlPullParser.START_TAG:
+                    if ("Product".equalsIgnoreCase(tagName)) {
+                        currentItem = new com.inventory.farovon.db.InventoryItemEntity();
+                        currentItem.departmentId = resolvedDepartmentId;
+                        currentItem.code = "";
+                        currentItem.name = "";
+                        currentItem.rf = "";
+                        currentItem.mol = "";
+                        currentItem.location = "";
+                    }
+                    break;
+                case org.xmlpull.v1.XmlPullParser.TEXT:
+                    text = parser.getText();
+                    break;
+                case org.xmlpull.v1.XmlPullParser.END_TAG:
+                    if (currentItem != null) {
+                        if ("Code".equalsIgnoreCase(tagName)) {
+                            currentItem.code = (text != null) ? text : "";
+                        } else if ("Name".equalsIgnoreCase(tagName)) {
+                            currentItem.name = (text != null) ? text : "";
+                        } else if ("rf".equalsIgnoreCase(tagName)) {
+                            currentItem.rf = (text != null) ? text : "";
+                        } else if ("mol".equalsIgnoreCase(tagName)) {
+                            currentItem.mol = (text != null) ? text : "";
+                        } else if ("location".equalsIgnoreCase(tagName)) {
+                            currentItem.location = (text != null) ? text : "";
+                        } else if ("Product".equalsIgnoreCase(tagName)) {
+                            currentItem.location = roomCode;
+                            if (currentItem.code != null && !currentItem.code.isEmpty() && currentItem.name != null && !currentItem.name.isEmpty()) {
+                                items.add(currentItem);
+                            }
+                            currentItem = null;
+                        }
+                    }
+                    break;
+            }
+            eventType = parser.next();
+        }
+        return items;
     }
 
     @Override

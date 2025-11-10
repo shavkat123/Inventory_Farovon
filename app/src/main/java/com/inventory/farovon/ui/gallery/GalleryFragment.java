@@ -37,37 +37,21 @@ import com.google.mlkit.vision.barcode.BarcodeScanning;
 import com.google.mlkit.vision.barcode.common.Barcode;
 import com.google.mlkit.vision.common.InputImage;
 
-import com.inventory.farovon.MainActivity;
 import com.inventory.farovon.NomenclatureActivity;
 import com.inventory.farovon.R;
-import com.inventory.farovon.Nomenclature;
 import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.DepartmentEntity;
 import com.inventory.farovon.db.InventoryItemEntity;
 import com.inventory.farovon.ui.login.SessionManager;
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserFactory;
-import java.io.StringReader;
-import java.io.IOException;
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import okhttp3.Call;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 public class GalleryFragment extends Fragment {
 
     private PreviewView previewView;
     private TextView tvResult;
-    private TextView tvHint;
     private Button btnRequestPermission;
     private ProgressBar progressBar;
     private AppDatabase db;
@@ -79,41 +63,18 @@ public class GalleryFragment extends Fragment {
 
     private ActivityResultLauncher<String> requestPermissionLauncher;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-
-    // 🔹 Поле для рамки overlay
-    private Rect overlayRect;
-
-    private SessionManager sessionManager;
-
-    private String roomCodeToVerify;
-    private String roomNameToVerify;
-    private String departmentCode;
-    private int departmentId;
-
+    private View overlay;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        sessionManager = new SessionManager(getActivity());
-
-        if (getArguments() != null) {
-            roomCodeToVerify = getArguments().getString("room_code_to_verify");
-            roomNameToVerify = getArguments().getString("room_name_to_verify");
-            departmentCode = getArguments().getString("department_code");
-            departmentId = getArguments().getInt("department_id", -1);
-        }
-
-        // Регистрируем launcher разрешения
         requestPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
                     if (isGranted) {
                         startCamera();
-                        tvHint.setVisibility(View.VISIBLE);
                         btnRequestPermission.setVisibility(View.GONE);
                     } else {
-                        tvHint.setVisibility(View.GONE);
                         btnRequestPermission.setVisibility(View.VISIBLE);
                         Toast.makeText(requireContext(), "Нужно разрешение на камеру", Toast.LENGTH_SHORT).show();
                     }
@@ -123,16 +84,14 @@ public class GalleryFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater,
-                             ViewGroup container, Bundle savedInstanceState) {
-
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View root = inflater.inflate(R.layout.fragment_gallery, container, false);
 
         previewView = root.findViewById(R.id.previewView);
         tvResult = root.findViewById(R.id.tvResult);
-        tvHint = root.findViewById(R.id.tvScanHint);
         btnRequestPermission = root.findViewById(R.id.btnRequestPermission);
         progressBar = root.findViewById(R.id.progressBar);
+        overlay = root.findViewById(R.id.overlay);
 
         cameraExecutor = Executors.newSingleThreadExecutor();
 
@@ -143,15 +102,7 @@ public class GalleryFragment extends Fragment {
             startActivity(intent);
         });
 
-        // 🔹 Получаем координаты overlay после отрисовки
-        View overlay = root.findViewById(R.id.overlay);
-        overlay.post(() -> {
-            overlayRect = new Rect();
-            overlay.getGlobalVisibleRect(overlayRect);
-        });
-
         checkPermissionAndStart();
-
         return root;
     }
 
@@ -164,6 +115,82 @@ public class GalleryFragment extends Fragment {
         } else {
             requestPermissionLauncher.launch(Manifest.permission.CAMERA);
         }
+    }
+
+    private void processBarcodes(List<Barcode> barcodes, int imageWidth, int imageHeight) {
+        Rect overlayRect = new Rect();
+        overlay.getGlobalVisibleRect(overlayRect);
+
+        for (Barcode barcode : barcodes) {
+            Rect bounds = barcode.getBoundingBox();
+            if (bounds != null) {
+                Rect mappedRect = mapToPreviewView(bounds, imageWidth, imageHeight);
+                if (overlayRect.contains(mappedRect)) {
+                    final String roomCode = barcode.getRawValue();
+                    if (roomCode != null && !roomCode.isEmpty()) {
+                        mainHandler.post(() -> {
+                            tvResult.setText("Сканировано: " + roomCode);
+                            findRoomInDb(roomCode);
+                        });
+                    } else {
+                        isProcessingBarcode = false;
+                    }
+                    return; // Process only the first valid barcode
+                }
+            }
+        }
+        isProcessingBarcode = false;
+    }
+
+    private Rect mapToPreviewView(Rect bounds, int imageWidth, int imageHeight) {
+        if (previewView.getWidth() == 0 || previewView.getHeight() == 0) return bounds;
+        float scaleX = (float) previewView.getWidth() / imageWidth;
+        float scaleY = (float) previewView.getHeight() / imageHeight;
+        return new Rect((int) (bounds.left * scaleX), (int) (bounds.top * scaleY), (int) (bounds.right * scaleX), (int) (bounds.bottom * scaleY));
+    }
+
+    private void findRoomInDb(String roomCode) {
+        progressBar.setVisibility(View.VISIBLE);
+        databaseExecutor.execute(() -> {
+            DepartmentEntity department = db.departmentDao().getByCode(roomCode);
+            if (department != null) {
+                List<InventoryItemEntity> items = db.inventoryItemDao().getByDepartmentIdAndLocation(department.id, roomCode);
+                mainHandler.post(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    if (items != null && !items.isEmpty()) {
+                        navigateToNomenclature(department.id, department.code);
+                    } else {
+                        Toast.makeText(requireContext(), "Инвентарь для этого помещения не найден. Выполните синхронизацию.", Toast.LENGTH_LONG).show();
+                        isProcessingBarcode = false;
+                    }
+                });
+            } else {
+                // Log detailed debug info when a room is not found.
+                List<DepartmentEntity> allDeptsInDb = db.departmentDao().getAll();
+                Log.e("GalleryFragment", "Room lookup failed.");
+                Log.e("GalleryFragment", "Scanned room code: '" + roomCode + "'");
+                Log.e("Gallery-Fragment-Debug", "--- Start: All Department Codes in DB ---");
+                for (DepartmentEntity entity : allDeptsInDb) {
+                    Log.d("Gallery-Fragment-Debug", "DB Record: Name='" + entity.name + "', Code='" + entity.code + "'");
+                }
+                Log.e("Gallery-Fragment-Debug", "--- End: All Department Codes in DB ---");
+
+                mainHandler.post(() -> {
+                    progressBar.setVisibility(View.GONE);
+                    Toast.makeText(requireContext(), "Помещение не найдено в базе. Выполните синхронизацию.", Toast.LENGTH_LONG).show();
+                    isProcessingBarcode = false;
+                });
+            }
+        });
+    }
+
+    private void navigateToNomenclature(int departmentId, String roomCode) {
+        if (!isAdded()) return;
+        Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
+        intent.putExtra("room_code", roomCode);
+        intent.putExtra("department_id", departmentId);
+        startActivity(intent);
+        mainHandler.postDelayed(() -> isProcessingBarcode = false, 500);
     }
 
     private void startCamera() {
