@@ -225,7 +225,11 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         for (OrganizationItem deptItem : deptItems) {
             DepartmentEntity deptEntity = new DepartmentEntity();
             deptEntity.organizationId = orgId;
-            deptEntity.code = deptItem.getCode();
+            if (deptItem.getCode() != null) {
+                deptEntity.code = deptItem.getCode().trim();
+            } else {
+                deptEntity.code = null;
+            }
             deptEntity.name = deptItem.getName();
             deptEntity.parentRef = parentRef;
             deptEntities.add(deptEntity);
