@@ -154,10 +154,15 @@ public class GalleryFragment extends Fragment {
         databaseExecutor.execute(() -> {
             DepartmentEntity department = db.departmentDao().getByCode(roomCode);
             if (department != null) {
+                Log.i("GalleryFragment", "Room found successfully in DB. Name: '" + department.name + "', ID: " + department.id);
+                Log.d("GalleryFragment", "Now querying for inventory with departmentId=" + department.id + " and location='" + roomCode + "'");
                 List<InventoryItemEntity> items = db.inventoryItemDao().getByDepartmentIdAndLocation(department.id, roomCode);
+                final int itemsCount = (items != null) ? items.size() : 0;
+                Log.i("GalleryFragment", "Inventory query complete. Found " + itemsCount + " items for this room.");
+
                 mainHandler.post(() -> {
                     progressBar.setVisibility(View.GONE);
-                    if (items != null && !items.isEmpty()) {
+                    if (itemsCount > 0) {
                         navigateToNomenclature(department.id, department.code);
                     } else {
                         Toast.makeText(requireContext(), "Инвентарь для этого помещения не найден. Выполните синхронизацию.", Toast.LENGTH_LONG).show();
