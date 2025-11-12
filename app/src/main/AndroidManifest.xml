@@ -95,6 +95,8 @@
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
 
+        <activity android:name=".CameraScanActivity" />
+
         <service
             android:name=".UploadService"
             android:exported="false" />

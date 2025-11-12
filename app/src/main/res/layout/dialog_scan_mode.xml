@@ -17,50 +17,55 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp"/>
 
-    <LinearLayout
+    <com.google.android.material.button.MaterialButtonToggleGroup
         android:id="@+id/toggle_group_scan_mode"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        app:singleSelection="true"
+        app:selectionRequired="true"
         android:layout_marginBottom="16dp">
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_rfid"
+            style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/btn_scan_mode_selector"
-            android:textColor="@color/btn_scan_mode_text_color"
-            android:text="RFID" />
+            android:text="RFID"
+            app:backgroundTint="@color/toggle_button_background_color"
+            android:textColor="@color/toggle_button_text_color" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_barcode"
+            style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/btn_scan_mode_selector"
-            android:textColor="@color/btn_scan_mode_text_color"
-            android:text="ШК" />
+            android:text="ШК"
+            app:backgroundTint="@color/toggle_button_background_color"
+            android:textColor="@color/toggle_button_text_color" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_sn"
+            style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/btn_scan_mode_selector"
-            android:textColor="@color/btn_scan_mode_text_color"
-            android:text="SN" />
+            android:text="SN"
+            app:backgroundTint="@color/toggle_button_background_color"
+            android:textColor="@color/toggle_button_text_color" />
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_camera"
+            style="?attr/materialButtonOutlinedStyle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="@drawable/btn_scan_mode_selector"
-            android:textColor="@color/btn_scan_mode_text_color"
-            android:text="КАМЕРА" />
+            android:text="КАМЕРА"
+            app:backgroundTint="@color/toggle_button_background_color"
+            android:textColor="@color/toggle_button_text_color" />
 
-    </LinearLayout>
+    </com.google.android.material.button.MaterialButtonToggleGroup>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -82,7 +87,8 @@
             android:layout_height="56dp"
             android:layout_weight="1"
             android:layout_marginStart="8dp"
-            android:text="РУЧНОЙ ВВОД" />
+            android:text="РУЧНОЙ ВВОД"
+            android:enabled="false" />
 
     </LinearLayout>
 
