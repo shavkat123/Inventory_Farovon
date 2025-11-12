@@ -22,7 +22,4 @@ public interface InventoryItemDao {
 
     @Query("DELETE FROM inventory_items WHERE departmentId = :departmentId AND location = :location")
     void clearByDepartmentIdAndLocation(int departmentId, String location);
-
-    @Query("DELETE FROM inventory_items")
-    void clearAll();
 }

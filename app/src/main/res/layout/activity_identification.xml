@@ -44,16 +44,14 @@
             android:textSize="16sp" />
     </LinearLayout>
 
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fab_scan"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:text="ШК"
-        app:icon="@drawable/icons8____2_color_hand_drawn_96"
-        app:iconTint="@color/white"
-        android:textColor="@color/white"
-        android:backgroundTint="@color/colorPrimary"/>
+        app:srcCompat="@drawable/ic_scan_qr"
+        android:backgroundTint="@color/colorPrimary"
+        app:tint="@color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

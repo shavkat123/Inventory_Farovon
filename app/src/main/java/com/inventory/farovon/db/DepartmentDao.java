@@ -25,10 +25,4 @@ public interface DepartmentDao {
 
     @Query("SELECT id FROM departments WHERE code = :code")
     int getIdByCode(String code);
-
-    @Query("SELECT * FROM departments WHERE code = :code LIMIT 1")
-    DepartmentEntity getByCode(String code);
-
-    @Query("SELECT * FROM departments")
-    List<DepartmentEntity> getAll();
 }
