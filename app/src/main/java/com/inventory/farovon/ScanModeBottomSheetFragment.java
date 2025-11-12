@@ -14,6 +14,8 @@ import android.content.Context;
 import android.app.AlertDialog;
 import android.widget.ImageButton;
 
+public class ScanModeBottomSheetFragment extends BottomSheetDialogFragment {
+
     public interface ScanModeListener {
         void onScanModeSelected(int modeId);
     }
