@@ -18,7 +18,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.inventory.farovon.db.AppDatabase;
-import com.inventory.farovon.db.InventoryItemEntity;
+import android.util.Log;
+import android.util.Log;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 
@@ -26,6 +27,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class IdentificationActivity extends AppCompatActivity implements ScanModeBottomSheetFragment.ScanModeListener, ScanOrManualInputDialog.ScanOrManualInputListener {
+
+    private static final String TAG = "IdentificationActivity"; // Тег для логирования
 
     private enum ScanMode {
         NONE,
@@ -151,10 +154,17 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
             while ((info = mReader.readTagFromBuffer()) != null) {
                 String epc = info.getEPC();
                 if (epc != null) {
+                    Log.d(TAG, "Отсканирована метка EPC: " + epc); // Логируем полученную метку
                     executorService.execute(() -> {
                         InventoryItemEntity item = db.inventoryItemDao().findByRfid(epc);
                         if (item != null) {
-                            handler.post(() -> adapter.addItem(item));
+                            Log.d(TAG, "Найден товар в БД: " + item.name); // Логируем найденный товар
+                            handler.post(() -> {
+                                Log.d(TAG, "Добавление товара в адаптер: " + item.name); // Логируем добавление в адаптер
+                                adapter.addItem(item);
+                            });
+                        } else {
+                            Log.d(TAG, "Товар с EPC " + epc + " не найден в БД."); // Логируем, если товар не найден
                         }
                     });
                 }
