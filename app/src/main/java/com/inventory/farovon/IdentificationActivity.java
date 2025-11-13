@@ -29,8 +29,6 @@ import java.util.concurrent.Executors;
 
 public class IdentificationActivity extends AppCompatActivity implements ScanModeBottomSheetFragment.ScanModeListener, ScanOrManualInputDialog.ScanOrManualInputListener {
 
-    private static final String TAG = "IdentificationActivity"; // Тег для логирования
-
     private enum ScanMode {
         NONE,
         RFID,
@@ -133,17 +131,11 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
 
     private void stopRfidScanning() {
         if (isScanning && mReader != null) {
-            try {
-                mReader.stopInventory();
-            } catch (Exception ignored) {
-            }
+            mReader.stopInventory();
+            isScanning = false;
+            handler.removeCallbacks(pollRunnable);
+            Toast.makeText(this, "RFID сканирование остановлено", Toast.LENGTH_SHORT).show();
         }
-        isScanning = false;
-        handler.removeCallbacks(pollRunnable);
-        if (mReader != null) {
-            mReader.free();
-        }
-        Toast.makeText(this, "RFID сканирование остановлено", Toast.LENGTH_SHORT).show();
     }
 
     private final Runnable pollRunnable = new Runnable() {
@@ -155,17 +147,10 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
             while ((info = mReader.readTagFromBuffer()) != null) {
                 String epc = info.getEPC();
                 if (epc != null) {
-                    Log.d(TAG, "Отсканирована метка EPC: " + epc); // Логируем полученную метку
                     executorService.execute(() -> {
                         InventoryItemEntity item = db.inventoryItemDao().findByRfid(epc);
                         if (item != null) {
-                            Log.d(TAG, "Найден товар в БД: " + item.name); // Логируем найденный товар
-                            handler.post(() -> {
-                                Log.d(TAG, "Добавление товара в адаптер: " + item.name); // Логируем добавление в адаптер
-                                adapter.addItem(item);
-                            });
-                        } else {
-                            Log.d(TAG, "Товар с EPC " + epc + " не найден в БД."); // Логируем, если товар не найден
+                            handler.post(() -> adapter.addItem(item));
                         }
                     });
                 }
@@ -200,6 +185,9 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     protected void onDestroy() {
         super.onDestroy();
         stopRfidScanning();
+        if (mReader != null) {
+            mReader.free();
+        }
         if (executorService != null) {
             executorService.shutdown();
         }
