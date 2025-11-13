@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.InventoryItemEntity;
 import android.util.Log;
 import android.util.Log;
 import com.rscja.deviceapi.RFIDWithUHFUART;
