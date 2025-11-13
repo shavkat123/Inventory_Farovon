@@ -1,8 +1,10 @@
 package com.inventory.farovon;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.os.Looper;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -21,6 +23,15 @@ import java.util.concurrent.Executors;
 
 public class IdentificationActivity extends AppCompatActivity implements ScanModeBottomSheetFragment.ScanModeListener, ScanOrManualInputDialog.ScanOrManualInputListener {
 
+    private enum ScanMode {
+        NONE,
+        RFID,
+        BARCODE,
+        SN,
+        CAMERA
+    }
+
+    private ScanMode currentScanMode = ScanMode.NONE;
     private RFIDWithUHFUART mReader;
     private boolean isScanning = false;
     private final Handler handler = new Handler(Looper.getMainLooper());
@@ -28,20 +39,27 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
 
     @Override
     public void onScanModeSelected(int modeId) {
-        // NOTE: The hardware barcode scanner on the target device is assumed to be a keyboard wedge.
-        // Therefore, we use a dialog with an EditText to capture the scanned data for both
-        // barcode and serial number modes.
+        String modeName = "";
         if (modeId == R.id.btn_rfid) {
-            toggleRfidScanning();
+            currentScanMode = ScanMode.RFID;
+            modeName = "RFID";
         } else if (modeId == R.id.btn_barcode) {
-            ScanOrManualInputDialog.newInstance("Сканирование штрихкода").show(getSupportFragmentManager(), "ScanOrManualInputDialog");
+            currentScanMode = ScanMode.BARCODE;
+            modeName = "Штрихкод";
         } else if (modeId == R.id.btn_sn) {
-            ScanOrManualInputDialog.newInstance("Ввод серийного номера").show(getSupportFragmentManager(), "ScanOrManualInputDialog");
+            currentScanMode = ScanMode.SN;
+            modeName = "Серийный номер";
         } else if (modeId == R.id.btn_camera) {
+            currentScanMode = ScanMode.CAMERA;
+            modeName = "Камера";
             // NOTE: GalleryFragment is the project's designated component for camera-based barcode scanning,
             // despite its name suggesting image selection.
             Intent intent = new Intent(this, CameraScanActivity.class);
             startActivity(intent);
+        }
+
+        if (!modeName.isEmpty() && currentScanMode == ScanMode.RFID) {
+            Toast.makeText(this, "Режим " + modeName + " выбран. Нажмите курок для сканирования.", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -81,7 +99,9 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         }
         executorService.execute(() -> {
             if (mReader.init(this)) {
-                mReader.setPower(30);
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                int power = prefs.getInt("scanner_power", 15);
+                mReader.setPower(power);
                 boolean ok = mReader.startInventoryTag();
                 if (!ok) {
                     handler.post(() -> Toast.makeText(IdentificationActivity.this, "Не удалось запустить инвентарь", Toast.LENGTH_SHORT).show());
@@ -156,5 +176,41 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         if (executorService != null) {
             executorService.shutdown();
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_F9:
+            case KeyEvent.KEYCODE_F10:
+            case 280:
+            case 293:
+                if (event.getRepeatCount() == 0) {
+                    if (currentScanMode == ScanMode.RFID) {
+                        startRfidScanning();
+                    } else if (currentScanMode == ScanMode.BARCODE) {
+                        ScanOrManualInputDialog.newInstance("Сканирование штрихкода").show(getSupportFragmentManager(), "ScanOrManualInputDialog");
+                    } else if (currentScanMode == ScanMode.SN) {
+                        ScanOrManualInputDialog.newInstance("Ввод серийного номера").show(getSupportFragmentManager(), "ScanOrManualInputDialog");
+                    }
+                    return true;
+                }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_F9:
+            case KeyEvent.KEYCODE_F10:
+            case 280:
+            case 293:
+                if (currentScanMode == ScanMode.RFID) {
+                    stopRfidScanning();
+                }
+                return true;
+        }
+        return super.onKeyUp(keyCode, event);
     }
 }
