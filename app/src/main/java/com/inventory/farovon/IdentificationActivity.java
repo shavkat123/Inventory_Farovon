@@ -13,8 +13,11 @@ import android.widget.Toast;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.inventory.farovon.db.AppDatabase;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 
@@ -36,6 +39,8 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     private boolean isScanning = false;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private AppDatabase db;
+    private IdentificationAdapter adapter;
 
     @Override
     public void onScanModeSelected(int modeId) {
@@ -68,11 +73,18 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_identification);
 
+        db = AppDatabase.getDatabase(this);
+
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+
+        RecyclerView recyclerView = findViewById(R.id.recycler_view_identification);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        adapter = new IdentificationAdapter();
+        recyclerView.setAdapter(adapter);
 
         FloatingActionButton fabScan = findViewById(R.id.fab_scan);
         fabScan.setOnClickListener(view -> showScanModeDialog());
@@ -140,7 +152,12 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
             while ((info = mReader.readTagFromBuffer()) != null) {
                 String epc = info.getEPC();
                 if (epc != null) {
-                    handler.post(() -> Toast.makeText(IdentificationActivity.this, "Отсканировано: " + epc, Toast.LENGTH_SHORT).show());
+                    executorService.execute(() -> {
+                        InventoryItemEntity item = db.inventoryItemDao().findByRfid(epc);
+                        if (item != null) {
+                            handler.post(() -> adapter.addItem(item));
+                        }
+                    });
                 }
             }
             handler.postDelayed(this, 60);

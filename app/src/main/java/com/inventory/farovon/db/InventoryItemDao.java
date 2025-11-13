@@ -22,4 +22,7 @@ public interface InventoryItemDao {
 
     @Query("DELETE FROM inventory_items WHERE departmentId = :departmentId AND location = :location")
     void clearByDepartmentIdAndLocation(int departmentId, String location);
+
+    @Query("SELECT * FROM inventory_items WHERE rf = :rfid LIMIT 1")
+    InventoryItemEntity findByRfid(String rfid);
 }
