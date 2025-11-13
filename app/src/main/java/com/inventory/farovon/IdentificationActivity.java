@@ -109,23 +109,21 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
             Toast.makeText(this, "Ридер не инициализирован", Toast.LENGTH_SHORT).show();
             return;
         }
-        executorService.execute(() -> {
-            if (mReader.init(this)) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                int power = prefs.getInt("scanner_power", 15);
-                mReader.setPower(power);
-                boolean ok = mReader.startInventoryTag();
-                if (!ok) {
-                    handler.post(() -> Toast.makeText(IdentificationActivity.this, "Не удалось запустить инвентарь", Toast.LENGTH_SHORT).show());
-                    return;
-                }
-                isScanning = true;
-                handler.post(() -> Toast.makeText(IdentificationActivity.this, "RFID сканирование начато", Toast.LENGTH_SHORT).show());
-                handler.post(pollRunnable);
-            } else {
-                handler.post(() -> Toast.makeText(IdentificationActivity.this, "Ошибка инициализации ридера", Toast.LENGTH_SHORT).show());
+        if (mReader.init(this)) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            int power = prefs.getInt("scanner_power", 15);
+            mReader.setPower(power);
+            boolean ok = mReader.startInventoryTag();
+            if (!ok) {
+                Toast.makeText(this, "Не удалось запустить инвентарь", Toast.LENGTH_SHORT).show();
+                return;
             }
-        });
+            isScanning = true;
+            handler.post(() -> Toast.makeText(IdentificationActivity.this, "RFID сканирование начато", Toast.LENGTH_SHORT).show());
+            executorService.execute(pollRunnable);
+        } else {
+            Toast.makeText(this, "Ошибка инициализации ридера", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void stopRfidScanning() {
