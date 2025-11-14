@@ -79,10 +79,10 @@ public class InventoryAdapter extends RecyclerView.Adapter<InventoryAdapter.View
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvName = itemView.findViewById(R.id.tvName);
-            tvCode = itemView.findViewById(R.id.tvCode);
-            tvRf = itemView.findViewById(R.id.rfid);
-            ivMoreOptions = itemView.findViewById(R.id.iv_more_options);
+            tvName = itemView.findViewById(R.id.item_name);
+            tvCode = itemView.findViewById(R.id.item_code);
+            tvRf = itemView.findViewById(R.id.item_rfid);
+            ivMoreOptions = itemView.findViewById(R.id.options_menu);
         }
 
         public void bind(Nomenclature item, boolean isFound, InventoryAdapter adapter) {
