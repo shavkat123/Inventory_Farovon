@@ -27,11 +27,11 @@ public class IdentificationAdapter extends RecyclerView.Adapter<IdentificationAd
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         InventoryItemEntity item = items.get(position);
-        holder.name.setText(item.getName());
-        holder.code.setText("Код: " + item.getCode());
-        holder.rfid.setText("RFID: " + item.getRf());
-        holder.mol.setText("МОЛ: " + item.getMol());
-        holder.location.setText("Локация: " + item.getLocation());
+        holder.name.setText(item.name);
+        holder.code.setText("Код: " + item.code);
+        holder.rfid.setText("RFID: " + item.rf);
+        holder.mol.setText("МОЛ: " + item.mol);
+        holder.location.setText("Локация: " + item.location);
     }
 
     @Override
