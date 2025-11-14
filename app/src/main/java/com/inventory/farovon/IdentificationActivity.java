@@ -64,7 +64,6 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     private static final String TAG = "IdentificationActivity";
     private ActivityResultLauncher<Intent> cameraLauncher;
     private ExtendedFloatingActionButton fabScan;
-    private TextView debugInfoText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -83,7 +82,6 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         recyclerView.setAdapter(adapter);
 
         emptyStateView = findViewById(R.id.empty_state_view);
-        debugInfoText = findViewById(R.id.debug_info_text);
 
         db = AppDatabase.getDatabase(getApplicationContext());
         inventoryItemDao = db.inventoryItemDao();
@@ -104,7 +102,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                     if (result.getResultCode() == RESULT_OK && result.getData() != null) {
                         String scannedCode = result.getData().getStringExtra("scanned_code");
                         if (scannedCode != null) {
-                            performSearch(scannedCode);
+                            performSearch(scannedCode, false);
                         }
                     }
                 });
@@ -112,7 +110,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         updateUI();
     }
 
-    private void performSearch(String query) {
+    private void performSearch(String query, boolean isRfidScan) {
         databaseExecutor.execute(() -> {
             List<InventoryItemEntity> items = null;
             switch (currentScanMode) {
@@ -130,17 +128,33 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                     break;
             }
 
-            final List<InventoryItemEntity> finalItems = items;
-            if (finalItems != null && !finalItems.isEmpty()) {
+            if (items != null && !items.isEmpty()) {
+                final List<InventoryItemEntity> finalItems = items;
                 runOnUiThread(() -> {
                     resultsList.addAll(0, finalItems);
                     adapter.notifyItemRangeInserted(0, finalItems.size());
                     updateUI();
                 });
             } else {
-                runOnUiThread(() -> {
-                    Toast.makeText(IdentificationActivity.this, "Объекты не найдены", Toast.LENGTH_SHORT).show();
-                });
+                if (isRfidScan) {
+                    // If it's an RFID scan and the item is not found, show it as "Unknown"
+                    runOnUiThread(() -> {
+                        InventoryItemEntity unknownItem = new InventoryItemEntity();
+                        unknownItem.rf = query;
+                        unknownItem.name = "Неизвестный объект";
+                        unknownItem.code = "—";
+                        unknownItem.mol = "—";
+                        unknownItem.location = "—";
+                        resultsList.add(0, unknownItem);
+                        adapter.notifyItemInserted(0);
+                        updateUI();
+                    });
+                } else {
+                    // For other modes, show a "not found" message
+                    runOnUiThread(() -> {
+                        Toast.makeText(IdentificationActivity.this, "Объекты не найдены", Toast.LENGTH_SHORT).show();
+                    });
+                }
             }
         });
     }
@@ -164,14 +178,11 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     public void onScanModeSelected(String mode) {
         // Stop any ongoing scan when mode changes
         stopRfidScanning();
-        debugInfoText.setVisibility(View.GONE); // Hide by default
 
         switch (mode) {
             case "RFID":
                 currentScanMode = ScanMode.RFID;
                 foundEpcSet.clear(); // Reset for a new scanning session
-                debugInfoText.setVisibility(View.VISIBLE);
-                debugInfoText.setText("Ожидание сканирования...");
                 Toast.makeText(this, "Режим RFID активирован. Нажмите курок для сканирования.", Toast.LENGTH_SHORT).show();
                 break;
             case "BARCODE":
@@ -207,7 +218,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         builder.setPositiveButton("Найти", (dialog, which) -> {
             String input = editText.getText().toString().trim();
             if (!input.isEmpty()) {
-                performSearch(input);
+                performSearch(input, false);
             }
         });
         builder.setNegativeButton("Отмена", (dialog, which) -> dialog.cancel());
@@ -319,12 +330,8 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                     String epc = tag.getEPC();
                     Log.d(TAG, "RFID Tag Found: " + epc);
                     boolean isNew = foundEpcSet.add(epc);
-                    handler.post(() -> {
-                        String debugText = "Last EPC: " + epc + "\nCount: " + foundEpcSet.size();
-                        debugInfoText.setText(debugText);
-                    });
                     if (isNew) {
-                        handler.post(() -> performSearch(epc));
+                        handler.post(() -> performSearch(epc, true));
                     }
                 }
             }
