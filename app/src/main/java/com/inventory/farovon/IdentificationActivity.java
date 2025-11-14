@@ -251,7 +251,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     private void initRfidReader() {
         try {
             mReader = RFIDWithUHFUART.getInstance();
-            mReader.init();
+            mReader.init(getApplicationContext());
             Log.i(TAG, "RFID Reader initialized successfully.");
         } catch (Exception e) {
             Log.e(TAG, "Failed to initialize RFID Reader", e);
