@@ -64,6 +64,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     private static final String TAG = "IdentificationActivity";
     private ActivityResultLauncher<Intent> cameraLauncher;
     private ExtendedFloatingActionButton fabScan;
+    private TextView debugInfoText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +83,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         recyclerView.setAdapter(adapter);
 
         emptyStateView = findViewById(R.id.empty_state_view);
+        debugInfoText = findViewById(R.id.debug_info_text);
 
         db = AppDatabase.getDatabase(getApplicationContext());
         inventoryItemDao = db.inventoryItemDao();
@@ -162,11 +164,14 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     public void onScanModeSelected(String mode) {
         // Stop any ongoing scan when mode changes
         stopRfidScanning();
+        debugInfoText.setVisibility(View.GONE); // Hide by default
 
         switch (mode) {
             case "RFID":
                 currentScanMode = ScanMode.RFID;
                 foundEpcSet.clear(); // Reset for a new scanning session
+                debugInfoText.setVisibility(View.VISIBLE);
+                debugInfoText.setText("Ожидание сканирования...");
                 Toast.makeText(this, "Режим RFID активирован. Нажмите курок для сканирования.", Toast.LENGTH_SHORT).show();
                 break;
             case "BARCODE":
@@ -312,7 +317,13 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                 UHFTAGInfo tag = mReader.readTagFromBuffer();
                 if (tag != null) {
                     String epc = tag.getEPC();
-                    if (foundEpcSet.add(epc)) {
+                    Log.d(TAG, "RFID Tag Found: " + epc);
+                    boolean isNew = foundEpcSet.add(epc);
+                    handler.post(() -> {
+                        String debugText = "Last EPC: " + epc + "\nCount: " + foundEpcSet.size();
+                        debugInfoText.setText(debugText);
+                    });
+                    if (isNew) {
                         handler.post(() -> performSearch(epc));
                     }
                 }
