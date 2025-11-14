@@ -104,6 +104,11 @@
             </intent-filter>
         </receiver>
 
+        <activity
+            android:name=".CameraScanActivity"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
+
     </application>
 
 </manifest>

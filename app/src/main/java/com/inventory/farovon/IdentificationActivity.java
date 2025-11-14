@@ -16,11 +16,23 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.inventory.farovon.db.InventoryItemEntity;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.view.KeyEvent;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.InventoryItemDao;
 import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
+import android.content.Intent;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import com.rscja.deviceapi.RFIDWithUHFUART;
+import com.rscja.deviceapi.entity.UHFTAGInfo;
+
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -44,6 +56,15 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     private InventoryItemDao inventoryItemDao;
     private ExecutorService databaseExecutor;
 
+    private RFIDWithUHFUART mReader;
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private ExecutorService rfidExecutor;
+    private Set<String> foundEpcSet = new HashSet<>();
+    private boolean isRfidScanning = false;
+    private static final String TAG = "IdentificationActivity";
+    private ActivityResultLauncher<Intent> cameraLauncher;
+    private ExtendedFloatingActionButton fabScan;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -66,8 +87,25 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         inventoryItemDao = db.inventoryItemDao();
         databaseExecutor = Executors.newSingleThreadExecutor();
 
-        ExtendedFloatingActionButton fabScan = findViewById(R.id.fab_scan);
-        fabScan.setOnClickListener(view -> showScanModeDialog());
+        fabScan = findViewById(R.id.fab_scan);
+        fabScan.setOnClickListener(view -> {
+            if (isRfidScanning) {
+                stopRfidScanning();
+            } else {
+                showScanModeDialog();
+            }
+        });
+
+        cameraLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                        String scannedCode = result.getData().getStringExtra("scanned_code");
+                        if (scannedCode != null) {
+                            performSearch(scannedCode);
+                        }
+                    }
+                });
 
         updateUI();
     }
@@ -122,11 +160,14 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
 
     @Override
     public void onScanModeSelected(String mode) {
+        // Stop any ongoing scan when mode changes
+        stopRfidScanning();
+
         switch (mode) {
             case "RFID":
                 currentScanMode = ScanMode.RFID;
-                Toast.makeText(this, "Функция RFID-сканирования в разработке", Toast.LENGTH_LONG).show();
-                // TODO: Start RFID scanning logic
+                foundEpcSet.clear(); // Reset for a new scanning session
+                Toast.makeText(this, "Режим RFID активирован. Нажмите курок для сканирования.", Toast.LENGTH_SHORT).show();
                 break;
             case "BARCODE":
                 currentScanMode = ScanMode.BARCODE;
@@ -138,8 +179,8 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                 break;
             case "CAMERA":
                 currentScanMode = ScanMode.CAMERA;
-                Toast.makeText(this, "Функция сканирования камерой в разработке", Toast.LENGTH_LONG).show();
-                // TODO: Start Camera scanning logic
+                Intent intent = new Intent(this, CameraScanActivity.class);
+                cameraLauncher.launch(intent);
                 break;
             case "MANUAL":
                 currentScanMode = ScanMode.MANUAL;
@@ -190,5 +231,97 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        initRfidReader();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopRfidScanning();
+        if (mReader != null) {
+            mReader.free();
+        }
+    }
+
+    private void initRfidReader() {
+        try {
+            mReader = RFIDWithUHFUART.getInstance();
+            mReader.init();
+            Log.i(TAG, "RFID Reader initialized successfully.");
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to initialize RFID Reader", e);
+            Toast.makeText(this, "Ошибка инициализации RFID", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void stopRfidScanning() {
+        if (isRfidScanning) {
+            isRfidScanning = false;
+            if (mReader != null) {
+                mReader.stopInventory();
+            }
+            if (rfidExecutor != null && !rfidExecutor.isShutdown()) {
+                rfidExecutor.shutdown();
+            }
+            Log.i(TAG, "RFID scanning stopped.");
+            handler.post(() -> {
+                fabScan.setText("Сканировать");
+                fabScan.setIconResource(R.drawable.ic_scan_to_search);
+            });
+        }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        // F9, F10, 280, 293 - key codes for hardware trigger on Chainway C72
+        if ((keyCode == KeyEvent.KEYCODE_F9 || keyCode == KeyEvent.KEYCODE_F10 || keyCode == 280 || keyCode == 293) && currentScanMode == ScanMode.RFID) {
+            if (!isRfidScanning) {
+                startRfidScanning();
+            }
+            return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_F9 || keyCode == KeyEvent.KEYCODE_F10 || keyCode == 280 || keyCode == 293) {
+            if (isRfidScanning) {
+                stopRfidScanning();
+            }
+            return true;
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    private void startRfidScanning() {
+        if (mReader == null) {
+            Toast.makeText(this, "RFID ридер не инициализирован", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        isRfidScanning = true;
+        mReader.startInventoryTag();
+        rfidExecutor = Executors.newSingleThreadExecutor();
+        rfidExecutor.execute(() -> {
+            while (isRfidScanning) {
+                UHFTAGInfo tag = mReader.readTagFromBuffer();
+                if (tag != null) {
+                    String epc = tag.getEPC();
+                    if (foundEpcSet.add(epc)) {
+                        handler.post(() -> performSearch(epc));
+                    }
+                }
+            }
+        });
+        Log.i(TAG, "RFID scanning started.");
+        handler.post(() -> {
+            fabScan.setText("Остановить");
+            fabScan.setIconResource(R.drawable.ic_stop);
+        });
     }
 }
