@@ -90,10 +90,11 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                     break;
             }
 
-            if (items != null && !items.isEmpty()) {
+            final List<InventoryItemEntity> finalItems = items;
+            if (finalItems != null && !finalItems.isEmpty()) {
                 runOnUiThread(() -> {
-                    resultsList.addAll(0, items);
-                    adapter.notifyItemRangeInserted(0, items.size());
+                    resultsList.addAll(0, finalItems);
+                    adapter.notifyItemRangeInserted(0, finalItems.size());
                     updateUI();
                 });
             } else {
