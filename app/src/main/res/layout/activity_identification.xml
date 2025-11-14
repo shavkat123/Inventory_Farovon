@@ -21,24 +21,35 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view_results"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:padding="8dp"
+        android:clipToPadding="false"
+        android:visibility="gone"/>
+
     <LinearLayout
+        android:id="@+id/empty_state_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
         android:orientation="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        android:visibility="visible">
 
         <ImageView
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:layout_marginBottom="12dp"
-            android:src="@drawable/___450_x_450____photoroom"
+            android:src="@drawable/ic_scan_to_search"
             app:tint="@color/colorIconGrey" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Для начала считывания нажмите курок\nили выберите из списка"
+            android:text="Выберите режим и отсканируйте код,\nчтобы увидеть здесь информацию"
             android:textAlignment="center"
             android:textColor="@color/colorIconGrey"
             android:textSize="16sp" />

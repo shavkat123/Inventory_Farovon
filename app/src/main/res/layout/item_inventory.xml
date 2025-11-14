@@ -1,41 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/rootItem"
     android:layout_width="match_parent"
-    android:layout_height="170px"
+    android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="8dp"
+    android:padding="12dp"
     android:background="@drawable/bg_item_normal">
 
     <TextView
-        android:id="@+id/tvName"
-        android:layout_width="wrap_content"
+        android:id="@+id/item_name"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
+        android:layout_toStartOf="@+id/options_menu"
         android:text="Name"
         android:textSize="16sp"
+        android:textColor="@color/colorTextPrimary"
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/tvCode"
+        android:id="@+id/item_code"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Code"
         android:textSize="14sp"
-        android:layout_below="@+id/tvName"
-        android:layout_marginTop="1dp"/>
+        android:textColor="@color/colorTextSecondary"
+        android:layout_below="@+id/item_name"
+        android:layout_marginTop="4dp"/>
 
     <TextView
-        android:id="@+id/rfid"
+        android:id="@+id/item_rfid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="rf"
         android:textSize="14sp"
-        android:layout_below="@+id/tvCode"
-        android:layout_marginTop="1dp"/>
+        android:textColor="@color/colorTextSecondary"
+        android:layout_below="@+id/item_code"
+        android:layout_marginTop="4dp"/>
+
+    <TextView
+        android:id="@+id/item_mol"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="МОЛ"
+        android:textSize="14sp"
+        android:textColor="@color/colorTextSecondary"
+        android:layout_below="@+id/item_rfid"
+        android:layout_marginTop="4dp"/>
+
+    <TextView
+        android:id="@+id/item_location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Локация"
+        android:textSize="14sp"
+        android:textColor="@color/colorTextSecondary"
+        android:layout_below="@+id/item_mol"
+        android:layout_marginTop="4dp"/>
 
     <ImageView
-        android:id="@+id/iv_more_options"
+        android:id="@+id/options_menu"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
