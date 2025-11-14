@@ -6,7 +6,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.inventory.farovon.model.InventoryItemEntity;
+import com.inventory.farovon.db.InventoryItemEntity;
 import java.util.List;
 
 public class IdentificationAdapter extends RecyclerView.Adapter<IdentificationAdapter.ViewHolder> {

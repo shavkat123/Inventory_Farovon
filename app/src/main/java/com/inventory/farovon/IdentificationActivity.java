@@ -15,7 +15,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
-import com.inventory.farovon.model.InventoryItemEntity;
+import com.inventory.farovon.db.InventoryItemEntity;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.InventoryItemDao;
 import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
