@@ -82,7 +82,7 @@ public class CameraScanActivity extends AppCompatActivity {
         }, ContextCompat.getMainExecutor(this));
     }
 
-    private void scanBarcodes(InputImage image, ImageAnalysis.Analyzer analyzer) {
+    private void scanBarcodes(InputImage image, androidx.camera.core.ImageProxy imageProxy) {
         BarcodeScannerOptions options = new BarcodeScannerOptions.Builder()
                 .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
                 .build();
@@ -103,7 +103,7 @@ public class CameraScanActivity extends AppCompatActivity {
                         }
                     }
                 })
-                .addOnCompleteListener(task -> analyzer.getClass());
+                .addOnCompleteListener(task -> imageProxy.close());
     }
 
     @Override
