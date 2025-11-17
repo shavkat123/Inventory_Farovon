@@ -52,32 +52,34 @@ public class ScanModeBottomSheetFragment extends BottomSheetDialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_scan_mode, container, false);
 
-        MaterialButtonToggleGroup toggleGroup = view.findViewById(R.id.toggle_group_scan_mode);
+        MaterialButtonToggleGroup toggleGroupTop = view.findViewById(R.id.toggle_group_scan_mode_top);
+        MaterialButtonToggleGroup toggleGroupBottom = view.findViewById(R.id.toggle_group_scan_mode_bottom);
 
         // Set the initial checked button based on currentScanMode
         if (currentScanMode != null) {
             switch (currentScanMode) {
                 case "RFID":
-                    toggleGroup.check(R.id.button_rfid);
+                    toggleGroupTop.check(R.id.button_rfid);
                     break;
                 case "BARCODE":
-                    toggleGroup.check(R.id.button_barcode);
+                    toggleGroupTop.check(R.id.button_barcode);
                     break;
                 case "SN":
-                    toggleGroup.check(R.id.button_sn);
+                    toggleGroupTop.check(R.id.button_sn);
                     break;
                 case "CAMERA":
-                    toggleGroup.check(R.id.button_camera);
+                    toggleGroupTop.check(R.id.button_camera);
                     break;
                 case "MANUAL":
-                    toggleGroup.check(R.id.button_manual_input);
+                    toggleGroupBottom.check(R.id.button_manual_input);
                     break;
             }
         }
 
 
-        toggleGroup.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+        toggleGroupTop.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
             if (isChecked) {
+                toggleGroupBottom.clearChecked();
                 String selectedMode = "NONE";
                 if (checkedId == R.id.button_rfid) {
                     selectedMode = "RFID";
@@ -87,7 +89,17 @@ public class ScanModeBottomSheetFragment extends BottomSheetDialogFragment {
                     selectedMode = "SN";
                 } else if (checkedId == R.id.button_camera) {
                     selectedMode = "CAMERA";
-                } else if (checkedId == R.id.button_manual_input) {
+                }
+                mListener.onScanModeSelected(selectedMode);
+                dismiss();
+            }
+        });
+
+        toggleGroupBottom.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (isChecked) {
+                toggleGroupTop.clearChecked();
+                String selectedMode = "NONE";
+                if (checkedId == R.id.button_manual_input) {
                     selectedMode = "MANUAL";
                 }
                 mListener.onScanModeSelected(selectedMode);

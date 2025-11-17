@@ -20,57 +20,74 @@
         android:text="Режим считывания"
         android:layout_gravity="center_horizontal"
         android:textSize="18sp"
-        android:textColor="@color/colorTextPrimary"
+        android:textColor="?attr/colorOnSurface"
         android:textStyle="bold"
-        android:layout_marginBottom="24dp"/>
+        android:layout_marginBottom="16dp"/>
 
     <com.google.android.material.button.MaterialButtonToggleGroup
-        android:id="@+id/toggle_group_scan_mode"
+        android:id="@+id/toggle_group_scan_mode_top"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:singleSelection="true"
         app:selectionRequired="true"
-        android:gravity="center"
-        android:orientation="horizontal"
         app:backgroundTint="@color/toggle_button_tint"
-        android:textColor="@color/toggle_button_text_color">
+        android:textColor="@color/toggle_button_text_color"
+        android:gravity="center">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_rfid"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="RFID"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_barcode"
             style="?attr/materialButtonOutlinedStyle"
-            app:icon="@drawable/ic_barcode_scan"
-            app:iconGravity="textStart"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text=""/>
+            android:layout_weight="1"
+            android:text="ШК"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_sn"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="SN"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_camera"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="КАМЕРА"/>
+            android:layout_weight="1"
+            android:text="Камера"/>
+
+    </com.google.android.material.button.MaterialButtonToggleGroup>
+
+    <com.google.android.material.button.MaterialButtonToggleGroup
+        android:id="@+id/toggle_group_scan_mode_bottom"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:singleSelection="true"
+        app:selectionRequired="true"
+        android:layout_marginTop="8dp"
+        app:backgroundTint="@color/toggle_button_tint"
+        android:textColor="@color/toggle_button_text_color"
+        android:gravity="center">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_manual_input"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="wrap_content"
+            app:icon="@drawable/ic_hand_scanner"
+            app:iconGravity="textStart"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="РУЧНОЙ"/>
+            android:layout_weight="1"
+            android:text="Ручной ввод"/>
 
     </com.google.android.material.button.MaterialButtonToggleGroup>
 

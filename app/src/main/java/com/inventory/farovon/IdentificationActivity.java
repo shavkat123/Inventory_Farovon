@@ -61,6 +61,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     private IdentificationAdapter adapter;
     private List<InventoryItemEntity> resultsList = new ArrayList<>();
     private View emptyStateView;
+    private TextView scanModeTextView;
     private AppDatabase db;
     private InventoryItemDao inventoryItemDao;
     private ExecutorService databaseExecutor;
@@ -92,6 +93,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         recyclerView.setAdapter(adapter);
 
         emptyStateView = findViewById(R.id.empty_state_view);
+        scanModeTextView = findViewById(R.id.text_view_scan_mode);
 
         db = AppDatabase.getDatabase(getApplicationContext());
         inventoryItemDao = db.inventoryItemDao();
@@ -120,6 +122,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         updateUI();
 
         toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
+        updateScanModeIndicator();
     }
 
     @Override
@@ -128,6 +131,33 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
         if (toneGenerator != null) {
             toneGenerator.release();
             toneGenerator = null;
+        }
+    }
+
+    private void updateScanModeIndicator() {
+        if (currentScanMode == ScanMode.NONE) {
+            scanModeTextView.setVisibility(View.GONE);
+        } else {
+            String modeText = "";
+            switch (currentScanMode) {
+                case RFID:
+                    modeText = "Режим: RFID";
+                    break;
+                case BARCODE:
+                    modeText = "Режим: Штрихкод";
+                    break;
+                case SN:
+                    modeText = "Режим: Сер. номер";
+                    break;
+                case CAMERA:
+                    modeText = "Режим: Камера";
+                    break;
+                case MANUAL:
+                    modeText = "Режим: Ручной ввод";
+                    break;
+            }
+            scanModeTextView.setText(modeText);
+            scanModeTextView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -225,6 +255,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                 showManualInputDialog("Ручной ввод");
                 break;
         }
+        updateScanModeIndicator();
     }
 
     private void showManualInputDialog(String title) {
