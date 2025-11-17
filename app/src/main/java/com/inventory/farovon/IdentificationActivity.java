@@ -19,6 +19,8 @@ import com.google.android.material.floatingactionbutton.ExtendedFloatingActionBu
 import com.inventory.farovon.db.InventoryItemEntity;
 import android.os.Handler;
 import android.os.Looper;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.util.Log;
 import android.view.KeyEvent;
 import com.inventory.farovon.db.AppDatabase;
@@ -65,6 +67,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     private static final String TAG = "IdentificationActivity";
     private ActivityResultLauncher<Intent> cameraLauncher;
     private ExtendedFloatingActionButton fabScan;
+    private ToneGenerator toneGenerator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +112,17 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                 });
 
         updateUI();
+
+        toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (toneGenerator != null) {
+            toneGenerator.release();
+            toneGenerator = null;
+        }
     }
 
     private void performSearch(String query, boolean isRfidScan) {
@@ -349,6 +363,9 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                     Log.d(TAG, "RFID Tag Found: " + epc);
                     boolean isNew = foundEpcSet.add(epc);
                     if (isNew) {
+                        if (toneGenerator != null) {
+                            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP);
+                        }
                         handler.post(() -> performSearch(epc, true));
                     }
                 }
