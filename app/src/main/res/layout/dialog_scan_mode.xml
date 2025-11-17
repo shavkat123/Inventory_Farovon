@@ -31,7 +31,9 @@
         app:singleSelection="true"
         app:selectionRequired="true"
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        app:backgroundTint="@color/toggle_button_tint"
+        android:textColor="@color/toggle_button_text_color">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_rfid"
