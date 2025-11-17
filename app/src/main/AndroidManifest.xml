@@ -37,25 +37,25 @@
         <activity
             android:name=".IdentificationActivity"
             android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+            android:theme="@style/Theme.InventoryFarovon" />
         <activity
             android:name=".ui.returntowarehouse.ReturnToWarehouseActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+            android:theme="@style/Theme.InventoryFarovon" />
         <activity
             android:name=".AssetMovementActivity"
             android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+            android:theme="@style/Theme.InventoryFarovon" />
         <activity
             android:name=".IssueFromWarehouseActivity"
             android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar"
+            android:theme="@style/Theme.InventoryFarovon"
             android:windowSoftInputMode="adjustPan" />
         <activity
             android:name=".IssueDocumentListActivity"
             android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+            android:theme="@style/Theme.InventoryFarovon" />
         <activity
             android:name=".RfidActivity"
             android:exported="false"
@@ -77,20 +77,20 @@
             android:name=".MainActivity"
             android:exported="false"
             android:label="@string/app_name"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+            android:theme="@style/Theme.InventoryFarovon" />
         <activity
             android:name=".OrganizationInventoryActivity"
             android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+            android:theme="@style/Theme.InventoryFarovon" />
         <activity
             android:name=".InventoryListActivity"
             android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+            android:theme="@style/Theme.InventoryFarovon" />
         <activity
             android:name=".ScanningActivity"
             android:parentActivityName=".InventoryListActivity"
             android:exported="false"
-            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+            android:theme="@style/Theme.InventoryFarovon" />
 
         <service
             android:name=".UploadService"
