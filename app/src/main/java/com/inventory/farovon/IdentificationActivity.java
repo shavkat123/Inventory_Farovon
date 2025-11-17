@@ -197,12 +197,13 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
 
     @Override
     public void onScanModeSelected(String mode) {
-        // Stop any ongoing scan when mode changes
-        stopRfidScanning();
+        // Stop any ongoing scan and release hardware when mode changes
+        releaseRfidReader();
 
         switch (mode) {
             case "RFID":
                 currentScanMode = ScanMode.RFID;
+                initRfidReader(); // Initialize reader only when needed
                 foundEpcSet.clear(); // Reset for a new scanning session
                 Toast.makeText(this, "Режим RFID активирован. Нажмите курок для сканирования.", Toast.LENGTH_SHORT).show();
                 break;
@@ -290,15 +291,21 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     @Override
     protected void onResume() {
         super.onResume();
-        initRfidReader();
+        // RFID reader is now initialized on demand
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        releaseRfidReader();
+    }
+
+    private void releaseRfidReader() {
         stopRfidScanning();
         if (mReader != null) {
             mReader.free();
+            mReader = null;
+            Log.i(TAG, "RFID Reader released.");
         }
     }
 

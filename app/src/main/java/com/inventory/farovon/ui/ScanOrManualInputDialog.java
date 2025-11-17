@@ -3,13 +3,11 @@ package com.inventory.farovon.ui;
 import android.app.Dialog;
 import android.content.Context;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.DialogFragment;
@@ -22,8 +20,6 @@ public class ScanOrManualInputDialog extends DialogFragment {
     }
 
     private ScanListener listener;
-    private Handler handler = new Handler(Looper.getMainLooper());
-    private Runnable workRunnable;
 
     @Override
     public void onAttach(@NonNull Context context) {
@@ -38,34 +34,34 @@ public class ScanOrManualInputDialog extends DialogFragment {
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.TransparentDialog);
         LayoutInflater inflater = requireActivity().getLayoutInflater();
         View view = inflater.inflate(R.layout.dialog_hardware_scan, null);
         builder.setView(view);
 
-        EditText hiddenEditText = view.findViewById(R.id.hidden_edit_text);
+        final EditText hiddenEditText = view.findViewById(R.id.hidden_edit_text);
+
+        // Request focus to ensure the hardware scanner input goes here
         hiddenEditText.requestFocus();
 
-        hiddenEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {}
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                handler.removeCallbacks(workRunnable);
-                workRunnable = () -> {
-                    if (s.length() > 0) {
-                        listener.onScanCompleted(s.toString());
-                        dismiss();
-                    }
-                };
-                handler.postDelayed(workRunnable, 500); // Wait 500ms for scanner input to complete
+        hiddenEditText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                String scannedData = v.getText().toString().trim();
+                if (!scannedData.isEmpty() && listener != null) {
+                    listener.onScanCompleted(scannedData);
+                    dismiss();
+                    return true;
+                }
             }
+            return false;
         });
 
-        return builder.create();
+        // Create a transparent dialog
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        return dialog;
     }
 }
