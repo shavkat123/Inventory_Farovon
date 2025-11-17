@@ -26,6 +26,7 @@ import android.view.KeyEvent;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.InventoryItemDao;
 import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
+import com.inventory.farovon.ui.ScanOrManualInputDialog;
 import android.content.Intent;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -39,7 +40,12 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class IdentificationActivity extends AppCompatActivity implements ScanModeBottomSheetFragment.ScanModeListener {
+public class IdentificationActivity extends AppCompatActivity implements ScanModeBottomSheetFragment.ScanModeListener, ScanOrManualInputDialog.ScanListener {
+
+    @Override
+    public void onScanCompleted(String scannedData) {
+        performSearch(scannedData, false);
+    }
 
     private enum ScanMode {
         NONE,
@@ -185,7 +191,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
     }
 
     private void showScanModeDialog() {
-        ScanModeBottomSheetFragment bottomSheet = new ScanModeBottomSheetFragment();
+        ScanModeBottomSheetFragment bottomSheet = ScanModeBottomSheetFragment.newInstance(currentScanMode.name());
         bottomSheet.show(getSupportFragmentManager(), bottomSheet.getTag());
     }
 
@@ -202,7 +208,7 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                 break;
             case "BARCODE":
                 currentScanMode = ScanMode.BARCODE;
-                showManualInputDialog("Введите штрих-код");
+                new ScanOrManualInputDialog().show(getSupportFragmentManager(), "ScanOrManualInputDialog");
                 break;
             case "SN":
                 currentScanMode = ScanMode.SN;

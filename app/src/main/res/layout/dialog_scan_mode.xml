@@ -30,47 +30,46 @@
         android:layout_height="wrap_content"
         app:singleSelection="true"
         app:selectionRequired="true"
-        android:layout_marginBottom="16dp">
+        android:gravity="center"
+        android:orientation="horizontal">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_rfid"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="RFID"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_barcode"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
+            app:icon="@drawable/ic_barcode_scan"
+            app:iconGravity="textStart"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="ШК"/>
+            android:text=""/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_sn"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="SN"/>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_camera"
             style="?attr/materialButtonOutlinedStyle"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="КАМЕРА"/>
 
-    </com.google.android.material.button.MaterialButtonToggleGroup>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_manual_input"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="РУЧНОЙ"/>
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/button_manual_input"
-        style="@style/Widget.MaterialComponents.Button.TextButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="РУЧНОЙ ВВОД"/>
+    </com.google.android.material.button.MaterialButtonToggleGroup>
 
 </LinearLayout>
