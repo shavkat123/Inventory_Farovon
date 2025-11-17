@@ -82,7 +82,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/button_manual_input"
             style="?attr/materialButtonOutlinedStyle"
-            app:icon="@drawable/ic_hand_scanner"
+            app:icon="@drawable/ic_scan_icon"
             app:iconGravity="textStart"
             android:layout_width="0dp"
             android:layout_height="wrap_content"

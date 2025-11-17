@@ -32,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="12dp"
-            android:background="@color/colorAccent"
+            android:background="@color/colorPrimary"
             android:textColor="@android:color/white"
             android:text="Режим: Не выбран"
             android:textAlignment="center"
