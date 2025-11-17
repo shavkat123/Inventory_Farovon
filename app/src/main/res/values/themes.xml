@@ -22,9 +22,9 @@
         <item name="cornerRadius">28dp</item>
     </style>
 
-    <style name="Theme.InventoryFarovon.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="Theme.InventoryFarovon.AppBarOverlay" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar" />
 
-    <style name="Theme.InventoryFarovon.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+    <style name="Theme.InventoryFarovon.PopupOverlay" parent="ThemeOverlay.MaterialComponents.Light" />
 
     <style name="TransparentDialog" parent="Theme.AppCompat.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
