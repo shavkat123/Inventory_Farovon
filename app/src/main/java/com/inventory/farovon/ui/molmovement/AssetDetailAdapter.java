@@ -59,7 +59,6 @@ public class AssetDetailAdapter extends RecyclerView.Adapter<AssetDetailAdapter.
             serialNumber.setText("Серийный №: " + (item.serialNumber != null ? item.serialNumber : "Не назначено"));
             location.setText("Местоположение: " + (item.location != null ? item.location : "Не назначено"));
             mol.setText("Эксплуатирующий: " + (item.mol != null ? item.mol : "Не назначено"));
-            organization.setText("Организация: " + (item.organization != null ? item.organization : "Не назначено"));
         }
     }
 }
