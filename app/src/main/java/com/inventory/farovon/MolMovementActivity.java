@@ -1,17 +1,26 @@
 package com.inventory.farovon;
 
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.MolMovementDao;
+import com.inventory.farovon.db.MolMovementDocument;
 import com.inventory.farovon.ui.molmovement.MolMovementPagerAdapter;
 
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class MolMovementActivity extends AppCompatActivity {
+
+    private MolMovementPagerAdapter adapter;
+    private MolMovementDao molMovementDao;
+    private ExecutorService databaseExecutor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,13 +31,12 @@ public class MolMovementActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Перемещение между МОЛ");
         }
 
         ViewPager2 viewPager = findViewById(R.id.view_pager);
         TabLayout tabLayout = findViewById(R.id.tab_layout);
 
-        MolMovementPagerAdapter adapter = new MolMovementPagerAdapter(this);
+        adapter = new MolMovementPagerAdapter(this);
         viewPager.setAdapter(adapter);
 
         new TabLayoutMediator(tabLayout, viewPager,
@@ -41,29 +49,38 @@ public class MolMovementActivity extends AppCompatActivity {
                 }
         ).attach();
 
-        // Set the "ОУ" tab as the default selected tab
-        viewPager.setCurrentItem(1, false);
+        AppDatabase db = AppDatabase.getDatabase(getApplicationContext());
+        molMovementDao = db.molMovementDao();
+        databaseExecutor = Executors.newSingleThreadExecutor();
+    }
+
+    public void saveDocument() {
+        String fromMol = adapter.getParametersFragment().getFromMol();
+        String toMol = adapter.getParametersFragment().getToMol();
+        List<String> scannedRfids = adapter.getAssetsFragment().getScannedBarcodes();
+
+        if (fromMol.isEmpty() || toMol.isEmpty()) {
+            Toast.makeText(this, "Пожалуйста, заполните поля 'Откуда' и 'Куда'", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        MolMovementDocument document = new MolMovementDocument();
+        document.date = new Date().getTime();
+        document.fromMol = fromMol;
+        document.toMol = toMol;
+
+        databaseExecutor.execute(() -> {
+            molMovementDao.insertFullMovement(document, scannedRfids);
+            runOnUiThread(() -> {
+                Toast.makeText(this, "Документ сохранен", Toast.LENGTH_SHORT).show();
+                finish();
+            });
+        });
     }
 
     @Override
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.asset_movement_menu, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_reset) {
-            // Handle reset logic here
-            Toast.makeText(this, "Reset Clicked", Toast.LENGTH_SHORT).show();
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 }

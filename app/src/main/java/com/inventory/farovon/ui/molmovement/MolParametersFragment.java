@@ -4,16 +4,25 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.inventory.farovon.R;
+import com.google.android.material.textfield.TextInputEditText;
 
 public class MolParametersFragment extends Fragment {
+
+    private TextInputEditText fromMolEditText;
+    private TextInputEditText toMolEditText;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_mol_parameters, container, false);
+
+        fromMolEditText = view.findViewById(R.id.from_mol);
+        toMolEditText = view.findViewById(R.id.to_mol);
 
         View fromHeader = view.findViewById(R.id.from_header);
         View fromBody = view.findViewById(R.id.from_body);
@@ -26,6 +35,10 @@ public class MolParametersFragment extends Fragment {
         fromHeader.setOnClickListener(v -> toggleSection(fromBody, fromChevron));
         toHeader.setOnClickListener(v -> toggleSection(toBody, toChevron));
 
+        view.findViewById(R.id.button_create_document).setOnClickListener(v -> {
+            ((MolMovementActivity) requireActivity()).saveDocument();
+        });
+
         return view;
     }
 
@@ -33,5 +46,13 @@ public class MolParametersFragment extends Fragment {
         boolean isVisible = body.getVisibility() == View.VISIBLE;
         body.setVisibility(isVisible ? View.GONE : View.VISIBLE);
         chevron.animate().rotation(isVisible ? 0f : 180f).setDuration(200).start();
+    }
+
+    public String getFromMol() {
+        return fromMolEditText.getText().toString().trim();
+    }
+
+    public String getToMol() {
+        return toMolEditText.getText().toString().trim();
     }
 }

@@ -64,12 +64,12 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/button_barcode_scan"
+            android:id="@+id/button_scan"
             style="@style/PrimaryActionButton"
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:layout_weight="1"
-            android:text="ШК" />
+            android:text="СКАНИРОВАТЬ" />
 
     </LinearLayout>
 

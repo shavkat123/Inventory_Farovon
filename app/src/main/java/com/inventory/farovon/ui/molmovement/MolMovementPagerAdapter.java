@@ -7,6 +7,9 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 public class MolMovementPagerAdapter extends FragmentStateAdapter {
 
+    private MolParametersFragment parametersFragment;
+    private MolAssetsFragment assetsFragment;
+
     public MolMovementPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
         super(fragmentActivity);
     }
@@ -15,13 +18,27 @@ public class MolMovementPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         if (position == 0) {
-            return new MolParametersFragment();
+            if (parametersFragment == null) {
+                parametersFragment = new MolParametersFragment();
+            }
+            return parametersFragment;
         }
-        return new MolAssetsFragment();
+        if (assetsFragment == null) {
+            assetsFragment = new MolAssetsFragment();
+        }
+        return assetsFragment;
     }
 
     @Override
     public int getItemCount() {
-        return 2; // We have two tabs
+        return 2;
+    }
+
+    public MolParametersFragment getParametersFragment() {
+        return parametersFragment;
+    }
+
+    public MolAssetsFragment getAssetsFragment() {
+        return assetsFragment;
     }
 }

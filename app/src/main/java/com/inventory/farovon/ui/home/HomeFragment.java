@@ -52,7 +52,7 @@ public class HomeFragment extends Fragment {
                 Intent intent = new Intent(getActivity(), AssetMovementActivity.class);
                 startActivity(intent);
             } else if (item.getTitle().equals("Перемещение между МОЛ")) {
-                Intent intent = new Intent(getActivity(), MolMovementActivity.class);
+                Intent intent = new Intent(getActivity(), MolMovementListActivity.class);
                 startActivity(intent);
             } else if (item.getTitle().equals("Выдача со склада")) {
                 Intent intent = new Intent(getActivity(), IssueDocumentListActivity.class);

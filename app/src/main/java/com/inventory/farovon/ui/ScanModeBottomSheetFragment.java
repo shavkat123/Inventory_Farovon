@@ -18,14 +18,16 @@ public class ScanModeBottomSheetFragment extends BottomSheetDialogFragment {
         void onScanModeSelected(String mode);
     }
 
+    // Allow setting the listener programmatically
+    public void setScanModeListener(ScanModeListener listener) {
+        mListener = listener;
+    }
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
-        if (context instanceof ScanModeListener) {
+        if (mListener == null && context instanceof ScanModeListener) {
             mListener = (ScanModeListener) context;
-        } else {
-            throw new RuntimeException(context.toString()
-                    + " must implement ScanModeListener");
         }
     }
 
@@ -34,26 +36,28 @@ public class ScanModeBottomSheetFragment extends BottomSheetDialogFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_scan_mode, container, false);
 
-        view.findViewById(R.id.button_rfid).setOnClickListener(v -> {
-            mListener.onScanModeSelected("RFID");
+        View.OnClickListener listener = v -> {
+            if (mListener != null) {
+                if (v.getId() == R.id.button_rfid) {
+                    mListener.onScanModeSelected("RFID");
+                } else if (v.getId() == R.id.button_barcode) {
+                    mListener.onScanModeSelected("BARCODE");
+                } else if (v.getId() == R.id.button_sn) {
+                    mListener.onScanModeSelected("SN");
+                } else if (v.getId() == R.id.button_camera) {
+                    mListener.onScanModeSelected("CAMERA");
+                } else if (v.getId() == R.id.button_manual_input) {
+                    mListener.onScanModeSelected("MANUAL");
+                }
+            }
             dismiss();
-        });
-        view.findViewById(R.id.button_barcode).setOnClickListener(v -> {
-            mListener.onScanModeSelected("BARCODE");
-            dismiss();
-        });
-        view.findViewById(R.id.button_sn).setOnClickListener(v -> {
-            mListener.onScanModeSelected("SN");
-            dismiss();
-        });
-        view.findViewById(R.id.button_camera).setOnClickListener(v -> {
-            mListener.onScanModeSelected("CAMERA");
-            dismiss();
-        });
-        view.findViewById(R.id.button_manual_input).setOnClickListener(v -> {
-            mListener.onScanModeSelected("MANUAL");
-            dismiss();
-        });
+        };
+
+        view.findViewById(R.id.button_rfid).setOnClickListener(listener);
+        view.findViewById(R.id.button_barcode).setOnClickListener(listener);
+        view.findViewById(R.id.button_sn).setOnClickListener(listener);
+        view.findViewById(R.id.button_camera).setOnClickListener(listener);
+        view.findViewById(R.id.button_manual_input).setOnClickListener(listener);
 
         return view;
     }

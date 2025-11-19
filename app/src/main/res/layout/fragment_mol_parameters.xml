@@ -150,5 +150,13 @@
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_create_document"
+            style="@style/PrimaryActionButton"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:text="СОЗДАТЬ" />
+
     </LinearLayout>
 </ScrollView>
