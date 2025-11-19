@@ -21,6 +21,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.inventory.farovon.CameraScanActivity;
 import com.inventory.farovon.R;
+import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.InventoryItemDao;
+import com.inventory.farovon.db.InventoryItemEntity;
 import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
@@ -38,33 +41,26 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
 
     private static final String TAG = "MolAssetsFragment";
 
-    private ActivityResultLauncher<Intent> cameraLauncher;
-    private List<String> scannedItems = new ArrayList<>();
-    private BarcodeAdapter adapter;
+    private List<InventoryItemEntity> scannedItems = new ArrayList<>();
+    private AssetDetailAdapter adapter;
     private RecyclerView recyclerView;
     private View emptyStateView;
 
     private RFIDWithUHFUART mReader;
     private Handler handler = new Handler(Looper.getMainLooper());
     private ExecutorService rfidExecutor;
+    private ExecutorService databaseExecutor;
+    private InventoryItemDao inventoryItemDao;
     private Set<String> foundEpcSet = new HashSet<>();
     private boolean isRfidScanning = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        cameraLauncher = registerForActivityResult(
-                new ActivityResultContracts.StartActivityForResult(),
-                result -> {
-                    if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                        String scannedCode = result.getData().getStringExtra("scanned_code");
-                        if (scannedCode != null) {
-                            scannedItems.add(scannedCode);
-                            adapter.notifyItemInserted(scannedItems.size() - 1);
-                            updateUI();
-                        }
-                    }
-                });
+
+        AppDatabase db = AppDatabase.getDatabase(requireContext().getApplicationContext());
+        inventoryItemDao = db.inventoryItemDao();
+        databaseExecutor = Executors.newSingleThreadExecutor();
     }
 
     @Nullable
@@ -76,7 +72,7 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
         emptyStateView = view.findViewById(R.id.empty_state_group);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new BarcodeAdapter(scannedItems);
+        adapter = new AssetDetailAdapter(scannedItems);
         recyclerView.setAdapter(adapter);
 
         view.findViewById(R.id.button_scan).setOnClickListener(v -> {
@@ -85,7 +81,6 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
             bottomSheet.show(getParentFragmentManager(), bottomSheet.getTag());
         });
 
-        // Listen for hardware trigger key events
         view.setFocusableInTouchMode(true);
         view.requestFocus();
         view.setOnKeyListener((v, keyCode, event) -> {
@@ -103,7 +98,6 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
         });
 
         updateUI();
-
         return view;
     }
 
@@ -126,22 +120,18 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
         try {
             mReader = RFIDWithUHFUART.getInstance();
             mReader.init(requireContext().getApplicationContext());
-            Log.i(TAG, "RFID Reader initialized successfully.");
         } catch (Exception e) {
             Log.e(TAG, "Failed to initialize RFID Reader", e);
-            Toast.makeText(getContext(), "Ошибка инициализации RFID", Toast.LENGTH_SHORT).show();
         }
     }
 
     private void startRfidScanning() {
-        if (mReader == null) {
-            Toast.makeText(getContext(), "RFID ридер не инициализирован", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        if (mReader == null) return;
         isRfidScanning = true;
         foundEpcSet.clear();
         scannedItems.clear();
         adapter.notifyDataSetChanged();
+        updateUI();
 
         mReader.startInventoryTag();
         rfidExecutor = Executors.newSingleThreadExecutor();
@@ -150,61 +140,62 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
                 UHFTAGInfo tag = mReader.readTagFromBuffer();
                 if (tag != null) {
                     String epc = tag.getEPC();
-                    boolean isNew = foundEpcSet.add(epc);
-                    if (isNew) {
-                        handler.post(() -> {
-                            scannedItems.add(epc);
-                            adapter.notifyItemInserted(scannedItems.size() - 1);
-                            updateUI();
-                        });
+                    if (foundEpcSet.add(epc)) {
+                        searchAndAddItem(epc);
                     }
                 }
             }
         });
-        Log.i(TAG, "RFID scanning started.");
+    }
+
+    private void searchAndAddItem(String rfid) {
+        databaseExecutor.execute(() -> {
+            List<InventoryItemEntity> foundItems = inventoryItemDao.findByRfid(rfid);
+            handler.post(() -> {
+                if (foundItems != null && !foundItems.isEmpty()) {
+                    scannedItems.addAll(foundItems);
+                } else {
+                    InventoryItemEntity unknownItem = new InventoryItemEntity();
+                    unknownItem.rf = rfid;
+                    unknownItem.name = "Неизвестный объект";
+                    scannedItems.add(unknownItem);
+                }
+                adapter.notifyDataSetChanged();
+                updateUI();
+            });
+        });
     }
 
     private void stopRfidScanning() {
         if (isRfidScanning) {
             isRfidScanning = false;
-            if (mReader != null) {
-                mReader.stopInventory();
-            }
-            if (rfidExecutor != null && !rfidExecutor.isShutdown()) {
-                rfidExecutor.shutdown();
-            }
-            Log.i(TAG, "RFID scanning stopped.");
+            if (mReader != null) mReader.stopInventory();
+            if (rfidExecutor != null && !rfidExecutor.isShutdown()) rfidExecutor.shutdown();
         }
     }
 
-
     private void updateUI() {
-        if (scannedItems.isEmpty()) {
-            recyclerView.setVisibility(View.GONE);
-            emptyStateView.setVisibility(View.VISIBLE);
-        } else {
-            recyclerView.setVisibility(View.VISIBLE);
-            emptyStateView.setVisibility(View.GONE);
-        }
+        boolean isEmpty = scannedItems.isEmpty();
+        recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        emptyStateView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 
     public List<String> getScannedBarcodes() {
-        return scannedItems;
+        List<String> rfids = new ArrayList<>();
+        for (InventoryItemEntity item : scannedItems) {
+            if (item.rf != null && !item.rf.isEmpty()) {
+                rfids.add(item.rf);
+            }
+        }
+        return rfids;
     }
 
     @Override
     public void onScanModeSelected(String mode) {
-        switch (mode) {
-            case "RFID":
-                Toast.makeText(getContext(), "Режим RFID. Нажмите курок.", Toast.LENGTH_SHORT).show();
-                break;
-            case "CAMERA":
-                Intent intent = new Intent(getActivity(), CameraScanActivity.class);
-                cameraLauncher.launch(intent);
-                break;
-            default:
-                Toast.makeText(getContext(), mode + " - в разработке", Toast.LENGTH_SHORT).show();
-                break;
+        if ("RFID".equals(mode)) {
+            Toast.makeText(getContext(), "Режим RFID. Нажмите курок.", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getContext(), mode + " - в разработке", Toast.LENGTH_SHORT).show();
         }
     }
 }

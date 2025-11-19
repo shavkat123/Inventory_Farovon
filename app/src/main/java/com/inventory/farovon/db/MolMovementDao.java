@@ -21,6 +21,12 @@ public interface MolMovementDao {
     @Query("SELECT * FROM mol_movement_documents ORDER BY date DESC")
     List<MolMovementDocument> getAllDocuments();
 
+    @Query("SELECT * FROM mol_movement_items WHERE documentId = :documentId")
+    List<MolMovementItem> getItemsForDocument(long documentId);
+
+    @Query("SELECT * FROM mol_movement_documents WHERE id = :documentId")
+    MolMovementDocument getDocumentById(long documentId);
+
     @Transaction
     default void insertFullMovement(MolMovementDocument document, List<String> rfids) {
         long documentId = insertDocument(document);

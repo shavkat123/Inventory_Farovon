@@ -36,6 +36,7 @@ public class MolMovementActivity extends AppCompatActivity {
         ViewPager2 viewPager = findViewById(R.id.view_pager);
         TabLayout tabLayout = findViewById(R.id.tab_layout);
 
+        viewPager.setOffscreenPageLimit(2); // Keep both fragments in memory
         adapter = new MolMovementPagerAdapter(this);
         viewPager.setAdapter(adapter);
 

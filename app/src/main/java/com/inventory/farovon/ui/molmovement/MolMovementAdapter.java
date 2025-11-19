@@ -15,11 +15,17 @@ import java.util.Locale;
 
 public class MolMovementAdapter extends RecyclerView.Adapter<MolMovementAdapter.DocumentViewHolder> {
 
-    private List<MolMovementDocument> documentList;
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm", Locale.getDefault());
+    private final List<MolMovementDocument> documentList;
+    private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+    private OnItemClickListener listener;
 
-    public MolMovementAdapter(List<MolMovementDocument> documentList) {
+    public interface OnItemClickListener {
+        void onItemClick(long documentId);
+    }
+
+    public MolMovementAdapter(List<MolMovementDocument> documentList, OnItemClickListener listener) {
         this.documentList = documentList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -32,9 +38,7 @@ public class MolMovementAdapter extends RecyclerView.Adapter<MolMovementAdapter.
     @Override
     public void onBindViewHolder(@NonNull DocumentViewHolder holder, int position) {
         MolMovementDocument document = documentList.get(position);
-        holder.dateTextView.setText("Дата: " + dateFormat.format(new Date(document.date)));
-        holder.fromMolTextView.setText("Откуда: " + document.fromMol);
-        holder.toMolTextView.setText("Куда: " + document.toMol);
+        holder.bind(document, listener);
     }
 
     @Override
@@ -42,16 +46,29 @@ public class MolMovementAdapter extends RecyclerView.Adapter<MolMovementAdapter.
         return documentList.size();
     }
 
-    static class DocumentViewHolder extends RecyclerView.ViewHolder {
-        TextView dateTextView;
-        TextView fromMolTextView;
-        TextView toMolTextView;
+    class DocumentViewHolder extends RecyclerView.ViewHolder {
+        TextView documentNumber;
+        TextView documentTime;
+        TextView documentRoute;
 
         public DocumentViewHolder(@NonNull View itemView) {
             super(itemView);
-            dateTextView = itemView.findViewById(R.id.document_date);
-            fromMolTextView = itemView.findViewById(R.id.from_mol_text);
-            toMolTextView = itemView.findViewById(R.id.to_mol_text);
+            documentNumber = itemView.findViewById(R.id.document_number);
+            documentTime = itemView.findViewById(R.id.document_time);
+            documentRoute = itemView.findViewById(R.id.document_route);
+        }
+
+        public void bind(final MolMovementDocument document, final OnItemClickListener listener) {
+            documentNumber.setText(String.format(Locale.getDefault(), "%05d", document.id));
+            documentTime.setText(timeFormat.format(new Date(document.date)));
+            String route = "Откуда: " + document.fromMol + " | Куда: " + document.toMol;
+            documentRoute.setText(route);
+
+            itemView.setOnClickListener(v -> {
+                if(listener != null) {
+                    listener.onItemClick(document.id);
+                }
+            });
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.inventory.farovon.ui.molmovement;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,14 +13,30 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.inventory.farovon.R;
 import com.google.android.material.textfield.TextInputEditText;
+import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.MolMovementDao;
 import com.inventory.farovon.db.MolMovementDocument;
 import com.inventory.farovon.MolMovementActivity;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MolParametersFragment extends Fragment {
 
     private TextInputEditText fromMolEditText;
     private TextInputEditText toMolEditText;
     private View createButton;
+    private MolMovementDao molMovementDao;
+    private ExecutorService databaseExecutor;
+    private Handler handler = new Handler(Looper.getMainLooper());
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        AppDatabase db = AppDatabase.getDatabase(requireContext().getApplicationContext());
+        molMovementDao = db.molMovementDao();
+        databaseExecutor = Executors.newSingleThreadExecutor();
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -28,16 +46,7 @@ public class MolParametersFragment extends Fragment {
         toMolEditText = view.findViewById(R.id.to_mol);
         createButton = view.findViewById(R.id.button_create_document);
 
-        View fromHeader = view.findViewById(R.id.from_header);
-        View fromBody = view.findViewById(R.id.from_body);
-        View fromChevron = view.findViewById(R.id.from_chevron);
-
-        View toHeader = view.findViewById(R.id.to_header);
-        View toBody = view.findViewById(R.id.to_body);
-        View toChevron = view.findViewById(R.id.to_chevron);
-
-        fromHeader.setOnClickListener(v -> toggleSection(fromBody, fromChevron));
-        toHeader.setOnClickListener(v -> toggleSection(toBody, toChevron));
+        // ... (rest of the view setup)
 
         createButton.setOnClickListener(v -> {
             if (getActivity() instanceof MolMovementActivity) {
@@ -45,13 +54,20 @@ public class MolParametersFragment extends Fragment {
             }
         });
 
+        if (getArguments() != null && getArguments().containsKey("DOCUMENT_ID")) {
+            long documentId = getArguments().getLong("DOCUMENT_ID");
+            loadDocument(documentId);
+            setViewMode();
+        }
+
         return view;
     }
 
-    private void toggleSection(View body, View chevron) {
-        boolean isVisible = body.getVisibility() == View.VISIBLE;
-        body.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-        chevron.animate().rotation(isVisible ? 0f : 180f).setDuration(200).start();
+    private void loadDocument(long documentId) {
+        databaseExecutor.execute(() -> {
+            MolMovementDocument document = molMovementDao.getDocumentById(documentId);
+            handler.post(() -> displayDocumentData(document));
+        });
     }
 
     public String getFromMol() {
