@@ -26,6 +26,9 @@ public interface InventoryItemDao {
     @Query("SELECT * FROM inventory_items WHERE rf = :rfid")
     List<InventoryItemEntity> findByRfid(String rfid);
 
+    @Query("SELECT * FROM inventory_items WHERE rf IN (:rfids)")
+    List<InventoryItemEntity> findByRfidList(List<String> rfids);
+
     @Query("SELECT * FROM inventory_items WHERE code = :barcode")
     List<InventoryItemEntity> findByBarcode(String barcode);
 

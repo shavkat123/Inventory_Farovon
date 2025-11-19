@@ -17,6 +17,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.inventory.farovon.AssetMovementActivity;
 import com.inventory.farovon.IdentificationActivity;
 import com.inventory.farovon.IssueDocumentListActivity;
+import com.inventory.farovon.MolMovementActivity;
+import com.inventory.farovon.MolMovementListActivity;
 import com.inventory.farovon.R;
 import com.inventory.farovon.ui.returntowarehouse.ReturnToWarehouseActivity;
 
@@ -39,7 +41,7 @@ public class HomeFragment extends Fragment {
         menuItems.add(new MenuItem("Возврат на склад", R.drawable.icons8___900));
         menuItems.add(new MenuItem("Списание ОС", R.drawable.icons8__11));
         menuItems.add(new MenuItem("Перемещение МП", R.drawable.icons8____22));
-        menuItems.add(new MenuItem("Помещенные между МОЛ", R.drawable.icons8__12));
+        menuItems.add(new MenuItem("Перемещение между МОЛ", R.drawable.icons8__12));
         menuItems.add(new MenuItem("Первичная инвентаризация", R.drawable.icons8___));
 
 
@@ -49,6 +51,9 @@ public class HomeFragment extends Fragment {
                 navController.navigate(R.id.nav_inventory);
             } else if (item.getTitle().equals("Перемещение МП")) {
                 Intent intent = new Intent(getActivity(), AssetMovementActivity.class);
+                startActivity(intent);
+            } else if (item.getTitle().equals("Перемещение между МОЛ")) {
+                Intent intent = new Intent(getActivity(), MolMovementListActivity.class);
                 startActivity(intent);
             } else if (item.getTitle().equals("Выдача со склада")) {
                 Intent intent = new Intent(getActivity(), IssueDocumentListActivity.class);
