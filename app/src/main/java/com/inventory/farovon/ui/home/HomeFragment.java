@@ -18,6 +18,7 @@ import com.inventory.farovon.AssetMovementActivity;
 import com.inventory.farovon.IdentificationActivity;
 import com.inventory.farovon.IssueDocumentListActivity;
 import com.inventory.farovon.MolMovementActivity;
+import com.inventory.farovon.MolMovementListActivity;
 import com.inventory.farovon.R;
 import com.inventory.farovon.ui.returntowarehouse.ReturnToWarehouseActivity;
 
