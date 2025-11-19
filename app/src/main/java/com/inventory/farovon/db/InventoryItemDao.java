@@ -22,4 +22,16 @@ public interface InventoryItemDao {
 
     @Query("DELETE FROM inventory_items WHERE departmentId = :departmentId AND location = :location")
     void clearByDepartmentIdAndLocation(int departmentId, String location);
+
+    @Query("SELECT * FROM inventory_items WHERE rf = :rfid")
+    List<InventoryItemEntity> findByRfid(String rfid);
+
+    @Query("SELECT * FROM inventory_items WHERE code = :barcode")
+    List<InventoryItemEntity> findByBarcode(String barcode);
+
+    @Query("SELECT * FROM inventory_items WHERE serialNumber = :serialNumber")
+    List<InventoryItemEntity> findBySerialNumber(String serialNumber);
+
+    @Query("SELECT * FROM inventory_items WHERE code LIKE '%' || :query || '%' OR name LIKE '%' || :query || '%' OR rf LIKE '%' || :query || '%' OR serialNumber LIKE '%' || :query || '%'")
+    List<InventoryItemEntity> findByQuery(String query);
 }

@@ -215,14 +215,11 @@ public class NomenclatureAdapter extends RecyclerView.Adapter<NomenclatureAdapte
 
         VH(@NonNull View itemView) {
             super(itemView);
-            // rootItem — id корневого RelativeLayout в твоём item_nomenclature.xml
-            root      = itemView.findViewById(R.id.rootItem);
-            if (root == null) root = itemView; // страховка, если id не задан
-
-            tvName    = itemView.findViewById(R.id.tvName);
-            tvCode    = itemView.findViewById(R.id.tvCode);
-            tvRfid    = itemView.findViewById(R.id.rfid);
-            ivMoreOptions = itemView.findViewById(R.id.iv_more_options);
+            root = itemView; // rootItem was removed, itemView is the root
+            tvName    = itemView.findViewById(R.id.item_name);
+            tvCode    = itemView.findViewById(R.id.item_code);
+            tvRfid    = itemView.findViewById(R.id.item_rfid);
+            ivMoreOptions = itemView.findViewById(R.id.options_menu);
         }
     }
 }

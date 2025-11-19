@@ -5,7 +5,7 @@ import androidx.room.Database;
 import androidx.room.Room;
 import androidx.room.RoomDatabase;
 
-@Database(entities = {OrganizationEntity.class, DepartmentEntity.class, InventoryItemEntity.class, PendingUploadEntity.class}, version = 5, exportSchema = false)
+@Database(entities = {OrganizationEntity.class, DepartmentEntity.class, InventoryItemEntity.class, PendingUploadEntity.class}, version = 7, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract OrganizationDao organizationDao();
@@ -21,6 +21,8 @@ public abstract class AppDatabase extends RoomDatabase {
                 if (INSTANCE == null) {
                     INSTANCE = Room.databaseBuilder(context.getApplicationContext(),
                             AppDatabase.class, "inventory_database")
+                            // Используется для автоматического пересоздания БД при изменении схемы.
+                            // Данные будут утеряны, но это приемлемо для текущего этапа разработки.
                             .fallbackToDestructiveMigration()
                             .build();
                 }

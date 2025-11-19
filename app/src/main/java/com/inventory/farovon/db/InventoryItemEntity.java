@@ -18,4 +18,5 @@ public class InventoryItemEntity {
     public String rf;
     public String mol;
     public String location;
+    public String serialNumber;
 }
