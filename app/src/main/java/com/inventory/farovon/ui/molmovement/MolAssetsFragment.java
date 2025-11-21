@@ -128,10 +128,6 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
     private void startRfidScanning() {
         if (mReader == null) return;
         isRfidScanning = true;
-        foundEpcSet.clear();
-        scannedItems.clear();
-        adapter.notifyDataSetChanged();
-        updateUI();
 
         mReader.startInventoryTag();
         rfidExecutor = Executors.newSingleThreadExecutor();
