@@ -1,6 +1,8 @@
 package com.inventory.farovon.ui.molmovement;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,9 +12,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.inventory.farovon.R;
+import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.MolMovementDao;
 import com.google.android.material.textfield.TextInputEditText;
 import com.inventory.farovon.db.MolMovementDocument;
 import com.inventory.farovon.MolMovementActivity;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MolParametersFragment extends Fragment {
 
@@ -21,6 +28,15 @@ public class MolParametersFragment extends Fragment {
     private TextInputEditText fromOrganizationEditText;
     private TextInputEditText toMolEditText;
     private View createButton;
+    private ExecutorService databaseExecutor;
+    private MolMovementDao molMovementDao;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        databaseExecutor = Executors.newSingleThreadExecutor();
+        molMovementDao = AppDatabase.getDatabase(requireContext().getApplicationContext()).molMovementDao();
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -49,7 +65,24 @@ public class MolParametersFragment extends Fragment {
             }
         });
 
+        if (getArguments() != null && getArguments().containsKey("DOCUMENT_ID")) {
+            long documentId = getArguments().getLong("DOCUMENT_ID");
+            loadDocument(documentId);
+        }
+
         return view;
+    }
+
+    private void loadDocument(long documentId) {
+        databaseExecutor.execute(() -> {
+            MolMovementDocument document = molMovementDao.getDocumentById(documentId);
+            new Handler(Looper.getMainLooper()).post(() -> {
+                if (document != null) {
+                    displayDocumentData(document);
+                    setViewMode();
+                }
+            });
+        });
     }
 
     private void toggleSection(View body, View chevron) {
