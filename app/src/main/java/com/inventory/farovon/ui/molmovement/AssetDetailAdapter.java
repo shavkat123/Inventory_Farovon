@@ -13,9 +13,19 @@ import java.util.List;
 public class AssetDetailAdapter extends RecyclerView.Adapter<AssetDetailAdapter.AssetViewHolder> {
 
     private final List<InventoryItemEntity> assetList;
+    private OnItemRemoveListener listener;
+
+    public interface OnItemRemoveListener {
+        void onItemRemove(int position);
+    }
 
     public AssetDetailAdapter(List<InventoryItemEntity> assetList) {
         this.assetList = assetList;
+    }
+
+    public AssetDetailAdapter(List<InventoryItemEntity> assetList, OnItemRemoveListener listener) {
+        this.assetList = assetList;
+        this.listener = listener;
     }
 
     @NonNull
@@ -35,6 +45,11 @@ public class AssetDetailAdapter extends RecyclerView.Adapter<AssetDetailAdapter.
         return assetList.size();
     }
 
+    @Override
+    public void onBindViewHolder(@NonNull AssetViewHolder holder, int position) {
+        holder.bind(assetList.get(position), position, listener);
+    }
+
     static class AssetViewHolder extends RecyclerView.ViewHolder {
         TextView name;
         TextView inventoryNumber;
@@ -42,6 +57,7 @@ public class AssetDetailAdapter extends RecyclerView.Adapter<AssetDetailAdapter.
         TextView location;
         TextView mol;
         TextView organization;
+        View deleteButton;
 
         public AssetViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -51,14 +67,27 @@ public class AssetDetailAdapter extends RecyclerView.Adapter<AssetDetailAdapter.
             location = itemView.findViewById(R.id.location);
             mol = itemView.findViewById(R.id.mol);
             organization = itemView.findViewById(R.id.organization);
+            deleteButton = itemView.findViewById(R.id.delete_button);
         }
 
-        public void bind(InventoryItemEntity item) {
+        public void bind(InventoryItemEntity item, int position, OnItemRemoveListener listener) {
             name.setText(item.name);
             inventoryNumber.setText("Инв. №: " + (item.code != null ? item.code : "Не назначено"));
             serialNumber.setText("Серийный №: " + (item.serialNumber != null ? item.serialNumber : "Не назначено"));
             location.setText("Местоположение: " + (item.location != null ? item.location : "Не назначено"));
             mol.setText("Эксплуатирующий: " + (item.mol != null ? item.mol : "Не назначено"));
+
+            if (listener != null) {
+                deleteButton.setVisibility(View.VISIBLE);
+                deleteButton.setOnClickListener(v -> {
+                    int pos = getBindingAdapterPosition();
+                    if (pos != RecyclerView.NO_POSITION) {
+                        listener.onItemRemove(pos);
+                    }
+                });
+            } else {
+                deleteButton.setVisibility(View.GONE);
+            }
         }
     }
 }

@@ -54,6 +54,7 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
     private ExecutorService databaseExecutor;
     private InventoryItemDao inventoryItemDao;
     private Set<String> foundEpcSet = new HashSet<>();
+    private Set<String> ignoredEpcSet = new HashSet<>();
     private boolean isRfidScanning = false;
     private ToneGenerator toneGenerator;
     private OnItemCountChangeListener countChangeListener;
@@ -85,7 +86,17 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
         emptyStateView = view.findViewById(R.id.empty_state_group);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new AssetDetailAdapter(scannedItems);
+        adapter = new AssetDetailAdapter(scannedItems, position -> {
+            if (position >= 0 && position < scannedItems.size()) {
+                InventoryItemEntity removedItem = scannedItems.remove(position);
+                if (removedItem.rf != null) {
+                    ignoredEpcSet.add(removedItem.rf);
+                    foundEpcSet.remove(removedItem.rf);
+                }
+                adapter.notifyItemRemoved(position);
+                updateUI();
+            }
+        });
         recyclerView.setAdapter(adapter);
 
         view.findViewById(R.id.button_scan).setOnClickListener(v -> {
@@ -146,8 +157,8 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
                 UHFTAGInfo tag = mReader.readTagFromBuffer();
                 if (tag != null) {
                     String epc = tag.getEPC();
-                    Log.d(TAG, "RFID Tag Found: " + epc);
-                    if (foundEpcSet.add(epc)) {
+                    // Log.d(TAG, "RFID Tag Found: " + epc);
+                    if (!ignoredEpcSet.contains(epc) && foundEpcSet.add(epc)) {
                         if (toneGenerator != null) {
                             toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP);
                         }
