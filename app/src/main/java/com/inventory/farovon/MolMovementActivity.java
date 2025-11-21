@@ -7,6 +7,7 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.inventory.farovon.db.AppDatabase;
+import android.view.KeyEvent;
 import com.inventory.farovon.db.MolMovementDao;
 import com.inventory.farovon.db.MolMovementDocument;
 import com.inventory.farovon.ui.molmovement.MolMovementPagerAdapter;
@@ -21,6 +22,7 @@ public class MolMovementActivity extends AppCompatActivity {
     private MolMovementPagerAdapter adapter;
     private MolMovementDao molMovementDao;
     private ExecutorService databaseExecutor;
+    private ViewPager2 viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +35,7 @@ public class MolMovementActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        ViewPager2 viewPager = findViewById(R.id.view_pager);
+        viewPager = findViewById(R.id.view_pager);
         TabLayout tabLayout = findViewById(R.id.tab_layout);
 
         viewPager.setOffscreenPageLimit(2); // Keep both fragments in memory
@@ -83,5 +85,27 @@ public class MolMovementActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (viewPager.getCurrentItem() == 1) { // Assets Fragment
+            if (adapter.getAssetsFragment() != null) {
+                boolean handled = adapter.getAssetsFragment().onKeyDown(keyCode, event);
+                if (handled) return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (viewPager.getCurrentItem() == 1) { // Assets Fragment
+            if (adapter.getAssetsFragment() != null) {
+                boolean handled = adapter.getAssetsFragment().onKeyUp(keyCode, event);
+                if (handled) return true;
+            }
+        }
+        return super.onKeyUp(keyCode, event);
     }
 }

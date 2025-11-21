@@ -1,6 +1,8 @@
 package com.inventory.farovon.ui.molmovement;
 
 import android.content.Intent;
+import android.media.AudioManager;
+import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -53,6 +55,7 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
     private InventoryItemDao inventoryItemDao;
     private Set<String> foundEpcSet = new HashSet<>();
     private boolean isRfidScanning = false;
+    private ToneGenerator toneGenerator;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -61,6 +64,7 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
         AppDatabase db = AppDatabase.getDatabase(requireContext().getApplicationContext());
         inventoryItemDao = db.inventoryItemDao();
         databaseExecutor = Executors.newSingleThreadExecutor();
+        toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
     }
 
     @Nullable
@@ -79,22 +83,6 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
             ScanModeBottomSheetFragment bottomSheet = new ScanModeBottomSheetFragment();
             bottomSheet.setScanModeListener(this);
             bottomSheet.show(getParentFragmentManager(), bottomSheet.getTag());
-        });
-
-        view.setFocusableInTouchMode(true);
-        view.requestFocus();
-        view.setOnKeyListener((v, keyCode, event) -> {
-            if (event.getAction() == KeyEvent.ACTION_DOWN && (keyCode == KeyEvent.KEYCODE_F9 || keyCode == KeyEvent.KEYCODE_F10 || keyCode == 280 || keyCode == 293)) {
-                if (!isRfidScanning) {
-                    startRfidScanning();
-                }
-                return true;
-            }
-            if (event.getAction() == KeyEvent.ACTION_UP && (keyCode == KeyEvent.KEYCODE_F9 || keyCode == KeyEvent.KEYCODE_F10 || keyCode == 280 || keyCode == 293)) {
-                stopRfidScanning();
-                return true;
-            }
-            return false;
         });
 
         updateUI();
@@ -116,6 +104,15 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
         }
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (toneGenerator != null) {
+            toneGenerator.release();
+            toneGenerator = null;
+        }
+    }
+
     private void initRfidReader() {
         try {
             mReader = RFIDWithUHFUART.getInstance();
@@ -126,8 +123,12 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
     }
 
     private void startRfidScanning() {
-        if (mReader == null) return;
+        if (mReader == null) {
+            Log.e(TAG, "Reader not initialized");
+            return;
+        }
         isRfidScanning = true;
+        Log.i(TAG, "Starting RFID scanning");
 
         mReader.startInventoryTag();
         rfidExecutor = Executors.newSingleThreadExecutor();
@@ -136,7 +137,11 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
                 UHFTAGInfo tag = mReader.readTagFromBuffer();
                 if (tag != null) {
                     String epc = tag.getEPC();
+                    Log.d(TAG, "RFID Tag Found: " + epc);
                     if (foundEpcSet.add(epc)) {
+                        if (toneGenerator != null) {
+                            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP);
+                        }
                         searchAndAddItem(epc);
                     }
                 }
@@ -160,6 +165,24 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
                 updateUI();
             });
         });
+    }
+
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_F9 || keyCode == KeyEvent.KEYCODE_F10 || keyCode == 280 || keyCode == 293) {
+            if (!isRfidScanning) {
+                startRfidScanning();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_F9 || keyCode == KeyEvent.KEYCODE_F10 || keyCode == 280 || keyCode == 293) {
+            stopRfidScanning();
+            return true;
+        }
+        return false;
     }
 
     private void stopRfidScanning() {
