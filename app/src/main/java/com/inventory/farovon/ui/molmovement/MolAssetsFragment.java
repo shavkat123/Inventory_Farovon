@@ -56,10 +56,19 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
     private Set<String> foundEpcSet = new HashSet<>();
     private boolean isRfidScanning = false;
     private ToneGenerator toneGenerator;
+    private OnItemCountChangeListener countChangeListener;
+
+    public interface OnItemCountChangeListener {
+        void onItemCountChanged(int count);
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (getActivity() instanceof OnItemCountChangeListener) {
+            countChangeListener = (OnItemCountChangeListener) getActivity();
+        }
 
         AppDatabase db = AppDatabase.getDatabase(requireContext().getApplicationContext());
         inventoryItemDao = db.inventoryItemDao();
@@ -197,6 +206,10 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
         boolean isEmpty = scannedItems.isEmpty();
         recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
         emptyStateView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+
+        if (countChangeListener != null) {
+            countChangeListener.onItemCountChanged(scannedItems.size());
+        }
     }
 
     public List<String> getScannedBarcodes() {

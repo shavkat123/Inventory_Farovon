@@ -36,6 +36,11 @@ public class MolAssetsDetailFragment extends Fragment {
     private InventoryItemDao inventoryItemDao;
     private MolMovementDao molMovementDao;
     private Handler handler = new Handler(Looper.getMainLooper());
+    private OnItemCountChangeListener countChangeListener;
+
+    public interface OnItemCountChangeListener {
+        void onItemCountChanged(int count);
+    }
 
     public static MolAssetsDetailFragment newInstance(long documentId) {
         MolAssetsDetailFragment fragment = new MolAssetsDetailFragment();
@@ -48,6 +53,9 @@ public class MolAssetsDetailFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (getActivity() instanceof OnItemCountChangeListener) {
+            countChangeListener = (OnItemCountChangeListener) getActivity();
+        }
         AppDatabase db = AppDatabase.getDatabase(requireContext().getApplicationContext());
         inventoryItemDao = db.inventoryItemDao();
         molMovementDao = db.molMovementDao();
@@ -95,6 +103,9 @@ public class MolAssetsDetailFragment extends Fragment {
                 assetList.clear();
                 assetList.addAll(loadedAssets);
                 adapter.notifyDataSetChanged();
+                if (countChangeListener != null) {
+                    countChangeListener.onItemCountChanged(assetList.size());
+                }
             });
         });
     }

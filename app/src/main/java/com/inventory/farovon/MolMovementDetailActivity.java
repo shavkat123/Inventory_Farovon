@@ -5,11 +5,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.inventory.farovon.ui.molmovement.MolAssetsDetailFragment;
 import com.inventory.farovon.ui.molmovement.MolMovementDetailPagerAdapter;
 
-public class MolMovementDetailActivity extends AppCompatActivity {
+public class MolMovementDetailActivity extends AppCompatActivity implements MolAssetsDetailFragment.OnItemCountChangeListener {
 
     public static final String EXTRA_DOCUMENT_ID = "extra_document_id";
+    private TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,7 +31,7 @@ public class MolMovementDetailActivity extends AppCompatActivity {
         }
 
         ViewPager2 viewPager = findViewById(R.id.view_pager);
-        TabLayout tabLayout = findViewById(R.id.tab_layout);
+        tabLayout = findViewById(R.id.tab_layout);
 
         MolMovementDetailPagerAdapter adapter = new MolMovementDetailPagerAdapter(this, documentId);
         viewPager.setAdapter(adapter);
@@ -39,7 +41,7 @@ public class MolMovementDetailActivity extends AppCompatActivity {
                     if (position == 0) {
                         tab.setText("Парам.");
                     } else {
-                        tab.setText("ОУ");
+                        tab.setText("ОУ (0)");
                     }
                 }
         ).attach();
@@ -49,5 +51,15 @@ public class MolMovementDetailActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
+    }
+
+    @Override
+    public void onItemCountChanged(int count) {
+        if (tabLayout != null && tabLayout.getTabCount() > 1) {
+            TabLayout.Tab tab = tabLayout.getTabAt(1);
+            if (tab != null) {
+                tab.setText("ОУ (" + count + ")");
+            }
+        }
     }
 }

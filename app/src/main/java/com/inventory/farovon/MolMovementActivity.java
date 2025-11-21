@@ -10,6 +10,7 @@ import com.inventory.farovon.db.AppDatabase;
 import android.view.KeyEvent;
 import com.inventory.farovon.db.MolMovementDao;
 import com.inventory.farovon.db.MolMovementDocument;
+import com.inventory.farovon.ui.molmovement.MolAssetsFragment;
 import com.inventory.farovon.ui.molmovement.MolMovementPagerAdapter;
 
 import java.util.Date;
@@ -17,12 +18,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MolMovementActivity extends AppCompatActivity {
+public class MolMovementActivity extends AppCompatActivity implements MolAssetsFragment.OnItemCountChangeListener {
 
     private MolMovementPagerAdapter adapter;
     private MolMovementDao molMovementDao;
     private ExecutorService databaseExecutor;
     private ViewPager2 viewPager;
+    private TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +38,7 @@ public class MolMovementActivity extends AppCompatActivity {
         }
 
         viewPager = findViewById(R.id.view_pager);
-        TabLayout tabLayout = findViewById(R.id.tab_layout);
+        tabLayout = findViewById(R.id.tab_layout);
 
         viewPager.setOffscreenPageLimit(2); // Keep both fragments in memory
         adapter = new MolMovementPagerAdapter(this);
@@ -111,5 +113,15 @@ public class MolMovementActivity extends AppCompatActivity {
             }
         }
         return super.onKeyUp(keyCode, event);
+    }
+
+    @Override
+    public void onItemCountChanged(int count) {
+        if (tabLayout != null && tabLayout.getTabCount() > 1) {
+            TabLayout.Tab tab = tabLayout.getTabAt(1);
+            if (tab != null) {
+                tab.setText("ОУ (" + count + ")");
+            }
+        }
     }
 }
