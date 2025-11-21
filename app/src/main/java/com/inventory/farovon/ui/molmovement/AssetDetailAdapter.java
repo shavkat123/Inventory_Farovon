@@ -75,7 +75,7 @@ public class AssetDetailAdapter extends RecyclerView.Adapter<AssetDetailAdapter.
             if (listener != null) {
                 deleteButton.setVisibility(View.VISIBLE);
                 deleteButton.setOnClickListener(v -> {
-                    int pos = getBindingAdapterPosition();
+                    int pos = getAdapterPosition();
                     if (pos != RecyclerView.NO_POSITION) {
                         listener.onItemRemove(pos);
                     }
