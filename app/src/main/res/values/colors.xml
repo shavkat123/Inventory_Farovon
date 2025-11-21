@@ -22,4 +22,5 @@
     <color name="colorTextDisabled">#BDBDBD</color>
     <color name="colorIconGrey">#B0BEC5</color>
     <color name="item_found_background">#C8E6C9</color>
+    <color name="colorError">#B00020</color>
 </resources>
