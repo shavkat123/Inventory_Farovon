@@ -37,17 +37,12 @@ public class AssetDetailAdapter extends RecyclerView.Adapter<AssetDetailAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull AssetViewHolder holder, int position) {
-        holder.bind(assetList.get(position));
+        holder.bind(assetList.get(position), position, listener);
     }
 
     @Override
     public int getItemCount() {
         return assetList.size();
-    }
-
-    @Override
-    public void onBindViewHolder(@NonNull AssetViewHolder holder, int position) {
-        holder.bind(assetList.get(position), position, listener);
     }
 
     static class AssetViewHolder extends RecyclerView.ViewHolder {
