@@ -10,5 +10,7 @@ public class MolMovementDocument {
 
     public long date;
     public String fromMol;
+    public String fromDepartment;
+    public String fromOrganization;
     public String toMol;
 }

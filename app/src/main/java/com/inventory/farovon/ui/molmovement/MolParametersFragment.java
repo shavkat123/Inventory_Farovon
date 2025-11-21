@@ -17,6 +17,8 @@ import com.inventory.farovon.MolMovementActivity;
 public class MolParametersFragment extends Fragment {
 
     private TextInputEditText fromMolEditText;
+    private TextInputEditText fromDepartmentEditText;
+    private TextInputEditText fromOrganizationEditText;
     private TextInputEditText toMolEditText;
     private View createButton;
 
@@ -25,6 +27,8 @@ public class MolParametersFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_mol_parameters, container, false);
 
         fromMolEditText = view.findViewById(R.id.from_mol);
+        fromDepartmentEditText = view.findViewById(R.id.from_department);
+        fromOrganizationEditText = view.findViewById(R.id.from_organization);
         toMolEditText = view.findViewById(R.id.to_mol);
         createButton = view.findViewById(R.id.button_create_document);
 
@@ -58,12 +62,22 @@ public class MolParametersFragment extends Fragment {
         return fromMolEditText.getText().toString().trim();
     }
 
+    public String getFromDepartment() {
+        return fromDepartmentEditText.getText().toString().trim();
+    }
+
+    public String getFromOrganization() {
+        return fromOrganizationEditText.getText().toString().trim();
+    }
+
     public String getToMol() {
         return toMolEditText.getText().toString().trim();
     }
 
     public void setViewMode() {
         fromMolEditText.setEnabled(false);
+        fromDepartmentEditText.setEnabled(false);
+        fromOrganizationEditText.setEnabled(false);
         toMolEditText.setEnabled(false);
         createButton.setVisibility(View.GONE);
     }
@@ -71,6 +85,8 @@ public class MolParametersFragment extends Fragment {
     public void displayDocumentData(MolMovementDocument document) {
         if (document != null) {
             fromMolEditText.setText(document.fromMol);
+            fromDepartmentEditText.setText(document.fromDepartment);
+            fromOrganizationEditText.setText(document.fromOrganization);
             toMolEditText.setText(document.toMol);
         }
     }

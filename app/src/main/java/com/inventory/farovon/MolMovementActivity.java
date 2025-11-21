@@ -59,17 +59,21 @@ public class MolMovementActivity extends AppCompatActivity {
 
     public void saveDocument() {
         String fromMol = adapter.getParametersFragment().getFromMol();
+        String fromDepartment = adapter.getParametersFragment().getFromDepartment();
+        String fromOrganization = adapter.getParametersFragment().getFromOrganization();
         String toMol = adapter.getParametersFragment().getToMol();
         List<String> scannedRfids = adapter.getAssetsFragment().getScannedBarcodes();
 
         if (fromMol.isEmpty() || toMol.isEmpty()) {
-            Toast.makeText(this, "Пожалуйста, заполните поля 'Откуда' и 'Куда'", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Пожалуйста, заполните все поля", Toast.LENGTH_SHORT).show();
             return;
         }
 
         MolMovementDocument document = new MolMovementDocument();
         document.date = new Date().getTime();
         document.fromMol = fromMol;
+        document.fromDepartment = fromDepartment;
+        document.fromOrganization = fromOrganization;
         document.toMol = toMol;
 
         databaseExecutor.execute(() -> {

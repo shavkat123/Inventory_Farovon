@@ -21,6 +21,16 @@ public interface MolMovementDao {
     @Query("SELECT * FROM mol_movement_documents ORDER BY date DESC")
     List<MolMovementDocument> getAllDocuments();
 
+    @Transaction
+    @Query("SELECT * FROM mol_movement_documents WHERE " +
+            "fromMol LIKE '%' || :query || '%' OR " +
+            "toMol LIKE '%' || :query || '%' OR " +
+            "fromDepartment LIKE '%' || :query || '%' OR " +
+            "fromOrganization LIKE '%' || :query || '%' OR " +
+            "id LIKE '%' || :query || '%' " +
+            "ORDER BY date DESC")
+    List<MolMovementDocument> searchDocuments(String query);
+
     @Query("SELECT * FROM mol_movement_items WHERE documentId = :documentId")
     List<MolMovementItem> getItemsForDocument(long documentId);
 

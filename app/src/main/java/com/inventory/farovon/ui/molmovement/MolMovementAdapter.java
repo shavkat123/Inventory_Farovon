@@ -17,6 +17,7 @@ public class MolMovementAdapter extends RecyclerView.Adapter<MolMovementAdapter.
 
     private final List<MolMovementDocument> documentList;
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm", Locale.getDefault());
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
     private OnItemClickListener listener;
 
     public interface OnItemClickListener {
@@ -48,18 +49,21 @@ public class MolMovementAdapter extends RecyclerView.Adapter<MolMovementAdapter.
 
     class DocumentViewHolder extends RecyclerView.ViewHolder {
         TextView documentNumber;
+        TextView documentDate;
         TextView documentTime;
         TextView documentRoute;
 
         public DocumentViewHolder(@NonNull View itemView) {
             super(itemView);
             documentNumber = itemView.findViewById(R.id.document_number);
+            documentDate = itemView.findViewById(R.id.document_date);
             documentTime = itemView.findViewById(R.id.document_time);
             documentRoute = itemView.findViewById(R.id.document_route);
         }
 
         public void bind(final MolMovementDocument document, final OnItemClickListener listener) {
             documentNumber.setText(String.format(Locale.getDefault(), "%05d", document.id));
+            documentDate.setText(dateFormat.format(new Date(document.date)));
             documentTime.setText(timeFormat.format(new Date(document.date)));
             String route = "Откуда: " + document.fromMol + " | Куда: " + document.toMol;
             documentRoute.setText(route);
