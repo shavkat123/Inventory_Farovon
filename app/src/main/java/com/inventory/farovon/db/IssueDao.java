@@ -9,17 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Dao
-public interface IssueDao {
+public abstract class IssueDao {
 
     @Insert
-    long insertDocument(IssueDocument document);
+    public abstract long insertDocument(IssueDocument document);
 
     @Insert
-    void insertItems(List<IssueItem> items);
+    public abstract void insertItems(List<IssueItem> items);
 
     @Transaction
     @Query("SELECT * FROM issue_documents ORDER BY date DESC")
-    List<IssueDocument> getAllDocuments();
+    public abstract List<IssueDocument> getAllDocuments();
 
     @Transaction
     @Query("SELECT * FROM issue_documents WHERE " +
@@ -29,16 +29,16 @@ public interface IssueDao {
             "fromOrganization LIKE '%' || :query || '%' OR " +
             "id LIKE '%' || :query || '%' " +
             "ORDER BY date DESC")
-    List<IssueDocument> searchDocuments(String query);
+    public abstract List<IssueDocument> searchDocuments(String query);
 
     @Query("SELECT * FROM issue_items WHERE documentId = :documentId")
-    List<IssueItem> getItemsForDocument(long documentId);
+    public abstract List<IssueItem> getItemsForDocument(long documentId);
 
     @Query("SELECT * FROM issue_documents WHERE id = :documentId")
-    IssueDocument getDocumentById(long documentId);
+    public abstract IssueDocument getDocumentById(long documentId);
 
     @Transaction
-    default void insertFullMovement(IssueDocument document, List<String> rfids) {
+    public void insertFullMovement(IssueDocument document, List<String> rfids) {
         long documentId = insertDocument(document);
         if (rfids != null && !rfids.isEmpty()) {
             List<IssueItem> items = new ArrayList<>();

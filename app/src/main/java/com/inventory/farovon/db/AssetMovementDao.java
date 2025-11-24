@@ -9,17 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Dao
-public interface AssetMovementDao {
+public abstract class AssetMovementDao {
 
     @Insert
-    long insertDocument(AssetMovementDocument document);
+    public abstract long insertDocument(AssetMovementDocument document);
 
     @Insert
-    void insertItems(List<AssetMovementItem> items);
+    public abstract void insertItems(List<AssetMovementItem> items);
 
     @Transaction
     @Query("SELECT * FROM asset_movement_documents ORDER BY date DESC")
-    List<AssetMovementDocument> getAllDocuments();
+    public abstract List<AssetMovementDocument> getAllDocuments();
 
     @Transaction
     @Query("SELECT * FROM asset_movement_documents WHERE " +
@@ -29,16 +29,16 @@ public interface AssetMovementDao {
             "fromOrganization LIKE '%' || :query || '%' OR " +
             "id LIKE '%' || :query || '%' " +
             "ORDER BY date DESC")
-    List<AssetMovementDocument> searchDocuments(String query);
+    public abstract List<AssetMovementDocument> searchDocuments(String query);
 
     @Query("SELECT * FROM asset_movement_items WHERE documentId = :documentId")
-    List<AssetMovementItem> getItemsForDocument(long documentId);
+    public abstract List<AssetMovementItem> getItemsForDocument(long documentId);
 
     @Query("SELECT * FROM asset_movement_documents WHERE id = :documentId")
-    AssetMovementDocument getDocumentById(long documentId);
+    public abstract AssetMovementDocument getDocumentById(long documentId);
 
     @Transaction
-    default void insertFullMovement(AssetMovementDocument document, List<String> rfids) {
+    public void insertFullMovement(AssetMovementDocument document, List<String> rfids) {
         long documentId = insertDocument(document);
         if (rfids != null && !rfids.isEmpty()) {
             List<AssetMovementItem> items = new ArrayList<>();

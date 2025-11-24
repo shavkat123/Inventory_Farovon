@@ -9,17 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Dao
-public interface MolMovementDao {
+public abstract class MolMovementDao {
 
     @Insert
-    long insertDocument(MolMovementDocument document);
+    public abstract long insertDocument(MolMovementDocument document);
 
     @Insert
-    void insertItems(List<MolMovementItem> items);
+    public abstract void insertItems(List<MolMovementItem> items);
 
     @Transaction
     @Query("SELECT * FROM mol_movement_documents ORDER BY date DESC")
-    List<MolMovementDocument> getAllDocuments();
+    public abstract List<MolMovementDocument> getAllDocuments();
 
     @Transaction
     @Query("SELECT * FROM mol_movement_documents WHERE " +
@@ -29,16 +29,16 @@ public interface MolMovementDao {
             "fromOrganization LIKE '%' || :query || '%' OR " +
             "id LIKE '%' || :query || '%' " +
             "ORDER BY date DESC")
-    List<MolMovementDocument> searchDocuments(String query);
+    public abstract List<MolMovementDocument> searchDocuments(String query);
 
     @Query("SELECT * FROM mol_movement_items WHERE documentId = :documentId")
-    List<MolMovementItem> getItemsForDocument(long documentId);
+    public abstract List<MolMovementItem> getItemsForDocument(long documentId);
 
     @Query("SELECT * FROM mol_movement_documents WHERE id = :documentId")
-    MolMovementDocument getDocumentById(long documentId);
+    public abstract MolMovementDocument getDocumentById(long documentId);
 
     @Transaction
-    default void insertFullMovement(MolMovementDocument document, List<String> rfids) {
+    public void insertFullMovement(MolMovementDocument document, List<String> rfids) {
         long documentId = insertDocument(document);
         if (rfids != null && !rfids.isEmpty()) {
             List<MolMovementItem> items = new ArrayList<>();
