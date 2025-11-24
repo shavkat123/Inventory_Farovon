@@ -4,29 +4,29 @@ import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
+import android.os.Bundle;
 
-public class IssueFromWarehousePagerAdapter extends FragmentStateAdapter {
+public class IssueDetailPagerAdapter extends FragmentStateAdapter {
 
+    private final long documentId;
     private IssueParametersFragment parametersFragment;
-    private IssueAssetsFragment assetsFragment;
 
-    public IssueFromWarehousePagerAdapter(@NonNull FragmentActivity fragmentActivity) {
+    public IssueDetailPagerAdapter(@NonNull FragmentActivity fragmentActivity, long documentId) {
         super(fragmentActivity);
+        this.documentId = documentId;
     }
 
     @NonNull
     @Override
     public Fragment createFragment(int position) {
         if (position == 0) {
-            if (parametersFragment == null) {
-                parametersFragment = new IssueParametersFragment();
-            }
+            parametersFragment = new IssueParametersFragment();
+            Bundle args = new Bundle();
+            args.putLong("DOCUMENT_ID", documentId);
+            parametersFragment.setArguments(args);
             return parametersFragment;
         }
-        if (assetsFragment == null) {
-            assetsFragment = new IssueAssetsFragment();
-        }
-        return assetsFragment;
+        return IssueAssetsDetailFragment.newInstance(documentId);
     }
 
     @Override
@@ -36,9 +36,5 @@ public class IssueFromWarehousePagerAdapter extends FragmentStateAdapter {
 
     public IssueParametersFragment getParametersFragment() {
         return parametersFragment;
-    }
-
-    public IssueAssetsFragment getAssetsFragment() {
-        return assetsFragment;
     }
 }

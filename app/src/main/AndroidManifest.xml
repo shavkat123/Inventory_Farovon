@@ -39,12 +39,28 @@
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
         <activity
-            android:name=".ui.returntowarehouse.ReturnToWarehouseActivity"
+            android:name=".ReturnToWarehouseActivity"
             android:exported="false"
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
         <activity
+            android:name=".ReturnListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
+            android:name=".ReturnDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
             android:name=".AssetMovementActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
+            android:name=".AssetMovementListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
+            android:name=".AssetMovementDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
         <activity
@@ -64,6 +80,14 @@
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar"
             android:windowSoftInputMode="adjustPan" />
+        <activity
+            android:name=".IssueListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
+            android:name=".IssueDetailActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
         <activity
             android:name=".IssueDocumentListActivity"
             android:exported="false"

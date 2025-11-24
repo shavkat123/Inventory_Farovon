@@ -1,4 +1,4 @@
-package com.inventory.farovon.ui.returntowarehouse;
+package com.inventory.farovon.ui.issuefromwarehouse;
 
 import android.content.Intent;
 import android.media.AudioManager;
@@ -35,9 +35,9 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ReturnAssetsFragment extends Fragment implements ScanModeBottomSheetFragment.ScanModeListener {
+public class IssueAssetsFragment extends Fragment implements ScanModeBottomSheetFragment.ScanModeListener {
 
-    private static final String TAG = "ReturnAssetsFragment";
+    private static final String TAG = "IssueAssetsFragment";
 
     private List<InventoryItemEntity> scannedItems = new ArrayList<>();
     private AssetDetailAdapter adapter;

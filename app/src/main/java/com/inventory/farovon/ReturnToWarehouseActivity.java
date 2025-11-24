@@ -8,20 +8,20 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.inventory.farovon.db.AppDatabase;
-import com.inventory.farovon.db.IssueDao;
-import com.inventory.farovon.db.IssueDocument;
-import com.inventory.farovon.ui.issuefromwarehouse.IssueAssetsFragment;
-import com.inventory.farovon.ui.issuefromwarehouse.IssueFromWarehousePagerAdapter;
+import com.inventory.farovon.db.ReturnDao;
+import com.inventory.farovon.db.ReturnDocument;
+import com.inventory.farovon.ui.returntowarehouse.ReturnAssetsFragment;
+import com.inventory.farovon.ui.returntowarehouse.ReturnToWarehousePagerAdapter;
 
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class IssueFromWarehouseActivity extends AppCompatActivity implements IssueAssetsFragment.OnItemCountChangeListener {
+public class ReturnToWarehouseActivity extends AppCompatActivity implements ReturnAssetsFragment.OnItemCountChangeListener {
 
-    private IssueFromWarehousePagerAdapter adapter;
-    private IssueDao issueDao;
+    private ReturnToWarehousePagerAdapter adapter;
+    private ReturnDao returnDao;
     private ExecutorService databaseExecutor;
     private ViewPager2 viewPager;
     private TabLayout tabLayout;
@@ -35,14 +35,14 @@ public class IssueFromWarehouseActivity extends AppCompatActivity implements Iss
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Выдача со склада");
+            getSupportActionBar().setTitle("Возврат на склад");
         }
 
         viewPager = findViewById(R.id.view_pager);
         tabLayout = findViewById(R.id.tab_layout);
 
         viewPager.setOffscreenPageLimit(2);
-        adapter = new IssueFromWarehousePagerAdapter(this);
+        adapter = new ReturnToWarehousePagerAdapter(this);
         viewPager.setAdapter(adapter);
 
         new TabLayoutMediator(tabLayout, viewPager,
@@ -56,7 +56,7 @@ public class IssueFromWarehouseActivity extends AppCompatActivity implements Iss
         ).attach();
 
         AppDatabase db = AppDatabase.getDatabase(getApplicationContext());
-        issueDao = db.issueDao();
+        returnDao = db.returnDao();
         databaseExecutor = Executors.newSingleThreadExecutor();
     }
 
@@ -78,7 +78,7 @@ public class IssueFromWarehouseActivity extends AppCompatActivity implements Iss
             return;
         }
 
-        IssueDocument document = new IssueDocument();
+        ReturnDocument document = new ReturnDocument();
         document.date = new Date().getTime();
         document.fromIssuer = fromIssuer;
         document.fromIssuerDepartment = fromDepartment;
@@ -90,7 +90,7 @@ public class IssueFromWarehouseActivity extends AppCompatActivity implements Iss
         document.toLocation = toLocation;
 
         databaseExecutor.execute(() -> {
-            issueDao.insertFullMovement(document, scannedRfids);
+            returnDao.insertFullMovement(document, scannedRfids);
             runOnUiThread(() -> {
                 Toast.makeText(this, "Документ сохранен", Toast.LENGTH_SHORT).show();
                 finish();

@@ -1,4 +1,4 @@
-package com.inventory.farovon.ui.returntowarehouse;
+package com.inventory.farovon.ui.assetmovement;
 
 import android.content.Intent;
 import android.media.AudioManager;
@@ -25,6 +25,7 @@ import com.inventory.farovon.db.InventoryItemDao;
 import com.inventory.farovon.db.InventoryItemEntity;
 import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
 import com.inventory.farovon.ui.molmovement.AssetDetailAdapter;
+import com.inventory.farovon.ui.molmovement.MolAssetsFragment;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 
@@ -35,9 +36,9 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ReturnAssetsFragment extends Fragment implements ScanModeBottomSheetFragment.ScanModeListener {
+public class AssetMovementAssetsFragment extends Fragment implements ScanModeBottomSheetFragment.ScanModeListener {
 
-    private static final String TAG = "ReturnAssetsFragment";
+    private static final String TAG = "AssetMovementAssetsFrag";
 
     private List<InventoryItemEntity> scannedItems = new ArrayList<>();
     private AssetDetailAdapter adapter;
@@ -76,7 +77,7 @@ public class ReturnAssetsFragment extends Fragment implements ScanModeBottomShee
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_mol_assets, container, false);
+        View view = inflater.inflate(R.layout.fragment_mol_assets, container, false); // Reusing layout
 
         recyclerView = view.findViewById(R.id.assets_recycler_view);
         emptyStateView = view.findViewById(R.id.empty_state_group);
@@ -153,6 +154,7 @@ public class ReturnAssetsFragment extends Fragment implements ScanModeBottomShee
                 UHFTAGInfo tag = mReader.readTagFromBuffer();
                 if (tag != null) {
                     String epc = tag.getEPC();
+                    // Log.d(TAG, "RFID Tag Found: " + epc);
                     if (!ignoredEpcSet.contains(epc) && foundEpcSet.add(epc)) {
                         if (toneGenerator != null) {
                             toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP);

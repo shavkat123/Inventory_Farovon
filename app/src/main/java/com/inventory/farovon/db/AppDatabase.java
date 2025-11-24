@@ -11,8 +11,14 @@ import androidx.room.RoomDatabase;
         InventoryItemEntity.class,
         PendingUploadEntity.class,
         MolMovementDocument.class,
-        MolMovementItem.class
-}, version = 9, exportSchema = false)
+        MolMovementItem.class,
+        AssetMovementDocument.class,
+        AssetMovementItem.class,
+        IssueDocument.class,
+        IssueItem.class,
+        ReturnDocument.class,
+        ReturnItem.class
+}, version = 12, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract OrganizationDao organizationDao();
@@ -20,6 +26,9 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract InventoryItemDao inventoryItemDao();
     public abstract PendingUploadDao pendingUploadDao();
     public abstract MolMovementDao molMovementDao();
+    public abstract AssetMovementDao assetMovementDao();
+    public abstract IssueDao issueDao();
+    public abstract ReturnDao returnDao();
 
     private static volatile AppDatabase INSTANCE;
 
