@@ -46,7 +46,7 @@ public class WriteOffDetailAdapter extends RecyclerView.Adapter<WriteOffDetailAd
             super(itemView);
             name = itemView.findViewById(R.id.item_name);
             code = itemView.findViewById(R.id.item_code);
-            menuButton = itemView.findViewById(R.id.item_menu_button);
+            menuButton = itemView.findViewById(R.id.options_menu);
 
             // Hide menu button for read-only detail view
             if (menuButton != null) {
