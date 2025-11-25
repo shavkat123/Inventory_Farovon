@@ -52,6 +52,7 @@ public class MolMovementAdapter extends RecyclerView.Adapter<MolMovementAdapter.
         TextView documentDate;
         TextView documentTime;
         TextView documentRoute;
+        TextView documentTitle;
 
         public DocumentViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -59,9 +60,13 @@ public class MolMovementAdapter extends RecyclerView.Adapter<MolMovementAdapter.
             documentDate = itemView.findViewById(R.id.document_date);
             documentTime = itemView.findViewById(R.id.document_time);
             documentRoute = itemView.findViewById(R.id.document_route);
+            documentTitle = itemView.findViewById(R.id.document_title);
         }
 
         public void bind(final MolMovementDocument document, final OnItemClickListener listener) {
+            if (documentTitle != null) {
+                documentTitle.setText("Перемещение");
+            }
             documentNumber.setText(String.format(Locale.getDefault(), "%05d", document.id));
             documentDate.setText(dateFormat.format(new Date(document.date)));
             documentTime.setText(timeFormat.format(new Date(document.date)));
