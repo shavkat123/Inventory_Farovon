@@ -30,116 +30,104 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:paddingVertical="8dp">
 
-            <!-- Status Badge -->
-            <TextView
-                android:id="@+id/tv_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="На согласовании"
-                android:textSize="14sp"
-                android:textColor="@color/colorPrimary"
-                android:background="@drawable/status_background_pending"
-                android:paddingHorizontal="12dp"
-                android:paddingVertical="6dp"
-                android:layout_gravity="end"
-                android:layout_marginBottom="8dp"/>
+            <!-- Status Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Статус" />
+                <TextView
+                    android:id="@+id/tv_status"
+                    style="@style/DetailValue"
+                    android:text="На согласовании"
+                    android:textColor="@color/colorPrimary" />
+            </LinearLayout>
+            <View style="@style/Divider" />
 
-            <!-- Date -->
-            <TextView
-                android:id="@+id/tv_date"
+            <!-- Date Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Дата создания" />
+                <TextView
+                    android:id="@+id/tv_date"
+                    style="@style/DetailValue"
+                    android:text="20.10.2023 14:30" />
+            </LinearLayout>
+            <View style="@style/Divider" />
+
+            <!-- Name Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Название" />
+                <TextView
+                    android:id="@+id/tv_name"
+                    style="@style/DetailValue"
+                    android:text="-" />
+            </LinearLayout>
+            <View style="@style/Divider" />
+
+            <!-- Reason Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Причина" />
+                <TextView
+                    android:id="@+id/tv_reason"
+                    style="@style/DetailValue"
+                    android:text="-" />
+            </LinearLayout>
+            <View style="@style/Divider" />
+
+            <!-- Department Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Подразделение" />
+                <TextView
+                    android:id="@+id/tv_department"
+                    style="@style/DetailValue"
+                    android:text="-" />
+            </LinearLayout>
+            <View style="@style/Divider" />
+
+            <!-- Condition Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Состояние" />
+                <TextView
+                    android:id="@+id/tv_condition"
+                    style="@style/DetailValue"
+                    android:text="-" />
+            </LinearLayout>
+            <View style="@style/Divider" />
+
+            <!-- Photo Section -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="20.10.2023 14:30"
-                android:textColor="@color/colorTextSecondary"
-                android:textSize="14sp"
-                android:gravity="end"
-                android:layout_marginBottom="16dp"/>
+                android:orientation="vertical"
+                android:padding="16dp">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:layout_width="match_parent"
+                    android:text="Фото"
+                    android:layout_marginBottom="8dp"/>
 
-            <!-- Fields -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Название объекта"
-                android:textStyle="bold"
-                android:textColor="@color/colorTextSecondary"/>
-            <TextView
-                android:id="@+id/tv_name"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textSize="16sp"
-                android:textColor="@color/colorTextPrimary"
-                android:layout_marginBottom="12dp"/>
+                <ImageView
+                    android:id="@+id/iv_photo"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"
+                    android:scaleType="centerCrop"
+                    android:visibility="gone"
+                    android:background="@drawable/bg_photo_placeholder"/>
+            </LinearLayout>
+            <View style="@style/Divider" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Причина списания"
-                android:textStyle="bold"
-                android:textColor="@color/colorTextSecondary"/>
-            <TextView
-                android:id="@+id/tv_reason"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textSize="16sp"
-                android:textColor="@color/colorTextPrimary"
-                android:layout_marginBottom="12dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Подразделение"
-                android:textStyle="bold"
-                android:textColor="@color/colorTextSecondary"/>
-            <TextView
-                android:id="@+id/tv_department"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textSize="16sp"
-                android:textColor="@color/colorTextPrimary"
-                android:layout_marginBottom="12dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Состояние"
-                android:textStyle="bold"
-                android:textColor="@color/colorTextSecondary"/>
-            <TextView
-                android:id="@+id/tv_condition"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:textSize="16sp"
-                android:textColor="@color/colorTextPrimary"
-                android:layout_marginBottom="12dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Фото"
-                android:textStyle="bold"
-                android:textColor="@color/colorTextSecondary"
-                android:layout_marginBottom="4dp"/>
-            <ImageView
-                android:id="@+id/iv_photo"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:scaleType="centerCrop"
-                android:visibility="gone"
-                android:layout_marginBottom="16dp"
-                android:background="@drawable/bg_photo_placeholder"/>
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/colorDivider"
-                android:layout_marginVertical="16dp"/>
-
+            <!-- List Section Header -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -147,13 +135,14 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="@color/colorTextDark"
-                android:layout_marginBottom="8dp"/>
+                android:padding="16dp"/>
 
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/items_recycler_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"/>
+                android:nestedScrollingEnabled="false"
+                android:paddingHorizontal="16dp"/>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
