@@ -91,7 +91,7 @@
                 <ImageView
                     android:layout_width="48dp"
                     android:layout_height="48dp"
-                    android:src="@drawable/ic_camera_alt"
+                    android:src="@drawable/ic_menu_camera"
                     app:tint="@color/colorIconGrey"/>
 
                 <TextView
