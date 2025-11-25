@@ -4,46 +4,46 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.inventory.farovon.db.AppDatabase;
-import com.inventory.farovon.db.MolMovementDao;
-import com.inventory.farovon.db.MolMovementDocument;
-import com.inventory.farovon.ui.molmovement.MolMovementAdapter;
+import com.inventory.farovon.db.ReturnDao;
+import com.inventory.farovon.db.ReturnDocument;
+import com.inventory.farovon.ui.returntowarehouse.ReturnAdapter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MolMovementListActivity extends AppCompatActivity {
+public class ReturnListActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private MolMovementAdapter adapter;
-    private MolMovementDao molMovementDao;
+    private ReturnAdapter adapter;
+    private ReturnDao returnDao;
     private ExecutorService databaseExecutor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_mol_movement_list);
+        setContentView(R.layout.activity_mol_movement_list); // Reusing layout
 
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("Возврат на склад");
         }
 
         recyclerView = findViewById(R.id.documents_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         AppDatabase db = AppDatabase.getDatabase(getApplicationContext());
-        molMovementDao = db.molMovementDao();
+        returnDao = db.returnDao();
         databaseExecutor = Executors.newSingleThreadExecutor();
 
         findViewById(R.id.fab_add_document).setOnClickListener(v -> {
-            Intent intent = new Intent(this, MolMovementActivity.class);
+            Intent intent = new Intent(this, ReturnToWarehouseActivity.class);
             startActivity(intent);
         });
     }
@@ -56,11 +56,11 @@ public class MolMovementListActivity extends AppCompatActivity {
 
     private void loadDocuments() {
         databaseExecutor.execute(() -> {
-            List<MolMovementDocument> documents = molMovementDao.getAllDocuments();
+            List<ReturnDocument> documents = returnDao.getAllDocuments();
             runOnUiThread(() -> {
-                adapter = new MolMovementAdapter(documents, documentId -> {
-                    Intent intent = new Intent(this, MolMovementDetailActivity.class);
-                    intent.putExtra(MolMovementDetailActivity.EXTRA_DOCUMENT_ID, documentId);
+                adapter = new ReturnAdapter(documents, documentId -> {
+                    Intent intent = new Intent(this, ReturnDetailActivity.class);
+                    intent.putExtra(ReturnDetailActivity.EXTRA_DOCUMENT_ID, documentId);
                     startActivity(intent);
                 });
                 recyclerView.setAdapter(adapter);
@@ -94,17 +94,17 @@ public class MolMovementListActivity extends AppCompatActivity {
 
     private void performSearch(String query) {
         databaseExecutor.execute(() -> {
-            List<MolMovementDocument> documents;
+            List<ReturnDocument> documents;
             if (query == null || query.trim().isEmpty()) {
-                documents = molMovementDao.getAllDocuments();
+                documents = returnDao.getAllDocuments();
             } else {
-                documents = molMovementDao.searchDocuments(query);
+                documents = returnDao.searchDocuments(query);
             }
 
             runOnUiThread(() -> {
-                adapter = new MolMovementAdapter(documents, documentId -> {
-                    Intent intent = new Intent(this, MolMovementDetailActivity.class);
-                    intent.putExtra(MolMovementDetailActivity.EXTRA_DOCUMENT_ID, documentId);
+                adapter = new ReturnAdapter(documents, documentId -> {
+                    Intent intent = new Intent(this, ReturnDetailActivity.class);
+                    intent.putExtra(ReturnDetailActivity.EXTRA_DOCUMENT_ID, documentId);
                     startActivity(intent);
                 });
                 recyclerView.setAdapter(adapter);

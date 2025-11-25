@@ -4,46 +4,46 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.inventory.farovon.db.AppDatabase;
-import com.inventory.farovon.db.MolMovementDao;
-import com.inventory.farovon.db.MolMovementDocument;
-import com.inventory.farovon.ui.molmovement.MolMovementAdapter;
+import com.inventory.farovon.db.AssetMovementDao;
+import com.inventory.farovon.db.AssetMovementDocument;
+import com.inventory.farovon.ui.assetmovement.AssetMovementAdapter;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MolMovementListActivity extends AppCompatActivity {
+public class AssetMovementListActivity extends AppCompatActivity {
 
     private RecyclerView recyclerView;
-    private MolMovementAdapter adapter;
-    private MolMovementDao molMovementDao;
+    private AssetMovementAdapter adapter;
+    private AssetMovementDao assetMovementDao;
     private ExecutorService databaseExecutor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_mol_movement_list);
+        setContentView(R.layout.activity_mol_movement_list); // Reusing layout
 
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle("Перемещение МП");
         }
 
         recyclerView = findViewById(R.id.documents_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         AppDatabase db = AppDatabase.getDatabase(getApplicationContext());
-        molMovementDao = db.molMovementDao();
+        assetMovementDao = db.assetMovementDao();
         databaseExecutor = Executors.newSingleThreadExecutor();
 
         findViewById(R.id.fab_add_document).setOnClickListener(v -> {
-            Intent intent = new Intent(this, MolMovementActivity.class);
+            Intent intent = new Intent(this, AssetMovementActivity.class);
             startActivity(intent);
         });
     }
@@ -56,11 +56,11 @@ public class MolMovementListActivity extends AppCompatActivity {
 
     private void loadDocuments() {
         databaseExecutor.execute(() -> {
-            List<MolMovementDocument> documents = molMovementDao.getAllDocuments();
+            List<AssetMovementDocument> documents = assetMovementDao.getAllDocuments();
             runOnUiThread(() -> {
-                adapter = new MolMovementAdapter(documents, documentId -> {
-                    Intent intent = new Intent(this, MolMovementDetailActivity.class);
-                    intent.putExtra(MolMovementDetailActivity.EXTRA_DOCUMENT_ID, documentId);
+                adapter = new AssetMovementAdapter(documents, documentId -> {
+                    Intent intent = new Intent(this, AssetMovementDetailActivity.class);
+                    intent.putExtra(AssetMovementDetailActivity.EXTRA_DOCUMENT_ID, documentId);
                     startActivity(intent);
                 });
                 recyclerView.setAdapter(adapter);
@@ -70,7 +70,7 @@ public class MolMovementListActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.mol_movement_list_menu, menu);
+        getMenuInflater().inflate(R.menu.mol_movement_list_menu, menu); // Reusing menu
 
         MenuItem searchItem = menu.findItem(R.id.action_search);
         SearchView searchView = (SearchView) searchItem.getActionView();
@@ -94,17 +94,17 @@ public class MolMovementListActivity extends AppCompatActivity {
 
     private void performSearch(String query) {
         databaseExecutor.execute(() -> {
-            List<MolMovementDocument> documents;
+            List<AssetMovementDocument> documents;
             if (query == null || query.trim().isEmpty()) {
-                documents = molMovementDao.getAllDocuments();
+                documents = assetMovementDao.getAllDocuments();
             } else {
-                documents = molMovementDao.searchDocuments(query);
+                documents = assetMovementDao.searchDocuments(query);
             }
 
             runOnUiThread(() -> {
-                adapter = new MolMovementAdapter(documents, documentId -> {
-                    Intent intent = new Intent(this, MolMovementDetailActivity.class);
-                    intent.putExtra(MolMovementDetailActivity.EXTRA_DOCUMENT_ID, documentId);
+                adapter = new AssetMovementAdapter(documents, documentId -> {
+                    Intent intent = new Intent(this, AssetMovementDetailActivity.class);
+                    intent.putExtra(AssetMovementDetailActivity.EXTRA_DOCUMENT_ID, documentId);
                     startActivity(intent);
                 });
                 recyclerView.setAdapter(adapter);

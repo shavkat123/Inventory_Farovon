@@ -1,4 +1,4 @@
-package com.inventory.farovon.ui.molmovement;
+package com.inventory.farovon.ui.issuefromwarehouse;
 
 import android.content.Intent;
 import android.media.AudioManager;
@@ -13,20 +13,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.inventory.farovon.CameraScanActivity;
 import com.inventory.farovon.R;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.InventoryItemDao;
 import com.inventory.farovon.db.InventoryItemEntity;
 import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
+import com.inventory.farovon.ui.molmovement.AssetDetailAdapter;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 
@@ -37,11 +35,9 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static android.app.Activity.RESULT_OK;
+public class IssueAssetsFragment extends Fragment implements ScanModeBottomSheetFragment.ScanModeListener {
 
-public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFragment.ScanModeListener {
-
-    private static final String TAG = "MolAssetsFragment";
+    private static final String TAG = "IssueAssetsFragment";
 
     private List<InventoryItemEntity> scannedItems = new ArrayList<>();
     private AssetDetailAdapter adapter;
@@ -157,7 +153,6 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
                 UHFTAGInfo tag = mReader.readTagFromBuffer();
                 if (tag != null) {
                     String epc = tag.getEPC();
-                    // Log.d(TAG, "RFID Tag Found: " + epc);
                     if (!ignoredEpcSet.contains(epc) && foundEpcSet.add(epc)) {
                         if (toneGenerator != null) {
                             toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP);

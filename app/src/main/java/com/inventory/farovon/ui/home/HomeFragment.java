@@ -14,13 +14,12 @@ import androidx.navigation.Navigation;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.inventory.farovon.AssetMovementActivity;
+import com.inventory.farovon.AssetMovementListActivity;
 import com.inventory.farovon.IdentificationActivity;
-import com.inventory.farovon.IssueDocumentListActivity;
-import com.inventory.farovon.MolMovementActivity;
+import com.inventory.farovon.IssueListActivity;
 import com.inventory.farovon.MolMovementListActivity;
+import com.inventory.farovon.ReturnListActivity;
 import com.inventory.farovon.R;
-import com.inventory.farovon.ui.returntowarehouse.ReturnToWarehouseActivity;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,19 +49,19 @@ public class HomeFragment extends Fragment {
                 NavController navController = Navigation.findNavController(requireActivity(), R.id.nav_host_fragment_content_main);
                 navController.navigate(R.id.nav_inventory);
             } else if (item.getTitle().equals("Перемещение МП")) {
-                Intent intent = new Intent(getActivity(), AssetMovementActivity.class);
+                Intent intent = new Intent(getActivity(), AssetMovementListActivity.class);
                 startActivity(intent);
             } else if (item.getTitle().equals("Перемещение между МОЛ")) {
                 Intent intent = new Intent(getActivity(), MolMovementListActivity.class);
                 startActivity(intent);
             } else if (item.getTitle().equals("Выдача со склада")) {
-                Intent intent = new Intent(getActivity(), IssueDocumentListActivity.class);
+                Intent intent = new Intent(getActivity(), IssueListActivity.class);
                 startActivity(intent);
             } else if (item.getTitle().equals("Быстрая идентификация")) {
                 Intent intent = new Intent(getActivity(), IdentificationActivity.class);
                 startActivity(intent);
             } else if (item.getTitle().equals("Возврат на склад")) {
-                Intent intent = new Intent(getActivity(), ReturnToWarehouseActivity.class);
+                Intent intent = new Intent(getActivity(), ReturnListActivity.class);
                 startActivity(intent);
             } else {
                 Toast.makeText(getContext(), item.getTitle() + " - в разработке", Toast.LENGTH_SHORT).show();

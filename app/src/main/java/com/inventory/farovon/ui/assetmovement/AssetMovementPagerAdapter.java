@@ -7,6 +7,9 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 
 public class AssetMovementPagerAdapter extends FragmentStateAdapter {
 
+    private AssetMovementParametersFragment parametersFragment;
+    private AssetMovementAssetsFragment assetsFragment;
+
     public AssetMovementPagerAdapter(@NonNull FragmentActivity fragmentActivity) {
         super(fragmentActivity);
     }
@@ -15,13 +18,27 @@ public class AssetMovementPagerAdapter extends FragmentStateAdapter {
     @Override
     public Fragment createFragment(int position) {
         if (position == 0) {
-            return new ParametersFragment();
+            if (parametersFragment == null) {
+                parametersFragment = new AssetMovementParametersFragment();
+            }
+            return parametersFragment;
         }
-        return new AssetsFragment();
+        if (assetsFragment == null) {
+            assetsFragment = new AssetMovementAssetsFragment();
+        }
+        return assetsFragment;
     }
 
     @Override
     public int getItemCount() {
-        return 2; // We have two tabs
+        return 2;
+    }
+
+    public AssetMovementParametersFragment getParametersFragment() {
+        return parametersFragment;
+    }
+
+    public AssetMovementAssetsFragment getAssetsFragment() {
+        return assetsFragment;
     }
 }

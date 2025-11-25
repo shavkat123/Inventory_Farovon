@@ -1,4 +1,4 @@
-package com.inventory.farovon.ui.molmovement;
+package com.inventory.farovon.ui.assetmovement;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -15,17 +15,17 @@ import com.inventory.farovon.R;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.InventoryItemDao;
 import com.inventory.farovon.db.InventoryItemEntity;
-import com.inventory.farovon.db.MolMovementDao;
-import com.inventory.farovon.db.MolMovementItem;
+import com.inventory.farovon.db.AssetMovementDao;
+import com.inventory.farovon.db.AssetMovementItem;
+import com.inventory.farovon.ui.molmovement.AssetDetailAdapter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
-import java.util.stream.Collectors;
 
-public class MolAssetsDetailFragment extends Fragment {
+public class AssetMovementAssetsDetailFragment extends Fragment {
 
     private static final String ARG_DOCUMENT_ID = "document_id";
 
@@ -34,16 +34,11 @@ public class MolAssetsDetailFragment extends Fragment {
     private RecyclerView recyclerView;
     private ExecutorService databaseExecutor;
     private InventoryItemDao inventoryItemDao;
-    private MolMovementDao molMovementDao;
+    private AssetMovementDao assetMovementDao;
     private Handler handler = new Handler(Looper.getMainLooper());
-    private OnItemCountChangeListener countChangeListener;
 
-    public interface OnItemCountChangeListener {
-        void onItemCountChanged(int count);
-    }
-
-    public static MolAssetsDetailFragment newInstance(long documentId) {
-        MolAssetsDetailFragment fragment = new MolAssetsDetailFragment();
+    public static AssetMovementAssetsDetailFragment newInstance(long documentId) {
+        AssetMovementAssetsDetailFragment fragment = new AssetMovementAssetsDetailFragment();
         Bundle args = new Bundle();
         args.putLong(ARG_DOCUMENT_ID, documentId);
         fragment.setArguments(args);
@@ -53,12 +48,9 @@ public class MolAssetsDetailFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getActivity() instanceof OnItemCountChangeListener) {
-            countChangeListener = (OnItemCountChangeListener) getActivity();
-        }
         AppDatabase db = AppDatabase.getDatabase(requireContext().getApplicationContext());
         inventoryItemDao = db.inventoryItemDao();
-        molMovementDao = db.molMovementDao();
+        assetMovementDao = db.assetMovementDao();
         databaseExecutor = Executors.newSingleThreadExecutor();
     }
 
@@ -68,7 +60,7 @@ public class MolAssetsDetailFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_assets_detail, container, false);
         recyclerView = view.findViewById(R.id.assets_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new AssetDetailAdapter(assetList);
+        adapter = new AssetDetailAdapter(assetList); // View-only adapter (no delete listener)
         recyclerView.setAdapter(adapter);
 
         if (getArguments() != null) {
@@ -81,7 +73,7 @@ public class MolAssetsDetailFragment extends Fragment {
 
     private void loadAssetsForDocument(long documentId) {
         databaseExecutor.execute(() -> {
-            List<MolMovementItem> items = molMovementDao.getItemsForDocument(documentId);
+            List<AssetMovementItem> items = assetMovementDao.getItemsForDocument(documentId);
             if (items.isEmpty()) {
                 return;
             }
@@ -103,9 +95,6 @@ public class MolAssetsDetailFragment extends Fragment {
                 assetList.clear();
                 assetList.addAll(loadedAssets);
                 adapter.notifyDataSetChanged();
-                if (countChangeListener != null) {
-                    countChangeListener.onItemCountChanged(assetList.size());
-                }
             });
         });
     }

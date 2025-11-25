@@ -7,8 +7,10 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.inventory.farovon.db.AppDatabase;
+import android.view.KeyEvent;
 import com.inventory.farovon.db.MolMovementDao;
 import com.inventory.farovon.db.MolMovementDocument;
+import com.inventory.farovon.ui.molmovement.MolAssetsFragment;
 import com.inventory.farovon.ui.molmovement.MolMovementPagerAdapter;
 
 import java.util.Date;
@@ -16,11 +18,13 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class MolMovementActivity extends AppCompatActivity {
+public class MolMovementActivity extends AppCompatActivity implements MolAssetsFragment.OnItemCountChangeListener {
 
     private MolMovementPagerAdapter adapter;
     private MolMovementDao molMovementDao;
     private ExecutorService databaseExecutor;
+    private ViewPager2 viewPager;
+    private TabLayout tabLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +37,8 @@ public class MolMovementActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        ViewPager2 viewPager = findViewById(R.id.view_pager);
-        TabLayout tabLayout = findViewById(R.id.tab_layout);
+        viewPager = findViewById(R.id.view_pager);
+        tabLayout = findViewById(R.id.tab_layout);
 
         viewPager.setOffscreenPageLimit(2); // Keep both fragments in memory
         adapter = new MolMovementPagerAdapter(this);
@@ -57,17 +61,21 @@ public class MolMovementActivity extends AppCompatActivity {
 
     public void saveDocument() {
         String fromMol = adapter.getParametersFragment().getFromMol();
+        String fromDepartment = adapter.getParametersFragment().getFromDepartment();
+        String fromOrganization = adapter.getParametersFragment().getFromOrganization();
         String toMol = adapter.getParametersFragment().getToMol();
         List<String> scannedRfids = adapter.getAssetsFragment().getScannedBarcodes();
 
         if (fromMol.isEmpty() || toMol.isEmpty()) {
-            Toast.makeText(this, "Пожалуйста, заполните поля 'Откуда' и 'Куда'", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Пожалуйста, заполните все поля", Toast.LENGTH_SHORT).show();
             return;
         }
 
         MolMovementDocument document = new MolMovementDocument();
         document.date = new Date().getTime();
         document.fromMol = fromMol;
+        document.fromDepartment = fromDepartment;
+        document.fromOrganization = fromOrganization;
         document.toMol = toMol;
 
         databaseExecutor.execute(() -> {
@@ -83,5 +91,37 @@ public class MolMovementActivity extends AppCompatActivity {
     public boolean onSupportNavigateUp() {
         onBackPressed();
         return true;
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (viewPager.getCurrentItem() == 1) { // Assets Fragment
+            if (adapter.getAssetsFragment() != null) {
+                boolean handled = adapter.getAssetsFragment().onKeyDown(keyCode, event);
+                if (handled) return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (viewPager.getCurrentItem() == 1) { // Assets Fragment
+            if (adapter.getAssetsFragment() != null) {
+                boolean handled = adapter.getAssetsFragment().onKeyUp(keyCode, event);
+                if (handled) return true;
+            }
+        }
+        return super.onKeyUp(keyCode, event);
+    }
+
+    @Override
+    public void onItemCountChanged(int count) {
+        if (tabLayout != null && tabLayout.getTabCount() > 1) {
+            TabLayout.Tab tab = tabLayout.getTabAt(1);
+            if (tab != null) {
+                tab.setText("ОУ (" + count + ")");
+            }
+        }
     }
 }

@@ -1,166 +1,239 @@
 package com.inventory.farovon.ui.returntowarehouse;
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.ToneGenerator;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
-import com.google.android.material.button.MaterialButton;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.constraintlayout.widget.Group;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.inventory.farovon.Nomenclature;
 import com.inventory.farovon.R;
+import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.InventoryItemDao;
+import com.inventory.farovon.db.InventoryItemEntity;
+import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
+import com.inventory.farovon.ui.molmovement.AssetDetailAdapter;
 import com.rscja.deviceapi.RFIDWithUHFUART;
+import com.rscja.deviceapi.entity.UHFTAGInfo;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class ReturnAssetsFragment extends Fragment {
+public class ReturnAssetsFragment extends Fragment implements ScanModeBottomSheetFragment.ScanModeListener {
+
+    private static final String TAG = "ReturnAssetsFragment";
+
+    private List<InventoryItemEntity> scannedItems = new ArrayList<>();
+    private AssetDetailAdapter adapter;
+    private RecyclerView recyclerView;
+    private View emptyStateView;
 
     private RFIDWithUHFUART mReader;
-    private boolean isScanning = false;
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private MaterialButton btnScan;
+    private Handler handler = new Handler(Looper.getMainLooper());
+    private ExecutorService rfidExecutor;
+    private ExecutorService databaseExecutor;
+    private InventoryItemDao inventoryItemDao;
+    private Set<String> foundEpcSet = new HashSet<>();
+    private Set<String> ignoredEpcSet = new HashSet<>();
+    private boolean isRfidScanning = false;
     private ToneGenerator toneGenerator;
-    private RecyclerView recyclerView;
-    private ReturnAssetsAdapter adapter;
-    private Group emptyStateGroup;
-    private final Set<String> scannedEpcs = new HashSet<>();
+    private OnItemCountChangeListener countChangeListener;
+
+    public interface OnItemCountChangeListener {
+        void onItemCountChanged(int count);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (getActivity() instanceof OnItemCountChangeListener) {
+            countChangeListener = (OnItemCountChangeListener) getActivity();
+        }
+
+        AppDatabase db = AppDatabase.getDatabase(requireContext().getApplicationContext());
+        inventoryItemDao = db.inventoryItemDao();
+        databaseExecutor = Executors.newSingleThreadExecutor();
+        toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_return_assets, container, false);
+        View view = inflater.inflate(R.layout.fragment_mol_assets, container, false);
 
-        btnScan = view.findViewById(R.id.button_rfid_scan);
         recyclerView = view.findViewById(R.id.assets_recycler_view);
-        emptyStateGroup = view.findViewById(R.id.empty_state_group);
+        emptyStateView = view.findViewById(R.id.empty_state_group);
 
-        setupRecyclerView();
-        updateUiVisibility();
-
-        try {
-            mReader = RFIDWithUHFUART.getInstance();
-        } catch (Exception e) {
-            Toast.makeText(getContext(), "SDK init error: " + e.getMessage(), Toast.LENGTH_LONG).show();
-        }
-
-        btnScan.setOnClickListener(v -> {
-            if (!isScanning) {
-                startScanning();
-            } else {
-                stopScanning();
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new AssetDetailAdapter(scannedItems, position -> {
+            if (position >= 0 && position < scannedItems.size()) {
+                InventoryItemEntity removedItem = scannedItems.remove(position);
+                if (removedItem.rf != null) {
+                    ignoredEpcSet.add(removedItem.rf);
+                    foundEpcSet.remove(removedItem.rf);
+                }
+                adapter.notifyItemRemoved(position);
+                updateUI();
             }
         });
+        recyclerView.setAdapter(adapter);
 
-        view.findViewById(R.id.button_select).setOnClickListener(v ->
-                Toast.makeText(getContext(), "Select clicked", Toast.LENGTH_SHORT).show());
+        view.findViewById(R.id.button_scan).setOnClickListener(v -> {
+            ScanModeBottomSheetFragment bottomSheet = new ScanModeBottomSheetFragment();
+            bottomSheet.setScanModeListener(this);
+            bottomSheet.show(getParentFragmentManager(), bottomSheet.getTag());
+        });
 
-        toneGenerator = new ToneGenerator(AudioManager.STREAM_MUSIC, 100);
-
+        updateUI();
         return view;
     }
 
-    private void setupRecyclerView() {
-        adapter = new ReturnAssetsAdapter();
-        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(adapter);
+    @Override
+    public void onResume() {
+        super.onResume();
+        initRfidReader();
     }
-
-    private void updateUiVisibility() {
-        if (adapter.getItemCount() > 0) {
-            recyclerView.setVisibility(View.VISIBLE);
-            emptyStateGroup.setVisibility(View.GONE);
-        } else {
-            recyclerView.setVisibility(View.GONE);
-            emptyStateGroup.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void startScanning() {
-        scannedEpcs.clear();
-        if (mReader == null) {
-            Toast.makeText(getContext(), "Ридер не инициализирован", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        if (mReader.init(getContext())) {
-            mReader.setPower(30);
-            boolean ok = mReader.startInventoryTag();
-            if (!ok) {
-                Toast.makeText(getContext(), "Не удалось запустить инвентарь", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            isScanning = true;
-            // btnScan.setText("Стоп"); // Иконка изменится сама
-            handler.post(pollRunnable);
-        } else {
-            Toast.makeText(getContext(), "Ошибка инициализации ридера", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void stopScanning() {
-        if (isScanning && mReader != null) {
-            try { mReader.stopInventory(); } catch (Exception ignored) {}
-        }
-        isScanning = false;
-        // btnScan.setText("Сканировать"); // Иконка изменится сама
-        handler.removeCallbacks(pollRunnable);
-        if (mReader != null) mReader.free();
-    }
-
-    private final Runnable pollRunnable = new Runnable() {
-        @Override public void run() {
-            if (!isScanning || mReader == null) return;
-
-            com.rscja.deviceapi.entity.UHFTAGInfo info;
-            int burst = 0;
-            while ((info = mReader.readTagFromBuffer()) != null) {
-                String epc = info.getEPC();
-                if (epc != null && !scannedEpcs.contains(epc)) {
-                    scannedEpcs.add(epc);
-                    // TODO: Fetch Nomenclature details from DB or server by EPC
-                    // For now, creating a dummy item
-                    Nomenclature nomenclature = new Nomenclature("Unknown", epc, epc, "", "");
-                    getActivity().runOnUiThread(() -> {
-                        adapter.addItem(nomenclature);
-                        updateUiVisibility();
-                        ((ReturnToWarehouseActivity) getActivity()).updateTabTitle(adapter.getItemCount());
-                        toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150);
-                    });
-                }
-                if (++burst > 200) break;
-            }
-            handler.postDelayed(this, 60);
-        }
-    };
 
     @Override
     public void onPause() {
         super.onPause();
-        stopScanning();
+        stopRfidScanning();
+        if (mReader != null) {
+            mReader.free();
+        }
     }
 
     @Override
     public void onDestroy() {
-        stopScanning();
+        super.onDestroy();
         if (toneGenerator != null) {
             toneGenerator.release();
             toneGenerator = null;
         }
-        super.onDestroy();
+    }
+
+    private void initRfidReader() {
+        try {
+            mReader = RFIDWithUHFUART.getInstance();
+            mReader.init(requireContext().getApplicationContext());
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to initialize RFID Reader", e);
+        }
+    }
+
+    private void startRfidScanning() {
+        if (mReader == null) {
+            Log.e(TAG, "Reader not initialized");
+            return;
+        }
+        isRfidScanning = true;
+        Log.i(TAG, "Starting RFID scanning");
+
+        mReader.startInventoryTag();
+        rfidExecutor = Executors.newSingleThreadExecutor();
+        rfidExecutor.execute(() -> {
+            while (isRfidScanning) {
+                UHFTAGInfo tag = mReader.readTagFromBuffer();
+                if (tag != null) {
+                    String epc = tag.getEPC();
+                    if (!ignoredEpcSet.contains(epc) && foundEpcSet.add(epc)) {
+                        if (toneGenerator != null) {
+                            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP);
+                        }
+                        searchAndAddItem(epc);
+                    }
+                }
+            }
+        });
+    }
+
+    private void searchAndAddItem(String rfid) {
+        databaseExecutor.execute(() -> {
+            List<InventoryItemEntity> foundItems = inventoryItemDao.findByRfid(rfid);
+            handler.post(() -> {
+                if (foundItems != null && !foundItems.isEmpty()) {
+                    scannedItems.addAll(foundItems);
+                } else {
+                    InventoryItemEntity unknownItem = new InventoryItemEntity();
+                    unknownItem.rf = rfid;
+                    unknownItem.name = "Неизвестный объект";
+                    scannedItems.add(unknownItem);
+                }
+                adapter.notifyDataSetChanged();
+                updateUI();
+            });
+        });
+    }
+
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_F9 || keyCode == KeyEvent.KEYCODE_F10 || keyCode == 280 || keyCode == 293) {
+            if (!isRfidScanning) {
+                startRfidScanning();
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public boolean onKeyUp(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_F9 || keyCode == KeyEvent.KEYCODE_F10 || keyCode == 280 || keyCode == 293) {
+            stopRfidScanning();
+            return true;
+        }
+        return false;
+    }
+
+    private void stopRfidScanning() {
+        if (isRfidScanning) {
+            isRfidScanning = false;
+            if (mReader != null) mReader.stopInventory();
+            if (rfidExecutor != null && !rfidExecutor.isShutdown()) rfidExecutor.shutdown();
+        }
+    }
+
+    private void updateUI() {
+        boolean isEmpty = scannedItems.isEmpty();
+        recyclerView.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
+        emptyStateView.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
+
+        if (countChangeListener != null) {
+            countChangeListener.onItemCountChanged(scannedItems.size());
+        }
+    }
+
+    public List<String> getScannedBarcodes() {
+        List<String> rfids = new ArrayList<>();
+        for (InventoryItemEntity item : scannedItems) {
+            if (item.rf != null && !item.rf.isEmpty()) {
+                rfids.add(item.rf);
+            }
+        }
+        return rfids;
+    }
+
+    @Override
+    public void onScanModeSelected(String mode) {
+        if ("RFID".equals(mode)) {
+            Toast.makeText(getContext(), "Режим RFID. Нажмите курок.", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(getContext(), mode + " - в разработке", Toast.LENGTH_SHORT).show();
+        }
     }
 }

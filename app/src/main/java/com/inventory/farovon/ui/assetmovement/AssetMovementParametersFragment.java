@@ -1,4 +1,4 @@
-package com.inventory.farovon.ui.returntowarehouse;
+package com.inventory.farovon.ui.assetmovement;
 
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,32 +13,32 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.inventory.farovon.R;
 import com.inventory.farovon.db.AppDatabase;
-import com.inventory.farovon.db.ReturnDao;
-import com.inventory.farovon.db.ReturnDocument;
-import com.inventory.farovon.ReturnToWarehouseActivity;
+import com.inventory.farovon.db.AssetMovementDao;
+import com.inventory.farovon.db.AssetMovementDocument;
+import com.inventory.farovon.AssetMovementActivity;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class ReturnParametersFragment extends Fragment {
+public class AssetMovementParametersFragment extends Fragment {
 
     private TextInputEditText fromIssuer, fromIssuerDepartment, fromOrganization, fromLocation;
     private TextInputEditText toRecipient, toRecipientDepartment, toOrganization, toLocation;
     private View createButton;
     private ExecutorService databaseExecutor;
-    private ReturnDao returnDao;
+    private AssetMovementDao assetMovementDao;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         databaseExecutor = Executors.newSingleThreadExecutor();
-        returnDao = AppDatabase.getDatabase(requireContext().getApplicationContext()).returnDao();
+        assetMovementDao = AppDatabase.getDatabase(requireContext().getApplicationContext()).assetMovementDao();
     }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_asset_movement_parameters, container, false); // Using same layout
+        View view = inflater.inflate(R.layout.fragment_asset_movement_parameters, container, false);
 
         fromIssuer = view.findViewById(R.id.from_issuer);
         fromIssuerDepartment = view.findViewById(R.id.from_issuer_department);
@@ -52,8 +52,8 @@ public class ReturnParametersFragment extends Fragment {
         createButton = view.findViewById(R.id.button_create_document);
 
         createButton.setOnClickListener(v -> {
-            if (getActivity() instanceof ReturnToWarehouseActivity) {
-                ((ReturnToWarehouseActivity) requireActivity()).saveDocument();
+            if (getActivity() instanceof AssetMovementActivity) {
+                ((AssetMovementActivity) requireActivity()).saveDocument();
             }
         });
 
@@ -78,7 +78,7 @@ public class ReturnParametersFragment extends Fragment {
 
     private void loadDocument(long documentId) {
         databaseExecutor.execute(() -> {
-            ReturnDocument document = returnDao.getDocumentById(documentId);
+            AssetMovementDocument document = assetMovementDao.getDocumentById(documentId);
             new Handler(Looper.getMainLooper()).post(() -> {
                 if (document != null) {
                     displayDocumentData(document);
@@ -113,10 +113,11 @@ public class ReturnParametersFragment extends Fragment {
         toRecipientDepartment.setEnabled(false);
         toOrganization.setEnabled(false);
         toLocation.setEnabled(false);
+        // Hide button if I add it
         if (createButton != null) createButton.setVisibility(View.GONE);
     }
 
-    public void displayDocumentData(ReturnDocument document) {
+    public void displayDocumentData(AssetMovementDocument document) {
         if (document != null) {
             fromIssuer.setText(document.fromIssuer);
             fromIssuerDepartment.setText(document.fromIssuerDepartment);

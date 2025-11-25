@@ -9,26 +9,36 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Dao
-public interface MolMovementDao {
+public abstract class MolMovementDao {
 
     @Insert
-    long insertDocument(MolMovementDocument document);
+    public abstract long insertDocument(MolMovementDocument document);
 
     @Insert
-    void insertItems(List<MolMovementItem> items);
+    public abstract void insertItems(List<MolMovementItem> items);
 
     @Transaction
     @Query("SELECT * FROM mol_movement_documents ORDER BY date DESC")
-    List<MolMovementDocument> getAllDocuments();
-
-    @Query("SELECT * FROM mol_movement_items WHERE documentId = :documentId")
-    List<MolMovementItem> getItemsForDocument(long documentId);
-
-    @Query("SELECT * FROM mol_movement_documents WHERE id = :documentId")
-    MolMovementDocument getDocumentById(long documentId);
+    public abstract List<MolMovementDocument> getAllDocuments();
 
     @Transaction
-    default void insertFullMovement(MolMovementDocument document, List<String> rfids) {
+    @Query("SELECT * FROM mol_movement_documents WHERE " +
+            "fromMol LIKE '%' || :query || '%' OR " +
+            "toMol LIKE '%' || :query || '%' OR " +
+            "fromDepartment LIKE '%' || :query || '%' OR " +
+            "fromOrganization LIKE '%' || :query || '%' OR " +
+            "id LIKE '%' || :query || '%' " +
+            "ORDER BY date DESC")
+    public abstract List<MolMovementDocument> searchDocuments(String query);
+
+    @Query("SELECT * FROM mol_movement_items WHERE documentId = :documentId")
+    public abstract List<MolMovementItem> getItemsForDocument(long documentId);
+
+    @Query("SELECT * FROM mol_movement_documents WHERE id = :documentId")
+    public abstract MolMovementDocument getDocumentById(long documentId);
+
+    @Transaction
+    public void insertFullMovement(MolMovementDocument document, List<String> rfids) {
         long documentId = insertDocument(document);
         if (rfids != null && !rfids.isEmpty()) {
             List<MolMovementItem> items = new ArrayList<>();

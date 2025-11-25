@@ -75,6 +75,16 @@
             app:layout_constraintTop_toTopOf="@id/document_number_label"
             tools:text="00100" />
 
+        <TextView
+            android:id="@+id/document_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:textColor="@color/colorTextDark"
+            app:layout_constraintStart_toEndOf="@id/document_number"
+            app:layout_constraintTop_toTopOf="@id/document_number_label"
+            tools:text="12.10.2023" />
+
         <ImageView
             android:id="@+id/time_icon"
             android:layout_width="16dp"
@@ -82,7 +92,7 @@
             android:layout_marginStart="16dp"
             android:src="@android:drawable/ic_lock_idle_alarm"
             app:tint="@color/colorIconGrey"
-            app:layout_constraintStart_toEndOf="@id/document_number"
+            app:layout_constraintStart_toEndOf="@id/document_date"
             app:layout_constraintTop_toTopOf="@id/document_number_label"
             app:layout_constraintBottom_toBottomOf="@id/document_number_label"
             />

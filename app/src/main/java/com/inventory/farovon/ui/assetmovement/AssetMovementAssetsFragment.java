@@ -1,4 +1,4 @@
-package com.inventory.farovon.ui.molmovement;
+package com.inventory.farovon.ui.assetmovement;
 
 import android.content.Intent;
 import android.media.AudioManager;
@@ -13,20 +13,19 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.inventory.farovon.CameraScanActivity;
 import com.inventory.farovon.R;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.InventoryItemDao;
 import com.inventory.farovon.db.InventoryItemEntity;
 import com.inventory.farovon.ui.ScanModeBottomSheetFragment;
+import com.inventory.farovon.ui.molmovement.AssetDetailAdapter;
+import com.inventory.farovon.ui.molmovement.MolAssetsFragment;
 import com.rscja.deviceapi.RFIDWithUHFUART;
 import com.rscja.deviceapi.entity.UHFTAGInfo;
 
@@ -37,11 +36,9 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static android.app.Activity.RESULT_OK;
+public class AssetMovementAssetsFragment extends Fragment implements ScanModeBottomSheetFragment.ScanModeListener {
 
-public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFragment.ScanModeListener {
-
-    private static final String TAG = "MolAssetsFragment";
+    private static final String TAG = "AssetMovementAssetsFrag";
 
     private List<InventoryItemEntity> scannedItems = new ArrayList<>();
     private AssetDetailAdapter adapter;
@@ -80,7 +77,7 @@ public class MolAssetsFragment extends Fragment implements ScanModeBottomSheetFr
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_mol_assets, container, false);
+        View view = inflater.inflate(R.layout.fragment_mol_assets, container, false); // Reusing layout
 
         recyclerView = view.findViewById(R.id.assets_recycler_view);
         emptyStateView = view.findViewById(R.id.empty_state_group);
