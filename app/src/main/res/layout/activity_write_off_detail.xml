@@ -52,7 +52,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="20.10.2023 14:30"
-                android:textColor="@color/colorTextGrey"
+                android:textColor="@color/colorTextSecondary"
                 android:textSize="14sp"
                 android:gravity="end"
                 android:layout_marginBottom="16dp"/>
@@ -63,13 +63,14 @@
                 android:layout_height="wrap_content"
                 android:text="Название объекта"
                 android:textStyle="bold"
-                android:textColor="@color/colorTextDark"/>
+                android:textColor="@color/colorTextSecondary"/>
             <TextView
                 android:id="@+id/tv_name"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="-"
                 android:textSize="16sp"
+                android:textColor="@color/colorTextPrimary"
                 android:layout_marginBottom="12dp"/>
 
             <TextView
@@ -77,13 +78,14 @@
                 android:layout_height="wrap_content"
                 android:text="Причина списания"
                 android:textStyle="bold"
-                android:textColor="@color/colorTextDark"/>
+                android:textColor="@color/colorTextSecondary"/>
             <TextView
                 android:id="@+id/tv_reason"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="-"
                 android:textSize="16sp"
+                android:textColor="@color/colorTextPrimary"
                 android:layout_marginBottom="12dp"/>
 
             <TextView
@@ -91,13 +93,14 @@
                 android:layout_height="wrap_content"
                 android:text="Подразделение"
                 android:textStyle="bold"
-                android:textColor="@color/colorTextDark"/>
+                android:textColor="@color/colorTextSecondary"/>
             <TextView
                 android:id="@+id/tv_department"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="-"
                 android:textSize="16sp"
+                android:textColor="@color/colorTextPrimary"
                 android:layout_marginBottom="12dp"/>
 
             <TextView
@@ -105,13 +108,14 @@
                 android:layout_height="wrap_content"
                 android:text="Состояние"
                 android:textStyle="bold"
-                android:textColor="@color/colorTextDark"/>
+                android:textColor="@color/colorTextSecondary"/>
             <TextView
                 android:id="@+id/tv_condition"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="-"
                 android:textSize="16sp"
+                android:textColor="@color/colorTextPrimary"
                 android:layout_marginBottom="12dp"/>
 
             <TextView
@@ -119,7 +123,7 @@
                 android:layout_height="wrap_content"
                 android:text="Фото"
                 android:textStyle="bold"
-                android:textColor="@color/colorTextDark"
+                android:textColor="@color/colorTextSecondary"
                 android:layout_marginBottom="4dp"/>
             <ImageView
                 android:id="@+id/iv_photo"
