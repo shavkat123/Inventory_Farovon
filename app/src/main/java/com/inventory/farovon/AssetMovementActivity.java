@@ -10,18 +10,32 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.AssetMovementDao;
 import com.inventory.farovon.db.AssetMovementDocument;
+import com.inventory.farovon.db.InventoryItemDao;
+import com.inventory.farovon.db.InventoryItemEntity;
 import com.inventory.farovon.ui.assetmovement.AssetMovementAssetsFragment;
 import com.inventory.farovon.ui.assetmovement.AssetMovementPagerAdapter;
+import com.inventory.farovon.ui.login.SessionManager;
 
+import org.json.JSONObject;
+
+import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import okhttp3.Credentials;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class AssetMovementActivity extends AppCompatActivity implements AssetMovementAssetsFragment.OnItemCountChangeListener {
 
     private AssetMovementPagerAdapter adapter;
     private AssetMovementDao assetMovementDao;
+    private InventoryItemDao inventoryItemDao;
     private ExecutorService databaseExecutor;
     private ViewPager2 viewPager;
     private TabLayout tabLayout;
@@ -57,6 +71,7 @@ public class AssetMovementActivity extends AppCompatActivity implements AssetMov
 
         AppDatabase db = AppDatabase.getDatabase(getApplicationContext());
         assetMovementDao = db.assetMovementDao();
+        inventoryItemDao = db.inventoryItemDao();
         databaseExecutor = Executors.newSingleThreadExecutor();
     }
 
@@ -91,11 +106,63 @@ public class AssetMovementActivity extends AppCompatActivity implements AssetMov
 
         databaseExecutor.execute(() -> {
             assetMovementDao.insertFullMovement(document, scannedRfids);
+            sendAssetMovement(document, scannedRfids);
             runOnUiThread(() -> {
                 Toast.makeText(this, "Документ сохранен", Toast.LENGTH_SHORT).show();
                 finish();
             });
         });
+    }
+
+    private void sendAssetMovement(AssetMovementDocument document, List<String> rfids) {
+        SessionManager sessionManager = new SessionManager(getApplicationContext());
+        String ip = sessionManager.getIpAddress();
+        String username = sessionManager.getUsername();
+        String password = sessionManager.getPassword();
+        String url = "http://" + ip + "/my1c/hs/transfer/os";
+
+        OkHttpClient client = new OkHttpClient();
+
+        for (String rfid : rfids) {
+            try {
+                String fixedAssetCode = rfid;
+                List<InventoryItemEntity> items = inventoryItemDao.findByRfid(rfid);
+                if (items != null && !items.isEmpty()) {
+                    String code = items.get(0).code;
+                    if (code != null && !code.isEmpty()) {
+                        fixedAssetCode = code;
+                    }
+                }
+
+                JSONObject json = new JSONObject();
+                json.put("Organization", document.fromOrganization != null ? document.fromOrganization : "");
+                json.put("Division", document.fromIssuerDepartment != null ? document.fromIssuerDepartment : "");
+                json.put("DivisionOrganization", document.toRecipientDepartment != null ? document.toRecipientDepartment : "");
+                json.put("MOL", document.fromIssuer != null ? document.fromIssuer : "");
+                json.put("MOLOrganization", document.toRecipient != null ? document.toRecipient : "");
+                json.put("FixedAsset", fixedAssetCode);
+                json.put("token", UUID.randomUUID().toString());
+
+                RequestBody body = RequestBody.create(json.toString(), okhttp3.MediaType.parse("application/json; charset=utf-8"));
+                Request request = new Request.Builder()
+                        .url(url)
+                        .post(body)
+                        .header("Authorization", Credentials.basic(username, password))
+                        .build();
+
+                Response response = client.newCall(request).execute();
+                if (!response.isSuccessful()) {
+                    // Log error or handle failure
+                    System.err.println("Failed to send asset movement for: " + fixedAssetCode + " Code: " + response.code());
+                } else {
+                    System.out.println("Successfully sent asset movement for: " + fixedAssetCode);
+                }
+                response.close();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
