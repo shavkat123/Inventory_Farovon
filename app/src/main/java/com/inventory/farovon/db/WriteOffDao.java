@@ -37,8 +37,11 @@ public abstract class WriteOffDao {
     @Query("SELECT * FROM write_off_documents WHERE id = :documentId")
     public abstract WriteOffDocument getDocumentById(long documentId);
 
+    @Query("UPDATE write_off_documents SET status = :status WHERE id = :id")
+    public abstract void updateStatus(long id, String status);
+
     @Transaction
-    public void insertFullDocument(WriteOffDocument document, List<String> rfids) {
+    public long insertFullDocument(WriteOffDocument document, List<String> rfids) {
         long documentId = insertDocument(document);
         if (rfids != null && !rfids.isEmpty()) {
             List<WriteOffItem> items = new ArrayList<>();
@@ -50,5 +53,6 @@ public abstract class WriteOffDao {
             }
             insertItems(items);
         }
+        return documentId;
     }
 }

@@ -95,7 +95,8 @@ public class WriteOffActivity extends AppCompatActivity implements WriteOffAsset
         document.status = "На согласовании";
 
         databaseExecutor.execute(() -> {
-            writeOffDao.insertFullDocument(document, scannedRfids);
+            long id = writeOffDao.insertFullDocument(document, scannedRfids);
+            document.id = id;
             sendWriteOffTo1C(document, scannedRfids);
             runOnUiThread(() -> {
                 Toast.makeText(this, "Документ списания сохранен", Toast.LENGTH_SHORT).show();
@@ -141,7 +142,14 @@ public class WriteOffActivity extends AppCompatActivity implements WriteOffAsset
                 if (!response.isSuccessful()) {
                     System.err.println("Failed to send write-off for: " + fixedAssetCode + " Code: " + response.code());
                 } else {
-                    System.out.println("Successfully sent write-off for: " + fixedAssetCode);
+                    String responseBody = response.body() != null ? response.body().string().trim() : "";
+                    System.out.println("Successfully sent write-off for: " + fixedAssetCode + " Response: " + responseBody);
+
+                    if ("1".equals(responseBody)) {
+                        writeOffDao.updateStatus(document.id, "Проведен");
+                    } else if ("-1".equals(responseBody)) {
+                        writeOffDao.updateStatus(document.id, "На согласовании");
+                    }
                 }
                 response.close();
 
