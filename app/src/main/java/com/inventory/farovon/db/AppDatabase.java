@@ -20,7 +20,7 @@ import androidx.room.RoomDatabase;
         ReturnItem.class,
         WriteOffDocument.class,
         WriteOffItem.class
-}, version = 13, exportSchema = false)
+}, version = 14, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract OrganizationDao organizationDao();

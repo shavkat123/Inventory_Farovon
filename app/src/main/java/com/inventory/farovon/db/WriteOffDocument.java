@@ -10,9 +10,7 @@ public class WriteOffDocument {
 
     public long date;
     public String name; // Название объекта
-    public String reason; // Причина списания
+    public String organization; // Организация
     public String department; // Подразделение
-    public String condition; // Состояние
-    public String photoPath; // Путь к фото
     public String status; // Статус: "На согласовании", "Списано"
 }

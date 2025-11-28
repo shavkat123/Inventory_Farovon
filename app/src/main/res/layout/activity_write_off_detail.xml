@@ -69,13 +69,13 @@
             </LinearLayout>
             <View style="@style/Divider" />
 
-            <!-- Reason Row -->
+            <!-- Organization Row -->
             <LinearLayout style="@style/DetailRow">
                 <TextView
                     style="@style/DetailLabel"
-                    android:text="Причина" />
+                    android:text="Организация" />
                 <TextView
-                    android:id="@+id/tv_reason"
+                    android:id="@+id/tv_organization"
                     style="@style/DetailValue"
                     android:text="-" />
             </LinearLayout>
@@ -90,40 +90,6 @@
                     android:id="@+id/tv_department"
                     style="@style/DetailValue"
                     android:text="-" />
-            </LinearLayout>
-            <View style="@style/Divider" />
-
-            <!-- Condition Row -->
-            <LinearLayout style="@style/DetailRow">
-                <TextView
-                    style="@style/DetailLabel"
-                    android:text="Состояние" />
-                <TextView
-                    android:id="@+id/tv_condition"
-                    style="@style/DetailValue"
-                    android:text="-" />
-            </LinearLayout>
-            <View style="@style/Divider" />
-
-            <!-- Photo Section -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="16dp">
-                <TextView
-                    style="@style/DetailLabel"
-                    android:layout_width="match_parent"
-                    android:text="Фото"
-                    android:layout_marginBottom="8dp"/>
-
-                <ImageView
-                    android:id="@+id/iv_photo"
-                    android:layout_width="match_parent"
-                    android:layout_height="200dp"
-                    android:scaleType="centerCrop"
-                    android:visibility="gone"
-                    android:background="@drawable/bg_photo_placeholder"/>
             </LinearLayout>
             <View style="@style/Divider" />
 

@@ -24,7 +24,7 @@ public abstract class WriteOffDao {
     @Transaction
     @Query("SELECT * FROM write_off_documents WHERE " +
             "name LIKE '%' || :query || '%' OR " +
-            "reason LIKE '%' || :query || '%' OR " +
+            "organization LIKE '%' || :query || '%' OR " +
             "department LIKE '%' || :query || '%' OR " +
             "status LIKE '%' || :query || '%' OR " +
             "id LIKE '%' || :query || '%' " +

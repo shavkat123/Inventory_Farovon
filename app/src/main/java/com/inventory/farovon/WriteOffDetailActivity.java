@@ -35,12 +35,10 @@ public class WriteOffDetailActivity extends AppCompatActivity {
     private WriteOffDetailAdapter adapter;
 
     private TextView tvName;
-    private TextView tvReason;
+    private TextView tvOrganization;
     private TextView tvDepartment;
-    private TextView tvCondition;
     private TextView tvDate;
     private TextView tvStatus;
-    private ImageView ivPhoto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,12 +72,10 @@ public class WriteOffDetailActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         tvName = findViewById(R.id.tv_name);
-        tvReason = findViewById(R.id.tv_reason);
+        tvOrganization = findViewById(R.id.tv_organization);
         tvDepartment = findViewById(R.id.tv_department);
-        tvCondition = findViewById(R.id.tv_condition);
         tvDate = findViewById(R.id.tv_date);
         tvStatus = findViewById(R.id.tv_status);
-        ivPhoto = findViewById(R.id.iv_photo);
     }
 
     private void loadDocument(long documentId) {
@@ -117,18 +113,9 @@ public class WriteOffDetailActivity extends AppCompatActivity {
         tvDate.setText(sdf.format(new Date(document.date)));
 
         tvName.setText(document.name);
-        tvReason.setText(document.reason);
+        tvOrganization.setText(document.organization);
         tvDepartment.setText(document.department);
-        tvCondition.setText(document.condition);
         tvStatus.setText(document.status);
-
-        if (document.photoPath != null) {
-            File imgFile = new File(document.photoPath);
-            if (imgFile.exists()) {
-                ivPhoto.setVisibility(View.VISIBLE);
-                ivPhoto.setImageURI(Uri.fromFile(imgFile));
-            }
-        }
     }
 
     @Override
