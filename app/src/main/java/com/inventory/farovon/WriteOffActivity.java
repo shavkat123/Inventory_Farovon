@@ -109,7 +109,7 @@ public class WriteOffActivity extends AppCompatActivity implements WriteOffAsset
         String ip = sessionManager.getIpAddress();
         String username = sessionManager.getUsername();
         String password = sessionManager.getPassword();
-        String url = "http://" + ip + "/my1c/hs/writeff/os";
+        String url = "http://" + ip + "/my1c/hs/writeoff/writeoff";
 
         OkHttpClient client = new OkHttpClient();
 
