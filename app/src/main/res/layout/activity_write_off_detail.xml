@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".WriteOffDetailActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/colorPrimary"
+            app:title="Детали списания" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingVertical="8dp">
+
+            <!-- Status Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Статус" />
+                <TextView
+                    android:id="@+id/tv_status"
+                    style="@style/DetailValue"
+                    android:text="На согласовании"
+                    android:textColor="@color/colorPrimary" />
+            </LinearLayout>
+            <View style="@style/Divider" />
+
+            <!-- Date Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Дата создания" />
+                <TextView
+                    android:id="@+id/tv_date"
+                    style="@style/DetailValue"
+                    android:text="20.10.2023 14:30" />
+            </LinearLayout>
+            <View style="@style/Divider" />
+
+            <!-- Name Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Название" />
+                <TextView
+                    android:id="@+id/tv_name"
+                    style="@style/DetailValue"
+                    android:text="-" />
+            </LinearLayout>
+            <View style="@style/Divider" />
+
+            <!-- Organization Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Организация" />
+                <TextView
+                    android:id="@+id/tv_organization"
+                    style="@style/DetailValue"
+                    android:text="-" />
+            </LinearLayout>
+            <View style="@style/Divider" />
+
+            <!-- Department Row -->
+            <LinearLayout style="@style/DetailRow">
+                <TextView
+                    style="@style/DetailLabel"
+                    android:text="Подразделение" />
+                <TextView
+                    android:id="@+id/tv_department"
+                    style="@style/DetailValue"
+                    android:text="-" />
+            </LinearLayout>
+            <View style="@style/Divider" />
+
+            <!-- List Section Header -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Список объектов"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/colorTextDark"
+                android:padding="16dp"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/items_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false"
+                android:paddingHorizontal="16dp"/>
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

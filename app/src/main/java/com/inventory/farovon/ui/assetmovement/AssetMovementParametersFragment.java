@@ -6,6 +6,7 @@ import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 
 import androidx.annotation.NonNull;
@@ -15,25 +16,34 @@ import com.inventory.farovon.R;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.AssetMovementDao;
 import com.inventory.farovon.db.AssetMovementDocument;
+import com.inventory.farovon.db.DepartmentDao;
+import com.inventory.farovon.db.DepartmentEntity;
 import com.inventory.farovon.AssetMovementActivity;
+import com.google.android.material.textfield.MaterialAutoCompleteTextView;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class AssetMovementParametersFragment extends Fragment {
 
-    private TextInputEditText fromIssuer, fromIssuerDepartment, fromOrganization, fromLocation;
+    private TextInputEditText fromIssuer, fromIssuerDepartment, fromOrganization;
+    private MaterialAutoCompleteTextView fromLocation;
     private TextInputEditText toRecipient, toRecipientDepartment, toOrganization, toLocation;
     private View createButton;
     private ExecutorService databaseExecutor;
     private AssetMovementDao assetMovementDao;
+    private DepartmentDao departmentDao;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         databaseExecutor = Executors.newSingleThreadExecutor();
-        assetMovementDao = AppDatabase.getDatabase(requireContext().getApplicationContext()).assetMovementDao();
+        AppDatabase db = AppDatabase.getDatabase(requireContext().getApplicationContext());
+        assetMovementDao = db.assetMovementDao();
+        departmentDao = db.departmentDao();
     }
 
     @Override
@@ -73,7 +83,28 @@ public class AssetMovementParametersFragment extends Fragment {
             loadDocument(documentId);
         }
 
+        loadDepartments();
+
         return view;
+    }
+
+    private void loadDepartments() {
+        databaseExecutor.execute(() -> {
+            List<DepartmentEntity> departments = departmentDao.getAll();
+            List<String> departmentNames = new ArrayList<>();
+            for (DepartmentEntity dep : departments) {
+                if (dep.name != null) {
+                    departmentNames.add(dep.name);
+                }
+            }
+
+            new Handler(Looper.getMainLooper()).post(() -> {
+                if (getContext() != null) {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_dropdown_item_1line, departmentNames);
+                    fromLocation.setAdapter(adapter);
+                }
+            });
+        });
     }
 
     private void loadDocument(long documentId) {

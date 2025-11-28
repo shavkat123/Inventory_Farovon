@@ -17,8 +17,10 @@ import androidx.room.RoomDatabase;
         IssueDocument.class,
         IssueItem.class,
         ReturnDocument.class,
-        ReturnItem.class
-}, version = 12, exportSchema = false)
+        ReturnItem.class,
+        WriteOffDocument.class,
+        WriteOffItem.class
+}, version = 14, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract OrganizationDao organizationDao();
@@ -29,6 +31,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract AssetMovementDao assetMovementDao();
     public abstract IssueDao issueDao();
     public abstract ReturnDao returnDao();
+    public abstract WriteOffDao writeOffDao();
 
     private static volatile AppDatabase INSTANCE;
 

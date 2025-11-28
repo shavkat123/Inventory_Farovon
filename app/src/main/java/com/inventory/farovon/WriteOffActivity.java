@@ -8,17 +8,17 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import com.inventory.farovon.db.AppDatabase;
-import com.inventory.farovon.db.AssetMovementDao;
-import com.inventory.farovon.db.AssetMovementDocument;
 import com.inventory.farovon.db.InventoryItemDao;
 import com.inventory.farovon.db.InventoryItemEntity;
-import com.inventory.farovon.ui.assetmovement.AssetMovementAssetsFragment;
-import com.inventory.farovon.ui.assetmovement.AssetMovementPagerAdapter;
+import com.inventory.farovon.db.WriteOffDao;
+import com.inventory.farovon.db.WriteOffDocument;
 import com.inventory.farovon.ui.login.SessionManager;
+import com.inventory.farovon.ui.writeoff.WriteOffAssetsFragment;
+import com.inventory.farovon.ui.writeoff.WriteOffParamsFragment;
+import com.inventory.farovon.ui.writeoff.WriteOffPagerAdapter;
 
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -31,10 +31,10 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class AssetMovementActivity extends AppCompatActivity implements AssetMovementAssetsFragment.OnItemCountChangeListener {
+public class WriteOffActivity extends AppCompatActivity implements WriteOffAssetsFragment.OnItemCountChangeListener {
 
-    private AssetMovementPagerAdapter adapter;
-    private AssetMovementDao assetMovementDao;
+    private WriteOffPagerAdapter adapter;
+    private WriteOffDao writeOffDao;
     private InventoryItemDao inventoryItemDao;
     private ExecutorService databaseExecutor;
     private ViewPager2 viewPager;
@@ -43,20 +43,19 @@ public class AssetMovementActivity extends AppCompatActivity implements AssetMov
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_mol_movement); // Reuse MolMovement layout which has tab_layout and view_pager
+        setContentView(R.layout.activity_write_off);
 
         androidx.appcompat.widget.Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("Перемещение МП");
         }
 
         viewPager = findViewById(R.id.view_pager);
         tabLayout = findViewById(R.id.tab_layout);
 
         viewPager.setOffscreenPageLimit(2);
-        adapter = new AssetMovementPagerAdapter(this);
+        adapter = new WriteOffPagerAdapter(this);
         viewPager.setAdapter(adapter);
 
         new TabLayoutMediator(tabLayout, viewPager,
@@ -70,56 +69,48 @@ public class AssetMovementActivity extends AppCompatActivity implements AssetMov
         ).attach();
 
         AppDatabase db = AppDatabase.getDatabase(getApplicationContext());
-        assetMovementDao = db.assetMovementDao();
+        writeOffDao = db.writeOffDao();
         inventoryItemDao = db.inventoryItemDao();
         databaseExecutor = Executors.newSingleThreadExecutor();
     }
 
     public void saveDocument() {
-        String fromIssuer = adapter.getParametersFragment().getFromIssuer();
-        String fromDepartment = adapter.getParametersFragment().getFromIssuerDepartment();
-        String fromOrganization = adapter.getParametersFragment().getFromOrganization();
-        String fromLocation = adapter.getParametersFragment().getFromLocation();
-
-        String toRecipient = adapter.getParametersFragment().getToRecipient();
-        String toDepartment = adapter.getParametersFragment().getToRecipientDepartment();
-        String toOrganization = adapter.getParametersFragment().getToOrganization();
-        String toLocation = adapter.getParametersFragment().getToLocation();
+        WriteOffParamsFragment params = adapter.getParametersFragment();
+        String name = params.getName();
+        String organization = params.getOrganization();
+        String department = params.getDepartment();
 
         List<String> scannedRfids = adapter.getAssetsFragment().getScannedBarcodes();
 
-        if (fromIssuer.isEmpty() || toRecipient.isEmpty()) {
-            Toast.makeText(this, "Пожалуйста, заполните обязательные поля", Toast.LENGTH_SHORT).show();
+        if (name.isEmpty() || organization.isEmpty() || department.isEmpty()) {
+            Toast.makeText(this, "Пожалуйста, заполните все поля (Название, Организация, Подразделение)", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        AssetMovementDocument document = new AssetMovementDocument();
+        WriteOffDocument document = new WriteOffDocument();
         document.date = new Date().getTime();
-        document.fromIssuer = fromIssuer;
-        document.fromIssuerDepartment = fromDepartment;
-        document.fromOrganization = fromOrganization;
-        document.fromLocation = fromLocation;
-        document.toRecipient = toRecipient;
-        document.toRecipientDepartment = toDepartment;
-        document.toOrganization = toOrganization;
-        document.toLocation = toLocation;
+        document.name = name;
+        document.organization = organization;
+        document.department = department;
+        document.status = "На согласовании";
 
         databaseExecutor.execute(() -> {
-            assetMovementDao.insertFullMovement(document, scannedRfids);
-            sendAssetMovement(document, scannedRfids);
+            long id = writeOffDao.insertFullDocument(document, scannedRfids);
+            document.id = id;
+            sendWriteOffTo1C(document, scannedRfids);
             runOnUiThread(() -> {
-                Toast.makeText(this, "Документ сохранен", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Документ списания сохранен", Toast.LENGTH_SHORT).show();
                 finish();
             });
         });
     }
 
-    private void sendAssetMovement(AssetMovementDocument document, List<String> rfids) {
+    private void sendWriteOffTo1C(WriteOffDocument document, List<String> rfids) {
         SessionManager sessionManager = new SessionManager(getApplicationContext());
         String ip = sessionManager.getIpAddress();
         String username = sessionManager.getUsername();
         String password = sessionManager.getPassword();
-        String url = "http://" + ip + "/my1c/hs/transfer/os";
+        String url = "http://" + ip + "/my1c/hs/writeoff/writeoff";
 
         OkHttpClient client = new OkHttpClient();
 
@@ -135,11 +126,8 @@ public class AssetMovementActivity extends AppCompatActivity implements AssetMov
                 }
 
                 JSONObject json = new JSONObject();
-                json.put("Organization", document.fromOrganization != null ? document.fromOrganization : "");
-                json.put("Division", document.fromIssuerDepartment != null ? document.fromIssuerDepartment : "");
-                json.put("DivisionOrganization", document.toRecipientDepartment != null ? document.toRecipientDepartment : "");
-                json.put("MOL", document.fromIssuer != null ? document.fromIssuer : "");
-                json.put("MOLOrganization", document.toRecipient != null ? document.toRecipient : "");
+                json.put("Organization", document.organization != null ? document.organization : "");
+                json.put("DivisionOrganization", document.department != null ? document.department : "");
                 json.put("FixedAsset", fixedAssetCode);
                 json.put("token", UUID.randomUUID().toString());
 
@@ -152,10 +140,16 @@ public class AssetMovementActivity extends AppCompatActivity implements AssetMov
 
                 Response response = client.newCall(request).execute();
                 if (!response.isSuccessful()) {
-                    // Log error or handle failure
-                    System.err.println("Failed to send asset movement for: " + fixedAssetCode + " Code: " + response.code());
+                    System.err.println("Failed to send write-off for: " + fixedAssetCode + " Code: " + response.code());
                 } else {
-                    System.out.println("Successfully sent asset movement for: " + fixedAssetCode);
+                    String responseBody = response.body() != null ? response.body().string().trim() : "";
+                    System.out.println("Successfully sent write-off for: " + fixedAssetCode + " Response: " + responseBody);
+
+                    if ("1".equals(responseBody)) {
+                        writeOffDao.updateStatus(document.id, "Проведен");
+                    } else if ("-1".equals(responseBody)) {
+                        writeOffDao.updateStatus(document.id, "На согласовании");
+                    }
                 }
                 response.close();
 
