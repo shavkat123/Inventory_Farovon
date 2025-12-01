@@ -1,9 +1,10 @@
-package com.inventory.farovon;
+package com.inventory.farovon.worker;
 
-import android.app.IntentService;
-import android.content.Intent;
+import android.content.Context;
 import android.util.Log;
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
+import androidx.work.Worker;
+import androidx.work.WorkerParameters;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.PendingUploadEntity;
 import com.inventory.farovon.ui.login.SessionManager;
@@ -15,22 +16,24 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class UploadService extends IntentService {
+public class InventorySyncWorker extends Worker {
 
-    private static final String TAG = "UploadService";
+    private static final String TAG = "InventorySyncWorker";
 
-    public UploadService() {
-        super("UploadService");
+    public InventorySyncWorker(@NonNull Context context, @NonNull WorkerParameters workerParams) {
+        super(context, workerParams);
     }
 
+    @NonNull
     @Override
-    protected void onHandleIntent(@Nullable Intent intent) {
-        AppDatabase db = AppDatabase.getDatabase(getApplicationContext());
-        SessionManager sessionManager = new SessionManager(getApplicationContext());
+    public Result doWork() {
+        Context context = getApplicationContext();
+        AppDatabase db = AppDatabase.getDatabase(context);
+        SessionManager sessionManager = new SessionManager(context);
         List<PendingUploadEntity> uploads = db.pendingUploadDao().getAll();
 
         if (uploads.isEmpty()) {
-            return;
+            return Result.success();
         }
 
         OkHttpClient client = new OkHttpClient();
@@ -38,6 +41,12 @@ public class UploadService extends IntentService {
         String username = sessionManager.getUsername();
         String password = sessionManager.getPassword();
         String url = "http://" + ip + "/my1c/hs/hw/say";
+
+        if (ip == null || ip.isEmpty()) {
+             return Result.failure();
+        }
+
+        boolean allSuccess = true;
 
         for (PendingUploadEntity upload : uploads) {
             RequestBody body = RequestBody.create(upload.jsonData, okhttp3.MediaType.parse("application/json; charset=utf-8"));
@@ -54,10 +63,14 @@ public class UploadService extends IntentService {
                     Log.d(TAG, "Successfully uploaded and deleted: " + upload.id);
                 } else {
                     Log.e(TAG, "Server returned an error for upload: " + upload.id);
+                    allSuccess = false;
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Network error during upload: " + upload.id, e);
+                return Result.retry();
             }
         }
+
+        return Result.success();
     }
 }

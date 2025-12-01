@@ -7,23 +7,24 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.inventory.farovon.db.RoomEntity;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder> {
 
-    private List<Room> items = new ArrayList<>();
+    private List<RoomEntity> items = new ArrayList<>();
     private OnScanClickListener listener;
 
     public interface OnScanClickListener {
-        void onScanClick(Room item);
+        void onScanClick(RoomEntity item);
     }
 
     public void setOnScanClickListener(OnScanClickListener listener) {
         this.listener = listener;
     }
 
-    public void setItems(List<Room> items) {
+    public void setItems(List<RoomEntity> items) {
         this.items = items;
         notifyDataSetChanged();
     }
@@ -37,7 +38,7 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull RoomViewHolder holder, int position) {
-        Room item = items.get(position);
+        RoomEntity item = items.get(position);
         holder.bind(item, listener);
     }
 
@@ -58,10 +59,10 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
             statusCompleted = itemView.findViewById(R.id.tv_status_completed);
         }
 
-        public void bind(final Room item, final OnScanClickListener listener) {
-            roomName.setText(item.getName());
+        public void bind(final RoomEntity item, final OnScanClickListener listener) {
+            roomName.setText(item.name);
 
-            if (item.isCompleted()) {
+            if (item.isCompleted) {
                 statusCompleted.setVisibility(View.VISIBLE);
             } else {
                 statusCompleted.setVisibility(View.GONE);
