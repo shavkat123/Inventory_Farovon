@@ -1,9 +1,12 @@
 package com.inventory.farovon.ui.gallery;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Rect;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -40,6 +43,8 @@ import com.inventory.farovon.MainActivity;
 import com.inventory.farovon.NomenclatureActivity;
 import com.inventory.farovon.R;
 import com.inventory.farovon.Nomenclature;
+import com.inventory.farovon.db.AppDatabase;
+import com.inventory.farovon.db.InventoryItemEntity;
 import com.inventory.farovon.ui.login.SessionManager;
 
 import org.w3c.dom.Document;
@@ -74,6 +79,7 @@ public class GalleryFragment extends Fragment {
     private Button btnRequestPermission;
 
     private ExecutorService cameraExecutor;
+    private ExecutorService databaseExecutor;
     private ProcessCameraProvider cameraProvider;
     private volatile boolean isProcessingBarcode = false;
 
@@ -84,6 +90,7 @@ public class GalleryFragment extends Fragment {
     private Rect overlayRect;
 
     private SessionManager sessionManager;
+    private AppDatabase db;
 
     private String roomCodeToVerify;
     private String roomNameToVerify;
@@ -96,6 +103,8 @@ public class GalleryFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         sessionManager = new SessionManager(getActivity());
+        db = AppDatabase.getDatabase(requireContext());
+        databaseExecutor = Executors.newSingleThreadExecutor();
 
         if (getArguments() != null) {
             roomCodeToVerify = getArguments().getString("room_code_to_verify");
@@ -270,6 +279,7 @@ public class GalleryFragment extends Fragment {
             return;
         }
 
+        boolean found = false;
         for (Barcode barcode : barcodes) {
             Rect bounds = barcode.getBoundingBox();
             if (bounds != null) {
@@ -278,22 +288,20 @@ public class GalleryFragment extends Fragment {
                 if (overlayRect.contains(mappedRect)) {
                     final String value = barcode.getRawValue();
                     if (value != null && !value.isEmpty()) {
+                        found = true;
                         mainHandler.post(() -> {
                             if (!isAdded()) {
-                                return; // Fragment not attached, do nothing.
+                                return;
                             }
                             tvResult.setText("Сканировано: " + value);
                             if (roomCodeToVerify != null && roomCodeToVerify.equals(value)) {
                                 Toast.makeText(requireContext(), "Код помещения подтвержден!", Toast.LENGTH_SHORT).show();
-                                // Теперь вместо запуска ScanningActivity, мы просто вызываем sendBarcodeToServer
-                                sendBarcodeToServer(value);
-                                // Нет необходимости в задержке, так как sendBarcodeToServer запустит новую активность
+                                loadRoomItems(value);
                             } else if (roomCodeToVerify != null) {
                                 Toast.makeText(requireContext(), "Неверный QR-код помещения. Отсканирован: " + value, Toast.LENGTH_LONG).show();
-                                mainHandler.postDelayed(() -> isProcessingBarcode = false, 2000); // Allow re-scan sooner
+                                mainHandler.postDelayed(() -> isProcessingBarcode = false, 2000);
                             } else {
-                                // Default behavior if no verification code is present
-                                sendBarcodeToServer(value);
+                                loadRoomItems(value);
                                 mainHandler.postDelayed(() -> isProcessingBarcode = false, 5000);
                             }
                         });
@@ -303,7 +311,9 @@ public class GalleryFragment extends Fragment {
             }
         }
         // Если ни один штрихкод не попал в рамку — сбрасываем флаг
-        isProcessingBarcode = false;
+        if (!found) {
+            isProcessingBarcode = false;
+        }
     }
 
     // 🔹 Масштабируем координаты из кадра камеры в PreviewView
@@ -321,23 +331,42 @@ public class GalleryFragment extends Fragment {
         );
     }
 
-    private void sendBarcodeToServer(String barcode) {
+    private void loadRoomItems(String roomCode) {
+        databaseExecutor.execute(() -> {
+            List<InventoryItemEntity> entities = db.inventoryItemDao().getByDepartmentIdAndLocation(departmentId, roomCode);
+            if (!entities.isEmpty()) {
+                List<Nomenclature> items = new ArrayList<>();
+                for (InventoryItemEntity e : entities) {
+                    items.add(new Nomenclature(e.code, e.name, e.rf, e.mol, e.location));
+                }
+                mainHandler.post(() -> openNomenclatureActivity(items, roomCode));
+            } else {
+                if (isNetworkAvailable()) {
+                    fetchFromNetwork(roomCode);
+                } else {
+                    mainHandler.post(() -> {
+                        Toast.makeText(requireContext(), "Данные не найдены и нет сети", Toast.LENGTH_SHORT).show();
+                        isProcessingBarcode = false; // Allow rescanning
+                    });
+                }
+            }
+        });
+    }
+
+    private void fetchFromNetwork(String roomCode) {
         String serverIP = sessionManager.getIpAddress();
         String url = "http://" + serverIP +"/my1c/hs/hw/say";
         Log.i("GalleryFragment", url);
         OkHttpClient client = new OkHttpClient();
 
-        // Тело запроса в JSON
-        String json = "{\"odel\":\"" + barcode + "\"}";
+        String json = "{\"odel\":\"" + roomCode + "\"}";
         RequestBody body = RequestBody.create(
                 json,
                 MediaType.parse("application/json; charset=utf-8")
         );
 
-        // Авторизация Basic
-        String credentials = okhttp3.Credentials.basic("admin", "1");
+        String credentials = okhttp3.Credentials.basic(sessionManager.getUsername(), sessionManager.getPassword());
 
-        // Запрос
         Request request = new Request.Builder()
                 .url(url)
                 .post(body)
@@ -352,31 +381,75 @@ public class GalleryFragment extends Fragment {
                 mainHandler.post(() -> {
                     String errorMsg = "Ошибка сети: " + e.getMessage();
                     Toast.makeText(requireContext(), errorMsg, Toast.LENGTH_SHORT).show();
-                    android.content.ClipboardManager clipboard =
-                            (android.content.ClipboardManager) requireContext().getSystemService(android.content.Context.CLIPBOARD_SERVICE);
-                    android.content.ClipData clip = android.content.ClipData.newPlainText("Ошибка", errorMsg);
-                    clipboard.setPrimaryClip(clip);
+                    isProcessingBarcode = false; // Allow rescanning
                 });
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) throws IOException {
-                if (response.isSuccessful()) {
+                if (response.isSuccessful() && response.body() != null) {
                     final String xmlResponse = response.body().string();
                     final List<Nomenclature> items = parseXml(xmlResponse);
 
-                    mainHandler.post(() -> {
-                        Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
-                        intent.putExtra("items", new ArrayList<>(items));
-                        intent.putExtra("room_code", roomCodeToVerify);
-                        intent.putExtra("department_code", departmentCode);
-                        intent.putExtra("department_id", departmentId);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                        startActivity(intent);
+                    if (items.isEmpty()) {
+                         mainHandler.post(() -> {
+                             Toast.makeText(requireContext(), "Инвентарь пуст", Toast.LENGTH_SHORT).show();
+                             isProcessingBarcode = false;
+                         });
+                         return;
+                    }
+
+                    // Save to DB
+                    databaseExecutor.execute(() -> {
+                        db.inventoryItemDao().clearByDepartmentIdAndLocation(departmentId, roomCode);
+                        List<InventoryItemEntity> entities = new ArrayList<>();
+                        for (Nomenclature item : items) {
+                            InventoryItemEntity e = new InventoryItemEntity();
+                            e.departmentId = departmentId;
+                            e.code = item.getCode();
+                            e.name = item.getName();
+                            e.rf = item.getRfid();
+                            e.location = roomCode; // Ensure correct location
+                            e.mol = ""; // Or null, XML parser puts null in Nomenclature
+                            e.serialNumber = ""; // XML parser doesn't read it
+                            entities.add(e);
+                        }
+                        db.inventoryItemDao().insertAll(entities);
+
+                        mainHandler.post(() -> openNomenclatureActivity(items, roomCode));
                     });
+                } else {
+                     mainHandler.post(() -> {
+                        Toast.makeText(requireContext(), "Ошибка сервера: " + response.code(), Toast.LENGTH_SHORT).show();
+                        isProcessingBarcode = false;
+                     });
                 }
             }
         });
+    }
+
+    private void openNomenclatureActivity(List<Nomenclature> items, String roomCode) {
+        Intent intent = new Intent(requireContext(), NomenclatureActivity.class);
+        intent.putExtra("items", new ArrayList<>(items));
+        intent.putExtra("room_code", roomCode);
+        intent.putExtra("department_code", departmentCode);
+        intent.putExtra("department_id", departmentId);
+        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        // Do not reset isProcessingBarcode here immediately if you want to prevent double scans during transition.
+        // It will be reset next time user comes back or via the timeout in processBarcodes if we rely on that.
+        // But better is to just leave it true until onResume? No, existing code relied on timeouts.
+        // I will reset it here or let the activity start.
+        // The original code didn't reset it in success path of sendBarcodeToServer.
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager = (ConnectivityManager) requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager != null) {
+            NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+            return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        }
+        return false;
     }
 
     @Override
@@ -387,6 +460,9 @@ public class GalleryFragment extends Fragment {
         }
         if (cameraExecutor != null) {
             cameraExecutor.shutdown();
+        }
+        if (databaseExecutor != null) {
+             databaseExecutor.shutdown();
         }
     }
 }
