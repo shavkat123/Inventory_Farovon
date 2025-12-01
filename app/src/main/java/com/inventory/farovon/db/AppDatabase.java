@@ -19,12 +19,14 @@ import androidx.room.RoomDatabase;
         ReturnDocument.class,
         ReturnItem.class,
         WriteOffDocument.class,
-        WriteOffItem.class
-}, version = 14, exportSchema = false)
+        WriteOffItem.class,
+        RoomEntity.class
+}, version = 15, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract OrganizationDao organizationDao();
     public abstract DepartmentDao departmentDao();
+    public abstract RoomDao roomDao();
     public abstract InventoryItemDao inventoryItemDao();
     public abstract PendingUploadDao pendingUploadDao();
     public abstract MolMovementDao molMovementDao();
