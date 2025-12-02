@@ -1,6 +1,5 @@
 package com.inventory.farovon;
 
-import android.os.Bundle;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -9,7 +8,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.app.AlertDialog;
+import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -18,7 +20,8 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.inventory.farovon.db.AppDatabase;
-import com.inventory.farovon.db.InventoryItemEntity;
+import com.inventory.farovon.db.DepartmentEntity;
+import com.inventory.farovon.db.RoomEntity;
 import com.inventory.farovon.ui.login.SessionManager;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +29,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -38,7 +40,7 @@ import org.xmlpull.v1.XmlPullParserFactory;
 
 public class InventoryListActivity extends AppCompatActivity {
 
-    private List<Room> rooms = new ArrayList<>();
+    private List<RoomEntity> rooms = new ArrayList<>();
     public static final String EXTRA_DEPARTMENT_CODE = "department_code";
     public static final String EXTRA_DEPARTMENT_ID = "department_id";
     private static final String TAG = "InventoryListActivity";
@@ -60,10 +62,14 @@ public class InventoryListActivity extends AppCompatActivity {
                 String completedRoomCode = intent.getStringExtra("room_code");
                 if (completedRoomCode != null) {
                     for (int i = 0; i < rooms.size(); i++) {
-                        Room room = rooms.get(i);
-                        if (completedRoomCode.equals(room.getCode())) {
-                            room.setCompleted(true);
+                        RoomEntity room = rooms.get(i);
+                        if (completedRoomCode.equals(room.code)) {
+                            room.isCompleted = true;
                             adapter.notifyItemChanged(i);
+
+                            databaseExecutor.execute(() -> {
+                                db.roomDao().updateCompletionStatus(completedRoomCode, true);
+                            });
                             break;
                         }
                     }
@@ -96,12 +102,14 @@ public class InventoryListActivity extends AppCompatActivity {
         adapter.setOnScanClickListener(item -> {
             android.content.Intent intent = new android.content.Intent(InventoryListActivity.this, MainActivity.class);
             intent.putExtra("navigate_to", "gallery");
-            intent.putExtra("room_code_to_verify", item.getCode());
-            intent.putExtra("room_name_to_verify", item.getName());
+            intent.putExtra("room_code_to_verify", item.code);
+            intent.putExtra("room_name_to_verify", item.name);
             intent.putExtra("department_code", departmentCode);
-            intent.putExtra("department_id", departmentId); // <-- Добавляем ID
+            intent.putExtra("department_id", departmentId);
             startActivity(intent);
         });
+
+        adapter.setOnItemClickListener(item -> showRoomDetails(item));
 
         departmentCode = getIntent().getStringExtra(EXTRA_DEPARTMENT_CODE);
         departmentId = getIntent().getIntExtra(EXTRA_DEPARTMENT_ID, -1);
@@ -120,11 +128,7 @@ public class InventoryListActivity extends AppCompatActivity {
     private void loadDataFromDb() {
         progressBar.setVisibility(View.VISIBLE);
         databaseExecutor.execute(() -> {
-            List<InventoryItemEntity> itemEntities = db.inventoryItemDao().getByDepartmentId(departmentId);
-            rooms = itemEntities.stream()
-                                .map(e -> new Room(e.code, e.name))
-                                .distinct() // To get unique rooms
-                                .collect(Collectors.toList());
+            rooms = db.roomDao().getByDepartmentId(departmentId);
             mainHandler.post(() -> {
                 progressBar.setVisibility(View.GONE);
                 adapter.setItems(rooms);
@@ -151,40 +155,81 @@ public class InventoryListActivity extends AppCompatActivity {
         client.newCall(request).enqueue(new okhttp3.Callback() {
             @Override
             public void onFailure(@NonNull Call call, @NonNull IOException e) {
-                 mainHandler.post(() -> Toast.makeText(InventoryListActivity.this, "Ошибка синхронизации", Toast.LENGTH_SHORT).show());
+                 mainHandler.post(() -> Toast.makeText(InventoryListActivity.this, "Работа в оффлайн режиме", Toast.LENGTH_SHORT).show());
             }
 
             @Override
             public void onResponse(@NonNull Call call, @NonNull Response response) {
                 if (response.isSuccessful() && response.body() != null) {
                     try {
-                        final List<Room> parsedRooms = parseXml(response.body().byteStream());
+                        final List<RoomEntity> parsedRooms = parseXml(response.body().byteStream());
+
+                        for (RoomEntity r : parsedRooms) {
+                            r.departmentId = departmentId;
+                        }
+
                         databaseExecutor.execute(() -> {
-                            // This part is tricky. The server sends inventory items, not rooms.
-                            // We are faking "rooms" from the "location" field of items.
-                            // Let's just update the UI for now.
+                            db.roomDao().deleteByDepartmentId(departmentId);
+                            if (!parsedRooms.isEmpty()) {
+                                db.roomDao().insertAll(parsedRooms);
+                            }
+
+                            rooms = parsedRooms;
                             mainHandler.post(() -> {
-                                rooms = parsedRooms;
                                 adapter.setItems(rooms);
+                                Toast.makeText(InventoryListActivity.this, "Список помещений обновлен", Toast.LENGTH_SHORT).show();
                             });
                         });
                     } catch (Exception e) {
-                        // Log error
+                        e.printStackTrace();
                     }
                 }
             }
         });
     }
 
-    private List<Room> parseXml(InputStream is) {
-        List<Room> list = new ArrayList<>();
+    private void showRoomDetails(RoomEntity room) {
+        databaseExecutor.execute(() -> {
+            DepartmentEntity dept = db.departmentDao().getById(room.departmentId);
+            String departmentName = dept != null ? dept.name : "Неизвестно";
+
+            mainHandler.post(() -> {
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                View dialogView = getLayoutInflater().inflate(R.layout.dialog_room_details, null);
+                builder.setView(dialogView);
+                AlertDialog dialog = builder.create();
+
+                if (dialog.getWindow() != null) {
+                    dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+                }
+
+                TextView tvName = dialogView.findViewById(R.id.tv_room_name);
+                TextView tvDept = dialogView.findViewById(R.id.tv_department);
+                TextView tvLoc = dialogView.findViewById(R.id.tv_location);
+                TextView tvMol = dialogView.findViewById(R.id.tv_mol);
+                Button btnClose = dialogView.findViewById(R.id.btn_close);
+
+                tvName.setText(room.name);
+                tvDept.setText(departmentName);
+                tvLoc.setText(room.code);
+                tvMol.setText(room.mol != null ? room.mol : "");
+
+                btnClose.setOnClickListener(v -> dialog.dismiss());
+
+                dialog.show();
+            });
+        });
+    }
+
+    private List<RoomEntity> parseXml(InputStream is) {
+        List<RoomEntity> list = new ArrayList<>();
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             XmlPullParser parser = factory.newPullParser();
             parser.setInput(is, null);
 
             String text = "";
-            String code = null, name = null;
+            String code = null, name = null, mol = null;
             int eventType = parser.getEventType();
 
             while (eventType != XmlPullParser.END_DOCUMENT) {
@@ -198,17 +243,22 @@ public class InventoryListActivity extends AppCompatActivity {
                             code = text;
                         } else if ("Name".equalsIgnoreCase(tagName)) {
                             name = text;
-                        } else if ("Product".equalsIgnoreCase(tagName)) { // Assuming server returns rooms as products
+                        } else if ("MOL".equalsIgnoreCase(tagName)) {
+                            mol = text;
+                        } else if ("Product".equalsIgnoreCase(tagName)) {
                             if (code != null && name != null) {
-                                list.add(new Room(code, name));
+                                list.add(new RoomEntity(code, name, 0, mol));
                             }
+                            code = null;
+                            name = null;
+                            mol = null;
                         }
                         break;
                 }
                 eventType = parser.next();
             }
         } catch (Exception e) {
-            // Log error
+            e.printStackTrace();
         }
         return list;
     }

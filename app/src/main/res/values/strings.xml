@@ -56,5 +56,5 @@
         vestibulum. Fusce dictum libero quis erat maximus, vitae volutpat diam dignissim.
     </string>
     <string name="menu_organization_inventory">Инвентаризация Организации</string>
-    <string name="menu_room_inventory">Инвентаризация по помещению</string>
+    <string name="menu_room_inventory">Инвентаризация</string>
 </resources>
