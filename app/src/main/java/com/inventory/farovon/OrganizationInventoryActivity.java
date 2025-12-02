@@ -18,6 +18,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.Constraints;
+import androidx.work.NetworkType;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+import com.inventory.farovon.worker.InventorySyncWorker;
 import com.inventory.farovon.db.AppDatabase;
 import com.inventory.farovon.db.DepartmentEntity;
 import com.inventory.farovon.db.OrganizationEntity;
@@ -74,8 +79,20 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
         loadDataFromDb();
 
         if (isNetworkAvailable()) {
-            startService(new android.content.Intent(this, UploadService.class));
+            triggerWorkManager();
         }
+    }
+
+    private void triggerWorkManager() {
+        Constraints constraints = new Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build();
+
+        OneTimeWorkRequest uploadWork = new OneTimeWorkRequest.Builder(InventorySyncWorker.class)
+                .setConstraints(constraints)
+                .build();
+
+        WorkManager.getInstance(this).enqueue(uploadWork);
     }
 
     private void sendCompletedData() {
@@ -111,6 +128,7 @@ public class OrganizationInventoryActivity extends AppCompatActivity {
             mainHandler.post(() -> {
                 Toast.makeText(this, "Данные добавлены в очередь на отправку", Toast.LENGTH_SHORT).show();
                 loadDataFromDb();
+                triggerWorkManager();
             });
         });
     }
