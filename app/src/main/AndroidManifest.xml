@@ -128,9 +128,6 @@
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
 
-        <service
-            android:name=".UploadService"
-            android:exported="false" />
 
         <receiver
             android:name=".NetworkChangeReceiver"
