@@ -63,6 +63,7 @@ public class MainActivity extends AppCompatActivity {
             bundle.putString("room_code_to_verify", intent.getStringExtra("room_code_to_verify"));
             bundle.putString("room_name_to_verify", intent.getStringExtra("room_name_to_verify"));
             bundle.putString("department_code", intent.getStringExtra("department_code"));
+            bundle.putInt("department_id", intent.getIntExtra("department_id", -1));
 
             NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment_content_main);
             navController.navigate(R.id.nav_gallery, bundle);
