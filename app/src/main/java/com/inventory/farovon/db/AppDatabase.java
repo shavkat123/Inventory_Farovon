@@ -19,12 +19,15 @@ import androidx.room.RoomDatabase;
         ReturnDocument.class,
         ReturnItem.class,
         WriteOffDocument.class,
-        WriteOffItem.class
-}, version = 14, exportSchema = false)
+        WriteOffItem.class,
+        RoomEntity.class,
+        PrimaryInventoryDocument.class
+}, version = 17, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract OrganizationDao organizationDao();
     public abstract DepartmentDao departmentDao();
+    public abstract RoomDao roomDao();
     public abstract InventoryItemDao inventoryItemDao();
     public abstract PendingUploadDao pendingUploadDao();
     public abstract MolMovementDao molMovementDao();
@@ -32,6 +35,7 @@ public abstract class AppDatabase extends RoomDatabase {
     public abstract IssueDao issueDao();
     public abstract ReturnDao returnDao();
     public abstract WriteOffDao writeOffDao();
+    public abstract PrimaryInventoryDao primaryInventoryDao();
 
     private static volatile AppDatabase INSTANCE;
 
