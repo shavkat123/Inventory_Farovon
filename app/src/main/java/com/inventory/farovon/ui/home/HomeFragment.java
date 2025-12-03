@@ -67,6 +67,9 @@ public class HomeFragment extends Fragment {
             } else if (item.getTitle().equals("Списание ОС")) {
                 Intent intent = new Intent(getActivity(), WriteOffListActivity.class);
                 startActivity(intent);
+            } else if (item.getTitle().equals("Первичная инвентаризация")) {
+                Intent intent = new Intent(getActivity(), PrimaryInventoryListActivity.class);
+                startActivity(intent);
             } else {
                 Toast.makeText(getContext(), item.getTitle() + " - в разработке", Toast.LENGTH_SHORT).show();
             }
