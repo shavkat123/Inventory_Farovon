@@ -28,4 +28,7 @@ public interface DepartmentDao {
 
     @Query("SELECT * FROM departments")
     List<DepartmentEntity> getAll();
+
+    @Query("SELECT * FROM departments WHERE id = :id")
+    DepartmentEntity getById(int id);
 }

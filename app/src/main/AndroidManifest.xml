@@ -128,9 +128,6 @@
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
 
-        <service
-            android:name=".UploadService"
-            android:exported="false" />
 
         <receiver
             android:name=".NetworkChangeReceiver"
@@ -159,6 +156,15 @@
             android:name=".WriteOffDetailActivity"
             android:exported="false"
             android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
+            android:name=".PrimaryInventoryListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar" />
+        <activity
+            android:name=".PrimaryInventoryCreateActivity"
+            android:exported="false"
+            android:theme="@style/Theme.InventoryFarovon.NoActionBar"
+            android:windowSoftInputMode="adjustPan" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
