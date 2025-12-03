@@ -353,21 +353,37 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
             return;
         }
         isRfidScanning = true;
-        mReader.startInventoryTag();
+        // Use single tag inventory loop to allow reading user memory
         rfidExecutor = Executors.newSingleThreadExecutor();
         rfidExecutor.execute(() -> {
             while (isRfidScanning) {
-                UHFTAGInfo tag = mReader.readTagFromBuffer();
+                UHFTAGInfo tag = mReader.inventorySingleTag();
                 if (tag != null) {
                     String epc = tag.getEPC();
-                    Log.d(TAG, "RFID Tag Found: " + epc);
-                    boolean isNew = foundEpcSet.add(epc);
-                    if (isNew) {
-                        if (toneGenerator != null) {
-                            toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP);
+                    Log.d(TAG, "RFID Tag Found (EPC): " + epc);
+
+                    // Read User Memory (Bank 3, Start 0, Len 6 words = 24 hex chars)
+                    String userHex = mReader.readData("00000000", 3, 0, 6);
+                    if (userHex != null && !userHex.isEmpty()) {
+                        String inventoryNumber = hexToString(userHex);
+                        Log.d(TAG, "User Memory: " + userHex + " -> " + inventoryNumber);
+
+                        if (!inventoryNumber.isEmpty()) {
+                            boolean isNew = foundEpcSet.add(inventoryNumber);
+                            if (isNew) {
+                                if (toneGenerator != null) {
+                                    toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP);
+                                }
+                                String finalInv = inventoryNumber;
+                                handler.post(() -> performSearch(finalInv, true));
+                            }
                         }
-                        handler.post(() -> performSearch(epc, true));
                     }
+                }
+                try {
+                    Thread.sleep(50);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
                 }
             }
         });
@@ -376,5 +392,20 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
             fabScan.setText("Остановить");
             fabScan.setIconResource(R.drawable.ic_stop);
         });
+    }
+
+    private String hexToString(String hex) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < hex.length(); i += 2) {
+            if (i + 2 > hex.length()) break;
+            String str = hex.substring(i, i + 2);
+            if ("00".equals(str)) continue; // Skip padding
+            try {
+                sb.append((char) Integer.parseInt(str, 16));
+            } catch (Exception e) {
+                // Ignore parsing errors
+            }
+        }
+        return sb.toString().trim();
     }
 }
