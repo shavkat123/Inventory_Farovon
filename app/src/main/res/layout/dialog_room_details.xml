@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/dialog_background_rounded">
+
+    <TextView
+        android:id="@+id/tv_room_name_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Название:"
+        android:textStyle="bold"
+        android:textColor="@color/colorTextSecondary" />
+
+    <TextView
+        android:id="@+id/tv_room_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_department_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Подразделение:"
+        android:textStyle="bold"
+        android:textColor="@color/colorTextSecondary" />
+
+    <TextView
+        android:id="@+id/tv_department"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_location_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Местоположение:"
+        android:textStyle="bold"
+        android:textColor="@color/colorTextSecondary" />
+
+    <TextView
+        android:id="@+id/tv_location"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="16sp" />
+
+    <TextView
+        android:id="@+id/tv_mol_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ответственный:"
+        android:textStyle="bold"
+        android:textColor="@color/colorTextSecondary" />
+
+    <TextView
+        android:id="@+id/tv_mol"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorTextPrimary"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/btn_close"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="Закрыть"
+        style="?android:attr/buttonBarButtonStyle" />
+
+</LinearLayout>
