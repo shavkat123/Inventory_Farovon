@@ -7,23 +7,33 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+import com.inventory.farovon.db.RoomEntity;
 import java.util.ArrayList;
 import java.util.List;
 
 public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder> {
 
-    private List<Room> items = new ArrayList<>();
-    private OnScanClickListener listener;
+    private List<RoomEntity> items = new ArrayList<>();
+    private OnScanClickListener scanListener;
+    private OnItemClickListener itemClickListener;
 
     public interface OnScanClickListener {
-        void onScanClick(Room item);
+        void onScanClick(RoomEntity item);
+    }
+
+    public interface OnItemClickListener {
+        void onItemClick(RoomEntity item);
     }
 
     public void setOnScanClickListener(OnScanClickListener listener) {
-        this.listener = listener;
+        this.scanListener = listener;
     }
 
-    public void setItems(List<Room> items) {
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.itemClickListener = listener;
+    }
+
+    public void setItems(List<RoomEntity> items) {
         this.items = items;
         notifyDataSetChanged();
     }
@@ -37,8 +47,8 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull RoomViewHolder holder, int position) {
-        Room item = items.get(position);
-        holder.bind(item, listener);
+        RoomEntity item = items.get(position);
+        holder.bind(item, scanListener, itemClickListener);
     }
 
     @Override
@@ -58,18 +68,24 @@ public class RoomAdapter extends RecyclerView.Adapter<RoomAdapter.RoomViewHolder
             statusCompleted = itemView.findViewById(R.id.tv_status_completed);
         }
 
-        public void bind(final Room item, final OnScanClickListener listener) {
-            roomName.setText(item.getName());
+        public void bind(final RoomEntity item, final OnScanClickListener scanListener, final OnItemClickListener itemClickListener) {
+            roomName.setText(item.name);
 
-            if (item.isCompleted()) {
+            if (item.isCompleted) {
                 statusCompleted.setVisibility(View.VISIBLE);
             } else {
                 statusCompleted.setVisibility(View.GONE);
             }
 
             scanIcon.setOnClickListener(v -> {
-                if (listener != null) {
-                    listener.onScanClick(item);
+                if (scanListener != null) {
+                    scanListener.onScanClick(item);
+                }
+            });
+
+            itemView.setOnClickListener(v -> {
+                if (itemClickListener != null) {
+                    itemClickListener.onItemClick(item);
                 }
             });
         }

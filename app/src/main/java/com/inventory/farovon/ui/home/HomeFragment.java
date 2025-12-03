@@ -18,6 +18,7 @@ import com.inventory.farovon.AssetMovementListActivity;
 import com.inventory.farovon.IdentificationActivity;
 import com.inventory.farovon.IssueListActivity;
 import com.inventory.farovon.MolMovementListActivity;
+import com.inventory.farovon.PrimaryInventoryListActivity;
 import com.inventory.farovon.ReturnListActivity;
 import com.inventory.farovon.WriteOffListActivity;
 import com.inventory.farovon.R;
@@ -66,6 +67,9 @@ public class HomeFragment extends Fragment {
                 startActivity(intent);
             } else if (item.getTitle().equals("Списание ОС")) {
                 Intent intent = new Intent(getActivity(), WriteOffListActivity.class);
+                startActivity(intent);
+            } else if (item.getTitle().equals("Первичная инвентаризация")) {
+                Intent intent = new Intent(getActivity(), PrimaryInventoryListActivity.class);
                 startActivity(intent);
             } else {
                 Toast.makeText(getContext(), item.getTitle() + " - в разработке", Toast.LENGTH_SHORT).show();
