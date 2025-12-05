@@ -367,11 +367,13 @@ public class IdentificationActivity extends AppCompatActivity implements ScanMod
                     // 1. Read User Memory (Only once per EPC)
                     // We skip performSearch(epc) to only support User Memory tags as requested.
                     if (!processedEpcsForUserMemory.contains(epc)) {
-                        processedEpcsForUserMemory.add(epc);
-
-                        // Read User Memory (Bank 3, Start 0, Len 6 words = 24 hex chars)
-                        String userHex = mReader.readData("00000000", 3, 0, 6);
+                        // Read User Memory (Bank 3, Start 0, Len 16 words = 64 hex chars = 32 bytes)
+                        // Increased from 6 to 16 to support longer inventory numbers
+                        String userHex = mReader.readData("00000000", 3, 0, 16);
                         if (userHex != null && !userHex.isEmpty()) {
+                            // Only mark as processed if read was successful
+                            processedEpcsForUserMemory.add(epc);
+
                             String inventoryNumber = hexToString(userHex);
                             Log.d(TAG, "User Memory for " + epc + ": " + userHex + " -> " + inventoryNumber);
 
