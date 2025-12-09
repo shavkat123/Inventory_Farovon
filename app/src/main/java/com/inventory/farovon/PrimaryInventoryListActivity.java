@@ -2,10 +2,12 @@ package com.inventory.farovon;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -60,6 +62,40 @@ public class PrimaryInventoryListActivity extends AppCompatActivity {
             List<PrimaryInventoryDocument> documents = db.primaryInventoryDao().getAll();
             runOnUiThread(() -> adapter.setDocuments(documents));
         });
+    }
+
+    private void searchDocuments(String query) {
+        databaseExecutor.execute(() -> {
+            List<PrimaryInventoryDocument> documents;
+            if (query == null || query.trim().isEmpty()) {
+                documents = db.primaryInventoryDao().getAll();
+            } else {
+                documents = db.primaryInventoryDao().findByQuery(query.trim());
+            }
+            runOnUiThread(() -> adapter.setDocuments(documents));
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.primary_inventory_menu, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                searchDocuments(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                searchDocuments(newText);
+                return true;
+            }
+        });
+        return true;
     }
 
     @Override
