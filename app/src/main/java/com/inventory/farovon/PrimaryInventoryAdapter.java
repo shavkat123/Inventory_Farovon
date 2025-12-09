@@ -37,6 +37,13 @@ public class PrimaryInventoryAdapter extends RecyclerView.Adapter<PrimaryInvento
         holder.tvName.setText(doc.name);
         holder.tvInventoryNumber.setText("Инв. №: " + doc.inventoryNumber);
         holder.tvStatus.setText(doc.status);
+
+        holder.itemView.setOnClickListener(v -> {
+            android.content.Context context = v.getContext();
+            android.content.Intent intent = new android.content.Intent(context, PrimaryInventoryDetailActivity.class);
+            intent.putExtra(PrimaryInventoryDetailActivity.EXTRA_DOCUMENT_ID, doc.id);
+            context.startActivity(intent);
+        });
     }
 
     @Override

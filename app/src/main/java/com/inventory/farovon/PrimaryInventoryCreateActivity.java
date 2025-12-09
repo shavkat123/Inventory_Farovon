@@ -155,12 +155,12 @@ public class PrimaryInventoryCreateActivity extends AppCompatActivity {
         final String dataToWrite = hexData;
 
         new Thread(() -> {
-            // Attempt to write to User bank (3), start address 0, length 6 words (24 chars)
+            // Attempt to write to EPC bank (1), start address 2 (skipping CRC/PC), length 6 words (24 chars)
             // Access password default "00000000"
             boolean success = false;
             if (mReader != null) {
-                Log.d(TAG, "Calling mReader.writeData to User Memory with: " + dataToWrite);
-                success = mReader.writeData("00000000", 3, 0, 6, dataToWrite);
+                Log.d(TAG, "Calling mReader.writeData to EPC Memory with: " + dataToWrite);
+                success = mReader.writeData("00000000", 1, 2, 6, dataToWrite);
                 Log.d(TAG, "mReader.writeData returned: " + success);
             } else {
                 Log.e(TAG, "mReader is null");
