@@ -15,4 +15,7 @@ public interface PrimaryInventoryDao {
 
     @Query("SELECT * FROM primary_inventory_documents WHERE id = :id")
     PrimaryInventoryDocument getById(long id);
+
+    @Query("SELECT * FROM primary_inventory_documents WHERE name LIKE '%' || :query || '%' OR inventoryNumber LIKE '%' || :query || '%' ORDER BY date DESC")
+    List<PrimaryInventoryDocument> findByQuery(String query);
 }
