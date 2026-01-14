@@ -61,8 +61,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="16dp"
-        android:text="ШК"
-        app:icon="@drawable/icons8____2_color_hand_drawn_96"
+        android:text="Сканировать"
+        app:icon="@drawable/ic_scan_icon"
         app:iconTint="@color/white"
         android:textColor="@color/white"
         android:backgroundTint="@color/colorPrimary"/>

@@ -10,6 +10,7 @@
 
     <!-- Custom Colors from Design Spec -->
     <color name="colorPrimary">#1976D2</color>
+    <color name="colorPrimaryDark">#004BA0</color>
     <color name="colorPrimaryBright">#0D6EFF</color>
     <color name="colorLightGreyBackground">#F3F5F7</color>
     <color name="colorDivider">#E0E0E0</color>
